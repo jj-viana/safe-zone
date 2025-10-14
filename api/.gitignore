@@ -1,0 +1,96 @@
+# ===== .NET / Visual Studio =====
+# Build results
+[Bb]in/
+[Oo]bj/
+[Rr]elease*/
+[Dd]ebug*/
+x64/
+x86/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+bld/
+out/
+artifacts/
+publish/
+
+# Visual Studio cache/options
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.rsuser
+
+# Rider / JetBrains
+.idea/
+*.sln.iml
+
+# VS Code (keep only if you want per-dev settings untracked)
+.vscode/
+
+# Logs and diagnostics
+logs/
+*.log
+*.dmp
+
+# Test results
+TestResult*/
+TestResults/
+*.trx
+*.coverage
+*.coveragexml
+
+# NuGet
+*.nupkg
+*.snupkg
+packages/
+*.nuget.props
+*.nuget.targets
+
+# Entity Framework / Scaffolding
+ScaffoldingReadMe.txt
+
+# Publish profiles (may contain secrets)
+Properties/PublishProfiles/
+
+# ASP.NET Core static assets cache
+**/wwwroot/lib/**
+**/obj/**/staticwebassets/**
+**/obj/**/scopedcss/**
+*.rz.scp.css
+
+# Local configuration and secrets
+appsettings.json
+appsettings.Development.json
+appsettings.Local.json
+appsettings.*.local.json
+.env
+.env.*
+!.env.example
+
+# Azure Functions local settings (if applicable)
+local.settings.json
+
+# SQL/LocalDB
+*.mdf
+*.ldf
+*.ndf
+
+# Tooling caches
+.sonarqube/
+.scannerwork/
+_ReSharper*/
+*.[Rr]e[Ss]harper
+*.DotSettings.user
+_NCrunch_*/
+.*crunch*.local.xml
+
+# OS-generated files
+.DS_Store
+.AppleDouble
+.LSOverride
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
