@@ -1,5 +1,7 @@
 # **Visão Geral do Produto: Amaterasu - Safe Zone**
 
+![Safezone](./safezone.jpg)
+
 O **Amaterasu - Safe Zone** é uma aplicação web em formato de dashboard projetada para analisar e processar dados sobre criminalidade e insegurança no Distrito Federal e entorno. O objetivo é informar os cidadãos, facilitar a denúncia de ocorrências de forma menos burocrática e auxiliar na tomada de decisões mais direcionadas por parte dos órgãos competentes.
 
 ## **Problema a ser Solucionado**
