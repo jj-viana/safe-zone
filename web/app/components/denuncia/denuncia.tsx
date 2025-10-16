@@ -209,8 +209,16 @@ export default function DenunciaModal({ show, onCloseAction }: { show: boolean, 
                       onChange={(e) => {
                         let input = e.target.value.replace(/\D/g, "")
                         if (input.length > 8) input = input.slice(0, 8)
-                        if (input.length > 4) input = input.replace(/^(\d{2})(\d{2})(\d{0,4}).*/, "$1/$2/$3")
-                        else if (input.length > 2) input = input.replace(/^(\d{2})(\d{0,2})/, "$1/$2")
+                        if (input.length >= 7) {
+                          // Format as DD/MM/YYYY when 7 or 8 digits are present
+                          input = input.replace(/^(\d{2})(\d{2})(\d{3,4}).*/, "$1/$2/$3")
+                        } else if (input.length > 4) {
+                          // Format as DD/MM/YY or DD/MM/Y
+                          input = input.replace(/^(\d{2})(\d{2})(\d{1,2})/, "$1/$2/$3")
+                        } else if (input.length > 2) {
+                          // Format as DD/MM
+                          input = input.replace(/^(\d{2})(\d{0,2})/, "$1/$2")
+                        }
                         setDataOcorrencia(input)
                       }}
                       maxLength={10}
