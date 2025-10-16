@@ -13,7 +13,7 @@ export default function Home() {
   const [showModal, setShowModal] = useState(false)
 
   useEffect(() => {
-    const newLocks = [...Array(10)].map(() => ({
+    const newLocks = [...Array(12)].map(() => ({
       size: Math.random() * 60 + 60,
       top: Math.random() * 90,
       left: Math.random() * 90,
@@ -85,7 +85,11 @@ export default function Home() {
         </div>
       </div>
 
-      <MapaDepoimentos />
+      <div className="relative z-10 w-full flex justify-center py-20 bg-neutral-900">
+        <div className="w-[90%] h-[500px] rounded-2xl overflow-hidden">
+          <MapaDepoimentos height="200%" />
+        </div>
+      </div>
 
       <DenunciaModal show={showModal} onCloseAction={() => setShowModal(false)} />
     </>

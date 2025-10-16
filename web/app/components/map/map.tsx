@@ -12,7 +12,13 @@ L.Icon.Default.mergeOptions({
   shadowUrl: "/leaflet/marker-shadow.png",
 })
 
-export default function MapaDepoimentos() {
+interface MapaDepoimentosProps {
+  hideMarkers?: boolean
+  hideTitle?: boolean
+  height?: string // permite customizar altura
+}
+
+export default function MapaDepoimentos({ hideMarkers = false, hideTitle = false, height = "100%" }: MapaDepoimentosProps) {
   type Depoimento = {
     id: number
     pos: [number, number]
@@ -84,16 +90,14 @@ export default function MapaDepoimentos() {
           if (hasScrollHandler) (map as any).scrollWheelZoom.enable()
           if (map.doubleClickZoom) map.doubleClickZoom.enable()
           if (map.dragging) map.dragging.enable()
-        } catch (err) {
-        }
+        } catch {}
       }
       const handleLeave = () => {
         try {
           if (hasScrollHandler) (map as any).scrollWheelZoom.disable()
           if (map.doubleClickZoom) map.doubleClickZoom.disable()
           if (map.dragging) map.dragging.disable()
-        } catch (err) {
-        }
+        } catch {}
       }
 
       container.addEventListener("mouseenter", handleEnter)
@@ -111,36 +115,37 @@ export default function MapaDepoimentos() {
   }
 
   return (
-    <section className="relative min-h-screen bg-neutral-950 text-white flex flex-col items-center justify-center py-20">
-      <h2 className="text-3xl font-semibold mb-8 text-center">
-        Mapa de Depoimentos
-      </h2>
+    <div className="w-full" style={{ height }}>
+      {!hideTitle && (
+        <h2 className="text-3xl font-semibold mb-4 text-center text-white">
+          Mapa de Depoimentos
+        </h2>
+      )}
 
-      <div className="w-[90%] h-[70vh] rounded-2xl overflow-hidden shadow-lg border border-gray-700">
-        <MapContainer
-          center={[-15.7801, -47.9292]} 
-          zoom={10}
-          scrollWheelZoom={false}
-          doubleClickZoom={false}
-          dragging={false}
-          className="h-full w-full z-0"
-        >
-          <EnableZoomOnHover />
+      <MapContainer
+        center={[-15.7801, -47.9292]}
+        zoom={10}
+        scrollWheelZoom={false}
+        doubleClickZoom={false}
+        dragging={false}
+        className="w-full h-full rounded-lg"
+      >
+        <EnableZoomOnHover />
 
-          <TileLayer
-            attribution='&copy; <a href="https://cartodb.com/">CartoDB</a> contributors'
-            url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-          />
+        <TileLayer
+          attribution='&copy; <a href="https://cartodb.com/">CartoDB</a> contributors'
+          url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+        />
 
-          {depoimentos.map((dep) => (
+        {!hideMarkers &&
+          depoimentos.map((dep) => (
             <Marker key={dep.id} position={dep.pos} icon={createIcon(dep.cor)}>
               <Popup>
                 <p className="text-gray-800 font-medium">{dep.texto}</p>
               </Popup>
             </Marker>
           ))}
-        </MapContainer>
-      </div>
-    </section>
+      </MapContainer>
+    </div>
   )
 }
