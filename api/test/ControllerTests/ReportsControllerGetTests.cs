@@ -6,6 +6,7 @@ using ReportsApi.Models;
 using Xunit;
 
 using ReportsApi.Services;
+using System.Drawing;
 
 namespace ReportsApi.Tests.Services;
 
@@ -63,7 +64,7 @@ public class ReportsControllerGetTests
         Assert.Equal(StatusCodes.Status500InternalServerError, problem.StatusCode);
 
     }
-    
+
     [Fact]
     public async Task GetCrimeByTypeAsync_WhenServiceThrowsException_ReturnsProblem()
     {
