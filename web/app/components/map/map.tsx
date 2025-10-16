@@ -90,14 +90,18 @@ export default function MapaDepoimentos({ hideMarkers = false, hideTitle = false
           if (hasScrollHandler) (map as any).scrollWheelZoom.enable()
           if (map.doubleClickZoom) map.doubleClickZoom.enable()
           if (map.dragging) map.dragging.enable()
-        } catch {}
+        } catch (error) {
+          console.error("Error enabling map interactions:", error);
+        }
       }
       const handleLeave = () => {
         try {
           if (hasScrollHandler) (map as any).scrollWheelZoom.disable()
           if (map.doubleClickZoom) map.doubleClickZoom.disable()
           if (map.dragging) map.dragging.disable()
-        } catch {}
+        } catch (error) {
+          console.error("Error disabling map interactions:", error);
+        }
       }
 
       container.addEventListener("mouseenter", handleEnter)
