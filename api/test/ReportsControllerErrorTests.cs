@@ -1,0 +1,83 @@
+using Microsoft.AspNetCore.Mvc;
+using Moq;
+using ReportsApi.Controllers;
+using ReportsApi.Interfaces;
+using ReportsApi.Models;
+using Xunit;
+
+using ReportsApi.Services;
+
+namespace ReportsApi.Tests.Services;
+
+public class ReportsControllerGetTests
+{
+    private readonly Mock<IReportService> _serviceMock = new();
+    private readonly ReportsController _controller;
+
+    public ReportsControllerGetTests()
+    {
+        var loggerMock = new Mock<ILogger<ReportsController>>();
+        _controller = new ReportsController(_serviceMock.Object, loggerMock.Object);
+    }
+
+    private static CreateReportRequest CreateSampleReport() => new()
+    {
+        CrimeGenre = "Hate Crime",
+        CrimeType = "Assault",
+        Description = "Incident description",
+        Location = "Central Park",
+        CrimeDate = DateTime.UtcNow,
+        Resolved = false
+    };
+
+    [Fact]
+
+    public async Task GetByIdAsync_WhenServiceThrowsException_Returnsproblem()
+    {
+        string testId = "123";
+
+        _serviceMock
+            .Setup(s => s.GetByIdAsync(testId, It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new ArgumentException("Invalid payload"));
+
+        var result = await _controller.GetByIdAsync(testId, CancellationToken.None);
+
+        var problem = Assert.IsType<ObjectResult>(result);
+        Assert.Equal(StatusCodes.Status500InternalServerError, problem.StatusCode);
+
+    }
+
+    [Fact]
+
+    public async Task GetCrimeByGenreAsync_WhenServiceThrowsException_ReturnsProblem()
+    {
+        string testGenre = "Hate Crime";
+
+        _serviceMock
+            .Setup(s => s.GetByCrimeGenreAsync(testGenre, It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new ArgumentException("Invalid payload"));
+
+        var result = await _controller.GetByCrimeGenreAsync(testGenre, CancellationToken.None);
+
+        var problem = Assert.IsType<ObjectResult>(result);
+        Assert.Equal(StatusCodes.Status500InternalServerError, problem.StatusCode);
+
+    }
+    
+    [Fact]
+    public async Task GetCrimeByTypeAsync_WhenServiceThrowsException_ReturnsProblem()
+    {
+        string testType = "Assault";
+
+        _serviceMock
+            .Setup(s => s.GetByCrimeTypeAsync(testType, It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new ArgumentException("Invalid payload"));
+
+        var result = await _controller.GetByCrimeTypeAsync(testType, CancellationToken.None);
+
+        var problem = Assert.IsType<ObjectResult>(result);
+        Assert.Equal(StatusCodes.Status500InternalServerError, problem.StatusCode);
+
+    }
+
+}
