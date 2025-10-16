@@ -1,4 +1,4 @@
-"use client"
+'use client'
 
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet"
 import L from "leaflet"
@@ -70,6 +70,46 @@ export default function MapaDepoimentos() {
     document.head.appendChild(style)
   }, [])
 
+  function EnableZoomOnHover() {
+    const map = useMap()
+
+    useEffect(() => {
+      const hasScrollHandler = !!(map as any).scrollWheelZoom
+      const container = map.getContainer?.()
+
+      if (!container) return
+
+      const handleEnter = () => {
+        try {
+          if (hasScrollHandler) (map as any).scrollWheelZoom.enable()
+          if (map.doubleClickZoom) map.doubleClickZoom.enable()
+          if (map.dragging) map.dragging.enable()
+        } catch (err) {
+        }
+      }
+      const handleLeave = () => {
+        try {
+          if (hasScrollHandler) (map as any).scrollWheelZoom.disable()
+          if (map.doubleClickZoom) map.doubleClickZoom.disable()
+          if (map.dragging) map.dragging.disable()
+        } catch (err) {
+        }
+      }
+
+      container.addEventListener("mouseenter", handleEnter)
+      container.addEventListener("mouseleave", handleLeave)
+
+      handleLeave()
+
+      return () => {
+        container.removeEventListener("mouseenter", handleEnter)
+        container.removeEventListener("mouseleave", handleLeave)
+      }
+    }, [map])
+
+    return null
+  }
+
   return (
     <section className="relative min-h-screen bg-neutral-950 text-white flex flex-col items-center justify-center py-20">
       <h2 className="text-3xl font-semibold mb-8 text-center">
@@ -78,11 +118,15 @@ export default function MapaDepoimentos() {
 
       <div className="w-[90%] h-[70vh] rounded-2xl overflow-hidden shadow-lg border border-gray-700">
         <MapContainer
-          center={[-15.7801, -47.9292]} // centro em Brasília
+          center={[-15.7801, -47.9292]} 
           zoom={10}
           scrollWheelZoom={false}
+          doubleClickZoom={false}
+          dragging={false}
           className="h-full w-full z-0"
         >
+          <EnableZoomOnHover />
+
           <TileLayer
             attribution='&copy; <a href="https://cartodb.com/">CartoDB</a> contributors'
             url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
