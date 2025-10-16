@@ -13,7 +13,7 @@ export default function Home() {
   const [showModal, setShowModal] = useState(false)
 
   useEffect(() => {
-    const newLocks = [...Array(10)].map(() => ({
+    const newLocks = [...Array(12)].map(() => ({
       size: Math.random() * 60 + 60,
       top: Math.random() * 90,
       left: Math.random() * 90,
@@ -28,7 +28,6 @@ export default function Home() {
   return (
     <>
       <div className="relative min-h-screen overflow-hidden flex flex-col justify-between text-white bg-neutral-900">
-        {/* Fundo com cadeados */}
         <div className="absolute inset-0 overflow-hidden">
           {locks.map((lock, i) => (
             <motion.div
@@ -56,7 +55,6 @@ export default function Home() {
           ))}
         </div>
 
-        {/* Navegação */}
         <nav className="relative z-10 w-full flex justify-center pt-6">
           <ul className="flex gap-20 text-lg font-medium">
             <li><Link href="/sobre" className="hover:text-gray-300 transition-colors">Sobre</Link></li>
@@ -64,7 +62,7 @@ export default function Home() {
             <li>
               <button
                 onClick={() => setShowModal(true)}
-                className="hover:text-gray-300 transition-colors"
+                className="hover:text-gray-300 transition-colors cursor-pointer"
               >
                 Fazer Denúncia
               </button>
@@ -72,7 +70,6 @@ export default function Home() {
           </ul>
         </nav>
 
-        {/* Logo */}
         <div className="relative z-10 flex-1 flex items-center justify-center">
           <img
             src="/logo.svg"
@@ -88,10 +85,12 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Mapa */}
-      <MapaDepoimentos />
+      <div className="relative z-10 w-full flex justify-center py-20 bg-neutral-900">
+        <div className="w-[90%] h-[500px] rounded-2xl overflow-hidden">
+          <MapaDepoimentos height="200%" />
+        </div>
+      </div>
 
-      {/* Modal */}
       <DenunciaModal show={showModal} onCloseAction={() => setShowModal(false)} />
     </>
   )
