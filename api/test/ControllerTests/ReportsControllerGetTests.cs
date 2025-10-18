@@ -61,6 +61,24 @@ public class ReportsControllerGetTests
         Assert.Equal(StatusCodes.Status404NotFound, notFound.StatusCode);
     }
 
+    [Fact]
+    public async Task GetByIdAsync_WhenServiceReturnsOk_CheckIfCorrect()
+    {
+        string testId = "12345";
+
+        var expectedReport = new ReportResponse(testId, "Hate Crime", "Assault", "Incident description", "Central Park", DateTime.UtcNow, null, DateTime.UtcNow, false);
+        
+        _serviceMock
+            .Setup(s => s.GetByIdAsync(testId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(expectedReport);
+
+        var result = await _controller.GetByIdAsync(testId, CancellationToken.None);
+
+        var ok = Assert.IsType<OkObjectResult>(result);
+        var report = Assert.IsAssignableFrom<ReportResponse>(ok.Value);
+        Assert.Equal(expectedReport, report);
+    }
+
 
     //Testes Genre
     [Fact]
