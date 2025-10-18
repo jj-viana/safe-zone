@@ -5,7 +5,7 @@ import L from "leaflet"
 import "leaflet/dist/leaflet.css"
 import { useEffect } from "react"
 
-delete (L.Icon.Default.prototype as any)._getIconUrl
+delete (L.Icon.Default.prototype as unknown as { _getIconUrl?: unknown })._getIconUrl
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: "/leaflet/marker-icon-2x.png",
   iconUrl: "/leaflet/marker-icon.png",
@@ -80,27 +80,27 @@ export default function MapaDepoimentos({ hideMarkers = false, hideTitle = false
     const map = useMap()
 
     useEffect(() => {
-      const hasScrollHandler = !!(map as any).scrollWheelZoom
+      const hasScrollHandler = Boolean(map.scrollWheelZoom)
       const container = map.getContainer?.()
 
       if (!container) return
 
       const handleEnter = () => {
         try {
-          if (hasScrollHandler) (map as any).scrollWheelZoom.enable()
-          if (map.doubleClickZoom) map.doubleClickZoom.enable()
-          if (map.dragging) map.dragging.enable()
+          if (hasScrollHandler) map.scrollWheelZoom?.enable()
+          map.doubleClickZoom?.enable()
+          map.dragging?.enable()
         } catch (error) {
-          console.error("Error enabling map interactions:", error);
+          console.error("Error enabling map interactions:", error)
         }
       }
       const handleLeave = () => {
         try {
-          if (hasScrollHandler) (map as any).scrollWheelZoom.disable()
-          if (map.doubleClickZoom) map.doubleClickZoom.disable()
-          if (map.dragging) map.dragging.disable()
+          if (hasScrollHandler) map.scrollWheelZoom?.disable()
+          map.doubleClickZoom?.disable()
+          map.dragging?.disable()
         } catch (error) {
-          console.error("Error disabling map interactions:", error);
+          console.error("Error disabling map interactions:", error)
         }
       }
 
