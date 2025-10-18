@@ -84,34 +84,41 @@ jobs:
           resource-group-name: ${{ env.RESOURCE_GROUP }}
           package: publish/api
 
+      - name: Define health_check function
+        run: |
+          cat <<'EOF' > health_check.sh
+          #!/bin/bash
+          health_check() {
+            local url="$1"
+            for attempt in {1..5}; do
+              if curl --fail --silent --show-error "$url"; then
+                return 0
+              fi
+              sleep 10
+            done
+            return 1
+          }
+          EOF
+          chmod +x health_check.sh
+
       - name: Verify API health
         if: env.API_HEALTHCHECK_URL != ''
         run: |
-          for attempt in {1..5}; do
-            if curl --fail --silent --show-error "$API_HEALTHCHECK_URL"; then
-              exit 0
-            fi
-            sleep 10
-          done
-          exit 1
+          source ./health_check.sh
+          health_check "$API_HEALTHCHECK_URL"
 
       - name: Verify Web health
         if: env.WEB_HEALTHCHECK_URL != ''
         run: |
-          for attempt in {1..5}; do
-            if curl --fail --silent --show-error "$WEB_HEALTHCHECK_URL"; then
-              exit 0
-            fi
-            sleep 10
-          done
-          exit 1
+          source ./health_check.sh
+          health_check "$WEB_HEALTHCHECK_URL"
 
       - name: Determine next release tag
         id: release_tag
         shell: bash
         run: |
           git fetch --tags
-          latest=$(git tag -l 'v[0-9]*' --sort=-version:refname | head -n 1)
+          latest=$(git tag -l 'v[0-9]*.[0-9]*.[0-9]*' --sort=-version:refname | head -n 1)
           if [ -z "$latest" ]; then
             next="v0.1.0"
           else
