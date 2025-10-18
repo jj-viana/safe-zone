@@ -111,7 +111,7 @@ jobs:
         shell: bash
         run: |
           git fetch --tags
-          latest=$(git tag -l 'v[0-9]*' --sort=-version:refname | head -n 1)
+          latest=$(git tag -l 'v[0-9]*.[0-9]*.[0-9]*' --sort=-version:refname | head -n 1)
           if [ -z "$latest" ]; then
             next="v0.1.0"
           else
