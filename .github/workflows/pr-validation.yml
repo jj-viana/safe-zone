@@ -1,0 +1,65 @@
+name: PR Validation
+
+on:
+  pull_request:
+    branches:
+      - development
+      - main
+
+jobs:
+  web:
+    name: Web Quality Checks
+    if: github.base_ref == 'development' || (github.base_ref == 'main' && github.head_ref == 'development')
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: web/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Build
+        run: npm run build
+
+  api:
+    name: API Build and Tests
+    if: github.base_ref == 'development' || (github.base_ref == 'main' && github.head_ref == 'development')
+    runs-on: ubuntu-latest
+    env:
+      DOTNET_NOLOGO: true
+      DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+      DOTNET_CLI_TELEMETRY_OPTOUT: true
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Restore dependencies
+        run: dotnet restore api/api.sln
+
+      - name: Build
+        run: dotnet build api/api.sln --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet test api/api.sln --configuration Release --no-build --verbosity normal
