@@ -103,6 +103,7 @@ public class ReportsControllerGetTests
         // Cenário 1: Dois reports de Burglery
         yield return new object[]
         {
+            "Burglery",
             new List<ReportResponse>
             {
                 new ReportResponse("114234", "Crime", "Burglery", "Home invasion", "Kansas", DateTime.UtcNow, null, DateTime.UtcNow, true),
@@ -113,6 +114,7 @@ public class ReportsControllerGetTests
         // Cenário 2: Um report de Assault
         yield return new object[]
         {
+            "Assault",
             new List<ReportResponse>
             {
                 new ReportResponse("98765", "Hate Crime", "Assault", "Physical attack", "New York", DateTime.UtcNow.AddDays(-5), null, DateTime.UtcNow, false)
@@ -122,19 +124,27 @@ public class ReportsControllerGetTests
         // Cenário 3: Três reports de Theft
         yield return new object[]
         {
+            "Theft",
             new List<ReportResponse>
             {
+                new ReportResponse("11111", "Crime", "Theft", "Car theft", "California", DateTime.UtcNow.AddDays(-2), null, DateTime.UtcNow, false),
+                new ReportResponse("22222", "Crime", "Theft", "Bike stolen", "Texas", DateTime.UtcNow.AddDays(-3), null, DateTime.UtcNow, true),
+                new ReportResponse("33333", "Crime", "Theft", "Wallet missing", "Florida", DateTime.UtcNow.AddDays(-4), null, DateTime.UtcNow, false)
             }
+        };
+
+        // Cenário 4: Lista vazia (nenhum crime desse tipo encontrado)
+        yield return new object[]
+        {
+            "Vandalism",
+            new List<ReportResponse>()
         };
     }
 
     [Theory]
     [MemberData(nameof(GetReportResponseData))]
-    public async Task GetCrimeByTypeAsync_WhenServiceReturnsOk_CheckIfCorrect(List<ReportResponse> expectedReports)
+    public async Task GetCrimeByTypeAsync_WhenServiceReturnsOk_CheckIfCorrect(string testType, List<ReportResponse> expectedReports)
     {
-        string testType = "Burglery";
-        
-
         _serviceMock
             .Setup(s => s.GetByCrimeTypeAsync(testType, It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedReports);
@@ -144,7 +154,12 @@ public class ReportsControllerGetTests
         var ok = Assert.IsType<OkObjectResult>(result);
         var list = Assert.IsAssignableFrom<IReadOnlyCollection<ReportResponse>>(ok.Value);
         Assert.Equal(expectedReports.Count, list.Count);
-        Assert.All(list, report => Assert.Equal(testType, report.CrimeType));
+        
+        // Só verifica o CrimeType se a lista não estiver vazia
+        if (expectedReports.Count > 0)
+        {
+            Assert.All(list, report => Assert.Equal(testType, report.CrimeType));
+        }
     }
 
 }
