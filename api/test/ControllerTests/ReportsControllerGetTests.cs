@@ -117,7 +117,20 @@ public class ReportsControllerGetTests
         Assert.Empty(reports);
     }
 
-    
+    [Fact]
+
+    public async Task GetAllAsync_WhenServiceThrowsException_ReturnsProblem()
+    {
+        _serviceMock
+            .Setup(s => s.GetAllAsync(It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new ArgumentException("Invalid payload"));
+
+        var result = await _controller.GetAllAsync(CancellationToken.None);
+
+        var problem = Assert.IsType<ObjectResult>(result);
+        Assert.Equal(StatusCodes.Status500InternalServerError, problem.StatusCode);
+
+    }
 
    
 }
