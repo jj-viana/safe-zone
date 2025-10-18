@@ -132,5 +132,20 @@ public class ReportsControllerGetTests
 
     }
 
+    [Fact]
+
+    public async Task GetAllAsync_WhenServiceReturnsValidReport_ReturnsOk()
+    {
+        _serviceMock
+            .Setup(s => s.GetAllAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<ReportResponse>());
+
+        var result = await _controller.GetAllAsync(CancellationToken.None);
+
+        var okResult = Assert.IsType<OkObjectResult>(result);
+        Assert.Equal(StatusCodes.Status200OK, okResult.StatusCode);
+
+    }
+
    
 }
