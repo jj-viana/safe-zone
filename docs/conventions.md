@@ -209,7 +209,7 @@ Esta define os padrões para o front-end com Next.js (App Router), React e Tailw
   - `app/api/*` reservado para handlers utilitários do próprio Next apenas quando necessário (não substituir a API .NET).
   - `lib/` para helpers de fetch, schemas de validação, utilitários puros.
   - `components/` para UI reutilizável; `features/<domínio>/` para componentes orientados a casos de uso.
-- Integração com API .NET: preferir proxy via rewrites do Next para `/api/v1/*` (ver seção de servidor/proxy), evitando CORS no browser. Alternative: usar `NEXT_PUBLIC_API_BASE_URL` apenas quando o proxy não for possível.
+- Integração com API .NET: preferir proxy via rewrites do Next para `/api/v1/*` (ver seção de servidor/proxy), evitando CORS no browser. Alternative: usar `API_BASE_URL` apenas quando o proxy não for possível.
 
 ### React (componentes, hooks, estado)
 - Componentes funcionais com hooks; evitar classes.
@@ -251,7 +251,7 @@ Next.js é responsável por SSR/SSG/ISR, servir estáticos e orquestrar chamadas
 
 ### Responsabilidades do servidor Next.js
 - Renderização SSR/SSG/ISR e entrega de assets.
-- Integração com backend .NET: chamadas server-side (SSR/Route Handlers) usando `process.env.API_BASE_URL` para evitar CORS; chamadas client-side usando `NEXT_PUBLIC_API_BASE_URL` com CORS habilitado na API.
+- Integração com backend .NET: chamadas server-side (SSR/Route Handlers) usando `process.env.API_BASE_URL` para evitar CORS; chamadas client-side usando `API_BASE_URL` com CORS habilitado na API.
 - Observabilidade mínima: gerar/propagar `x-correlation-id` e logging de acesso (via middleware ou integração Application Insights no App Service).
 - Headers de segurança (CSP, no-store quando necessário). Em produção, manter HTTPS-only.
 
@@ -506,7 +506,7 @@ A aplicação é implantada inteiramente em serviços gerenciados Azure. Infra c
 
 ### Segurança HTTP
 - Front (SWA): usar `staticwebapp.config.json` para `globalHeaders` (CSP, HSTS, X-Content-Type-Options, Referrer-Policy) e políticas de cache. TLS é gerenciado pelo Azure.
-- APIs .NET: usar `UseHttpsRedirection`, `UseHsts` (exceto dev), CSP e headers de segurança. Habilitar CORS explicitamente para o domínio do SWA quando houver chamadas client-side (`NEXT_PUBLIC_API_BASE_URL`).
+- APIs .NET: usar `UseHttpsRedirection`, `UseHsts` (exceto dev), CSP e headers de segurança. Habilitar CORS explicitamente para o domínio do SWA quando houver chamadas client-side (`API_BASE_URL`).
 
 ### Proteção de Dados Sensíveis
 - Logs sem PII; se necessário, mascarar (`email`, `documentId`).
