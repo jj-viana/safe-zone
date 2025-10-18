@@ -6,8 +6,6 @@ using ReportsApi.Models;
 using Xunit;
 
 using ReportsApi.Services;
-using System.Drawing;
-
 namespace ReportsApi.Tests.Services;
 
 public class ReportsControllerGetTests
