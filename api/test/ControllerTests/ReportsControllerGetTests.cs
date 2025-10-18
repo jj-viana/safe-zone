@@ -83,7 +83,7 @@ public class ReportsControllerGetTests
 
     [Fact]
 
-    public async Task GetbyCrimeGenreAsync_WhenServiceReturnsValidReport_ReturnsOk()
+    public async Task GetByCrimeGenreAsync_WhenServiceReturnsValidReport_ReturnsOk()
     {
         string testGenre = "Hate Crime";
 
@@ -97,6 +97,27 @@ public class ReportsControllerGetTests
         Assert.Equal(StatusCodes.Status200OK, okResult.StatusCode);
 
     }
+
+    [Fact]
+
+    public async Task GetByCrimeGenreAsync_WhenListIsEmpty_ReturnsOkWithEmptyList()
+    {
+        string testGenre = "No Results Found";
+
+        _serviceMock
+            .Setup(s => s.GetByCrimeGenreAsync(testGenre, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<ReportResponse>());
+
+        var result = await _controller.GetByCrimeGenreAsync(testGenre, CancellationToken.None);
+
+        var okResult = Assert.IsType<OkObjectResult>(result); 
+        Assert.Equal(StatusCodes.Status200OK, okResult.StatusCode);
+
+        var reports = Assert.IsAssignableFrom<IEnumerable<ReportResponse>>(okResult.Value); 
+        Assert.Empty(reports);
+    }
+
+    
 
    
 }
