@@ -1,0 +1,101 @@
+# ---- Operating System ----
+.DS_Store
+Thumbs.db
+
+# ---- Node / Next.js / React ----
+node_modules/
+.pnp/
+.pnp.js
+*.log
+logs/
+nohup.out
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+bun.lockb
+.eslintcache
+.stylelintcache
+.parcel-cache
+.next/
+out/
+.vercel/
+.swa/
+next-env.d.ts
+*.tsbuildinfo
+.turbo/
+
+# ---- Testing & Coverage ----
+coverage/
+.nyc_output/
+playwright-report/
+.playwright-cache/
+junit.xml
+
+# ---- Environment Files ----
+.env
+.env.*
+!.env.example
+appsettings.json
+appsettings.*.json
+!appsettings.example.json
+
+# ---- Build Artifacts (JavaScript/TypeScript) ----
+dist/
+build/
+tmp/
+temp/
+
+# ---- .NET / C# ----
+bin/
+obj/
+TestResults/
+artifacts/
+*.user
+*.rsuser
+*.suo
+*.userosscache
+*.sln.docstates
+*.cache
+*.dbmdl
+*.jfm
+*.pdb
+*.pidb
+*.svclog
+*.vshost.*
+*.nupkg
+*.snupkg
+*.nuget.props
+*.nuget.targets
+*.coverage
+*.coveragexml
+*.codecoverage
+BenchmarkDotNet.Artifacts/
+
+# ---- Visual Studio / VS Code ----
+.vs/
+.idea/
+*.code-workspace
+*.sln.iml
+# Keep tracked workspace settings when explicitly committed
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/launch.json
+!.vscode/tasks.json
+
+# ---- GitHub / Copilot ----
+.github/copilot-internals.log
+.github/copilot-logs/
+.copilot/
+.copilot.json
+
+# ---- Miscellaneous ----
+*.orig
+*.rej
+*.bak
+*.tmp
+*.swp
+*.swo
+~$*
+.DS_Store?

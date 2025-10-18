@@ -1,9 +1,14 @@
 'use client'
 
 import { motion, AnimatePresence } from "framer-motion"
+import dynamic from "next/dynamic"
+import Image from "next/image"
 import { useState } from "react"
 import { FaArrowRight, FaArrowLeft } from "react-icons/fa"
-import MapaDepoimentos from "../map/map"
+
+const MapaDepoimentos = dynamic(() => import("../map/map"), {
+  ssr: false,
+})
 
 export default function DenunciaModal({ show, onCloseAction }: { show: boolean, onCloseAction: () => void }) {
   const [formStep, setFormStep] = useState(0)
@@ -48,10 +53,13 @@ export default function DenunciaModal({ show, onCloseAction }: { show: boolean, 
             exit={{ scale: 0.8, opacity: 0 }}
             onClick={(e) => e.stopPropagation()}
           >
-            <img
+            <Image
               src="/raposa.svg"
               alt="Raposa"
+              width={80}
+              height={80}
               className="w-20 h-20 mb-4"
+              priority
             />
 
             {/* STEP 0 */}

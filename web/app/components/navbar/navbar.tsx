@@ -52,7 +52,10 @@ export default function Navbar({ onOpenDenuncia }: NavbarProps) {
           })}
 
           <button
-            onClick={() => setShowModal(true)}
+            onClick={() => {
+              onOpenDenuncia?.()
+              setShowModal(true)
+            }}
             className="text-sm md:text-base pb-1 border-b-2 border-transparent text-gray-300 hover:text-white hover:border-cyan-400 transition-all duration-200 cursor-pointer"
           >
             Fazer Denúncia
