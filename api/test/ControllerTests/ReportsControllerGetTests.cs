@@ -29,9 +29,10 @@ public class ReportsControllerGetTests
         Resolved = false
     };
 
-    [Fact]
+    //Teste Id
 
-    public async Task GetByIdAsync_WhenServiceThrowsException_Returnsproblem()
+    [Fact]
+    public async Task GetByIdAsync_WhenServiceThrowsException_ReturnsProblem()
     {
         string testId = "123";
 
@@ -47,7 +48,22 @@ public class ReportsControllerGetTests
     }
 
     [Fact]
+    public async Task GetByIdAsync_WhenNoResult_ReturnNotFound()
+    {
+        string testId = "1123";
+        _serviceMock
+            .Setup(s => s.GetByIdAsync(testId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((ReportResponse?)null);
 
+        var result = await _controller.GetByIdAsync(testId, CancellationToken.None);
+
+        var notFound = Assert.IsType<NotFoundResult>(result);
+        Assert.Equal(StatusCodes.Status404NotFound, notFound.StatusCode);
+    }
+
+
+    //Testes Genre
+    [Fact]
     public async Task GetCrimeByGenreAsync_WhenServiceThrowsException_ReturnsProblem()
     {
         string testGenre = "Hate Crime";
@@ -63,6 +79,10 @@ public class ReportsControllerGetTests
 
     }
 
+
+
+
+    //Testes Type
     [Fact]
     public async Task GetCrimeByTypeAsync_WhenServiceThrowsException_ReturnsProblem()
     {
@@ -97,7 +117,7 @@ public class ReportsControllerGetTests
         Assert.Empty(list);
     }
 
-//Valores para serem testados em GetCrimeByTypeAsync_WhenServiceReturnsOk_CheckIfCorrect
+    //Valores para serem testados em GetCrimeByTypeAsync_WhenServiceReturnsOk_CheckIfCorrect
     public static IEnumerable<object[]> GetReportResponseData()
     {
         // Cenário 1: Dois reports de Burglery
@@ -154,7 +174,7 @@ public class ReportsControllerGetTests
         var ok = Assert.IsType<OkObjectResult>(result);
         var list = Assert.IsAssignableFrom<IReadOnlyCollection<ReportResponse>>(ok.Value);
         Assert.Equal(expectedReports.Count, list.Count);
-        
+
         // Só verifica o CrimeType se a lista não estiver vazia
         if (expectedReports.Count > 0)
         {
