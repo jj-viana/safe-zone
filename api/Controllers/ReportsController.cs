@@ -80,11 +80,6 @@ public class ReportsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> GetByCrimeGenreAsync(string crimeGenre, CancellationToken cancellationToken)
     {
-        if (string.IsNullOrWhiteSpace(crimeGenre))
-        {
-            return BadRequest(new { error = "The crimeGenre value is required." });
-        }
-
         try
         {
             _logger.LogInformation("Listing reports by crime genre {CrimeGenre}", crimeGenre);
@@ -107,11 +102,6 @@ public class ReportsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> GetByCrimeTypeAsync(string crimeType, CancellationToken cancellationToken)
     {
-        if (string.IsNullOrWhiteSpace(crimeType))
-        {
-            return BadRequest(new { error = "The crimeType value is required." });
-        }
-
         try
         {
             _logger.LogInformation("Listing reports by crime type {CrimeType}", crimeType);
