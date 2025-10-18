@@ -5,8 +5,6 @@ using ReportsApi.Interfaces;
 using ReportsApi.Models;
 using Xunit;
 
-using ReportsApi.Services;
-using System.Drawing;
 
 namespace ReportsApi.Tests.Services;
 
@@ -79,6 +77,74 @@ public class ReportsControllerGetTests
         var problem = Assert.IsType<ObjectResult>(result);
         Assert.Equal(StatusCodes.Status500InternalServerError, problem.StatusCode);
 
+    }
+
+    [Fact]
+    public async Task GetCrimeByTypeAsync_WhenNoResult_ReturnOkAndEmptyList()
+    {
+        string testType = "Burglery";
+
+        _serviceMock
+            .Setup(s => s.GetByCrimeTypeAsync(testType, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<ReportResponse>());
+
+        var result = await _controller.GetByCrimeTypeAsync(testType, CancellationToken.None);
+
+        var ok = Assert.IsType<OkObjectResult>(result);
+        var list = Assert.IsAssignableFrom<IReadOnlyCollection<ReportResponse>>(ok.Value);
+        // é list e não IReadOnlyCollection pq IRead é uma interface de List
+        //nenhum objeto tem como tipo exato uma interface
+        Assert.Empty(list);
+    }
+
+//Valores para serem testados em GetCrimeByTypeAsync_WhenServiceReturnsOk_CheckIfCorrect
+    public static IEnumerable<object[]> GetReportResponseData()
+    {
+        // Cenário 1: Dois reports de Burglery
+        yield return new object[]
+        {
+            new List<ReportResponse>
+            {
+                new ReportResponse("114234", "Crime", "Burglery", "Home invasion", "Kansas", DateTime.UtcNow, null, DateTime.UtcNow, true),
+                new ReportResponse("52355", "Crime", "Burglery", "School theft", "Acre", DateTime.UtcNow.AddDays(-1), null, DateTime.UtcNow, true)
+            }
+        };
+
+        // Cenário 2: Um report de Assault
+        yield return new object[]
+        {
+            new List<ReportResponse>
+            {
+                new ReportResponse("98765", "Hate Crime", "Assault", "Physical attack", "New York", DateTime.UtcNow.AddDays(-5), null, DateTime.UtcNow, false)
+            }
+        };
+
+        // Cenário 3: Três reports de Theft
+        yield return new object[]
+        {
+            new List<ReportResponse>
+            {
+            }
+        };
+    }
+
+    [Theory]
+    [MemberData(nameof(GetReportResponseData))]
+    public async Task GetCrimeByTypeAsync_WhenServiceReturnsOk_CheckIfCorrect(List<ReportResponse> expectedReports)
+    {
+        string testType = "Burglery";
+        
+
+        _serviceMock
+            .Setup(s => s.GetByCrimeTypeAsync(testType, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(expectedReports);
+
+        var result = await _controller.GetByCrimeTypeAsync(testType, CancellationToken.None);
+
+        var ok = Assert.IsType<OkObjectResult>(result);
+        var list = Assert.IsAssignableFrom<IReadOnlyCollection<ReportResponse>>(ok.Value);
+        Assert.Equal(expectedReports.Count, list.Count);
+        Assert.All(list, report => Assert.Equal(testType, report.CrimeType));
     }
 
 }
