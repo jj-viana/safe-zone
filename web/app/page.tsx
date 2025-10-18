@@ -1,13 +1,17 @@
 'use client'
 
 import { motion } from "framer-motion"
+import dynamic from "next/dynamic"
 import Image from "next/image"
 import Link from "next/link"
 import { IoIosArrowRoundDown } from "react-icons/io"
 import { FiLock } from "react-icons/fi"
 import { useEffect, useState } from "react"
-import MapaDepoimentos from "./components/map/map"
 import DenunciaModal from "./components/denuncia/denuncia"
+
+const MapaDepoimentos = dynamic(() => import("./components/map/map"), {
+  ssr: false,
+})
 
 export default function Home() {
   type FloatingLock = {
