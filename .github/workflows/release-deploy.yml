@@ -43,6 +43,7 @@ jobs:
         run: npm ci
 
       - name: Inject web environment variables
+        working-directory: web
         run: echo "NEXT_PUBLIC_API_BASE_URL=${{ secrets.NEXT_PUBLIC_API_BASE_URL }}" >> $GITHUB_ENV
 
       - name: Build web application
