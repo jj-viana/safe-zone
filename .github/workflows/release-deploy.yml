@@ -73,9 +73,12 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           action: upload
           app_location: ${{ env.STATIC_WEB_APP_LOCATION }}
+          api_location: ""
           output_location: .next
           config_file_location: ${{ env.STATIC_WEB_APP_CONFIG }}
           skip_app_build: true
+          skip_api_build: true
+          app_artifact_location: web/.next
 
       - name: Deploy API to App Service
         uses: azure/webapps-deploy@v3
