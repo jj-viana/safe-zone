@@ -121,7 +121,7 @@ public class ReportsControllerGetTests
     [Fact]
     public async Task GetCrimeByTypeAsync_WhenNoResult_ReturnOkAndEmptyList()
     {
-        string testType = "Burglery";
+        string testType = "Burglary";
 
         _serviceMock
             .Setup(s => s.GetByCrimeTypeAsync(testType, It.IsAny<CancellationToken>()))
