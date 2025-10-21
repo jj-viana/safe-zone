@@ -1,304 +1,194 @@
-# 🔗 Integração Frontend-Backend - SafeZone
+# **Visão Geral do Produto: Amaterasu - Safe Zone**
 
-## 📖 Visão Geral
+![Safezone](./safezone.jpg)
 
-Esta pasta contém toda a documentação da integração entre o frontend Next.js e a API .NET do projeto SafeZone, incluindo guias, checklists e exemplos de código.
+O **Amaterasu - Safe Zone** é uma aplicação web em formato de dashboard projetada para analisar e processar dados sobre criminalidade e insegurança no Distrito Federal e entorno. O objetivo é informar os cidadãos, facilitar a denúncia de ocorrências de forma menos burocrática e auxiliar na tomada de decisões mais direcionadas por parte dos órgãos competentes.
 
-## 📚 Documentos Disponíveis
+## **Problema a ser Solucionado**
 
-### 1. **INTEGRATION_SUMMARY.md** - Visão Geral Completa
-- 📋 O que foi implementado
-- 🎯 Fluxo completo de envio
-- 📁 Estrutura de arquivos
-- 🔧 Configuração necessária
-- 📊 Mapeamento de dados
-- 🎨 Padrões seguidos
+Com a velocidade da internet, a disseminação de notícias sobre perigos e crimes tornou-se extremamente rápida. O produto visa utilizar essa agilidade para criar uma comunicação democrática sobre os perigos, permitindo que a população seja alertada sobre a incidência de problemas em regiões específicas. A plataforma busca quebrar a burocracia, permitindo o registro de relatos informais que muitas vezes não se enquadram em um boletim de ocorrência tradicional, como locais mal iluminados, movimentações suspeitas ou situações de assédio.
 
-**👉 Comece por aqui para entender a arquitetura da integração**
+## **Objetivos e Diferenciais**
 
-### 2. **QUICK_START.md** - Guia de Início Rápido
-- ⚡ Setup em 5 minutos
-- 🚀 Como testar localmente
-- 🔍 Troubleshooting rápido
-- 📊 Exemplos de testes via Swagger, PowerShell e curl
+O principal objetivo do projeto é coletar e processar denúncias relacionadas à segurança no DF, garantindo sempre a privacidade e o anonimato dos usuários. Após o registro de uma denúncia, a plataforma informará ao usuário sobre como ele pode agir diante daquela situação.
 
-**👉 Use este para configurar e testar rapidamente**
+Como objetivos secundários, o projeto visa:
+* Permitir que órgãos competentes (como CEB, corpo de bombeiros e polícia civil) utilizem os dados visuais dos dashboards para criar estratégias mais eficazes e direcionadas.
+* Alertar a população sobre áreas de risco ou perigos recentes, melhorando o acesso à informação.
 
-### 3. **api-integration.md** - Documentação Técnica Detalhada
-- 🔧 Configuração passo a passo
-- 💻 Uso do cliente HTTP
-- 🗺️ Tabelas de mapeamento completas
-- ⚠️ Tratamento de erros
-- 🚀 Deploy em produção
-- 🐛 Troubleshooting detalhado
+## **Perfis de Usuário**
 
-**👉 Referência técnica completa para desenvolvedores**
+O sistema contará com dois perfis de acesso principais:
+* **Administrador:** Terá acesso para controlar os dashboards e gerenciar os dados do banco, podendo remover informações se necessário.
+* **Usuário:** Poderá visualizar os dados, criar novos relatos no mapa interativo e consultar o dashboard de informações.
 
-### 4. **INTEGRATION_CHECKLIST.md** - Lista de Verificação
-- ✅ Checklist completo de setup
-- 🧪 Testes passo a passo
-- 🐛 Testes de erro
-- 📝 Status de conclusão
+## Diagrama do Produto
 
-**👉 Use para garantir que tudo foi configurado corretamente**
+O diagrama abaixo representa, em alto nível, os atores, o Web Dashboard exposto pelo Next.js, e os principais componentes na Azure: Azure Static Web Apps (Next.js com SSR/SSG/ISR), APIs .NET no App Service (Controllers/Services/Middleware), Cosmos DB, Key Vault e Application Insights.
 
-## 🎯 Qual Documento Usar?
+```mermaid
+flowchart LR
+	%% Atores
+	subgraph Users
+		U["Usuário (Cidadão)"]
+		Admin["Administrador"]
+		Agencies["Órgãos competentes"]
+	end
+
+	%% Azure e Camadas
+	subgraph Azure
+		subgraph SWA["Azure Static Web Apps (web)"]
+			Next["Next.js (SSR/SSG/ISR)"]
+			Dashboard["Web Dashboard (React/Tailwind)"]
+		end
+
+		subgraph ApiApp["App Service (api-core)"]
+			API[".NET API
+             Controllers | Services | Middleware"]
+		end
+
+		Cosmos[("Azure Cosmos DB
+        (No SQL)")]
+		KeyVault[["Azure Key Vault"]]
+		AppInsights[("Application Insights")]
+	end
+
+	%% Fluxos principais
+	U -->|HTTPS| Dashboard
+	Admin -->|HTTPS| Dashboard
+	Agencies -->|HTTPS| Dashboard
+	Next -->|expõe| Dashboard
+	Dashboard -->|Interação| Next
+	Next -->|chamadas de API| API
+
+	%% Regras de negócio e dados
+	API -->|Dados| Cosmos
+	API -->|Segredos| KeyVault
+	API -->|Telemetria/Monitoramento| AppInsights
+	Next -->|Telemetria/Monitoramento| AppInsights
+
+	%% Estilos
+	classDef svc fill:#e8f3ff,stroke:#2b6cb0,stroke-width:1px;
+	classDef data fill:#fff7e6,stroke:#b7791f,stroke-width:1px;
+	classDef sec fill:#f0fff4,stroke:#2f855a,stroke-width:1px;
+	classDef user fill:#f7fafc,stroke:#4a5568,stroke-width:1px;
+
+	class Next,API,Dashboard svc;
+	class Cosmos data;
+	class KeyVault,AppInsights sec;
+	class U,Admin,Agencies user;
+```
+
+Legenda rápida:
+- Frontend: Next.js hospedado em Azure Static Web Apps, renderiza React/Tailwind e realiza chamadas server-side para a API .NET (evitando CORS). Client-side fetch é opcional e requer CORS.
+- .NET API (App Service): controllers finos; regras de negócio em services; middleware de erros padronizados.
+- Cosmos DB: persistência (Core SQL), propriedades camelCase.
+- Key Vault: segredos referenciados via App Settings.
+- Application Insights: telemetria entre serviços.
+
+
+## **Tecnologias Utilizadas**
+
+A equipe de desenvolvimento utilizará as seguintes tecnologias para a construção do produto:
+* **Frontend (Web):** Next.js (App Router, SSR/SSG/ISR), React e Tailwind CSS.
+* **APIs:** C#/.NET 9 (Controllers finos; regras em Services; Middleware central de erros/logs).
+* **Hospedagem:** Azure Static Web Apps (Next.js) e Azure App Service (APIs .NET).
+* **Banco de Dados:** Azure Cosmos DB (Core SQL), com propriedades em camelCase.
+* **Segurança e Segredos:** Azure Key Vault + App Settings.
+* **Observabilidade:** Azure Application Insights.
+* **Metodologia:** Scrum, com sprints semanais.
+* **Ferramentas:** Azure, GitHub Actions, Discord, Google Docs, GitHub, Git, VSCode, entre outras.
+
+## Como começar (dev)
+
+Esta seção descreve rapidamente como configurar e iniciar o repositório localmente para desenvolvimento, seguindo as convenções do projeto.
+
+### Estrutura do repositório
 
 ```
-┌─────────────────────────────────────────────┐
-│  Você quer...                               │
-├─────────────────────────────────────────────┤
-│                                             │
-│  📖 Entender a arquitetura?                 │
-│     → INTEGRATION_SUMMARY.md                │
-│                                             │
-│  ⚡ Testar rapidamente?                     │
-│     → QUICK_START.md                        │
-│                                             │
-│  📚 Referência técnica completa?            │
-│     → api-integration.md                    │
-│                                             │
-│  ✅ Verificar configuração?                 │
-│     → INTEGRATION_CHECKLIST.md              │
-│                                             │
-└─────────────────────────────────────────────┘
+.
+├─ web/   # Next.js (App Router) + Tailwind
+└─ api/   # ASP.NET Core 9 (Cosmos DB / App Insights)
 ```
-
-## 🚀 Início Rápido
 
 ### Pré-requisitos
 
-- ✅ .NET SDK 9.0+
-- ✅ Node.js 18+
-- ✅ Azure Cosmos DB (ou emulador local)
+- Node.js 18+ (recomendado 20+)
+- PNPM/NPM/Yarn (ex.: npm)
+- .NET SDK 9.0+
+- Conta Azure
 
-### Configuração em 3 Passos
+### Configuração (desenvolvimento)
 
-#### 1️⃣ Backend
+1) API (.NET)
 
-```powershell
-cd api
-dotnet restore
-# Configure appsettings.Development.json
-dotnet run
-```
+- No desenvolvimento local, configure via arquivo: edite `api/appsettings.Development.json` (não versionado por padrão pelo `.gitignore`). Preencha os campos mínimos:
 
-#### 2️⃣ Frontend
-
-```powershell
-cd web
-npm install
-copy .env.example .env.local
-# Configure .env.local
-npm run dev
-```
-
-#### 3️⃣ Teste
-
-1. Acesse `http://localhost:3000`
-2. Clique em "Fazer Denúncia"
-3. Preencha o formulário
-4. Envie e verifique o sucesso!
-
-📖 **Detalhes completos**: Veja `QUICK_START.md`
-
-## 📊 Arquitetura da Integração
-
-```
-┌─────────────┐         ┌──────────────┐         ┌─────────────┐
-│   Usuário   │────────▶│  Next.js     │───────▶│   .NET API  │
-│  (Browser)  │         │  (Frontend)  │         │  (Backend)  │
-└─────────────┘         └──────────────┘         └─────────────┘
-                              │                         │
-                              │                         │
-                        ┌─────▼─────┐            ┌──────▼──────┐
-                        │  lib/api/ │            │  Cosmos DB  │
-                        │   types   │            │  (Storage)  │
-                        │  client   │            └─────────────┘
-                        │  mappers  │
-                        └───────────┘
-```
-
-## 🔑 Conceitos-Chave
-
-### Mapeamento de Dados
-
-O formulário usa valores em **português**, mas a API espera valores em **inglês**:
-
-```typescript
-// Formulário (UI)
-"Crime" → "crime"                    // crimeGenre
-"Assalto" → "robbery"                // crimeType
-"18 - 29" → "18-29"                  // ageGroup
-"Homem Cisgênero" → "cisgender-man"  // genderIdentity
-```
-
-📖 **Tabelas completas**: Veja `api-integration.md` ou `form-mappers.ts`
-
-### Validação em Camadas
-
-1. **Frontend**: Formato de data, campos obrigatórios
-2. **API**: Validação de negócio, tamanhos de campo
-3. **Cosmos DB**: Constraints de schema
-
-### Tratamento de Erros
-
-```typescript
-try {
-  await reportsClient.createReport(data);
-} catch (error) {
-  if (error instanceof ApiResponseError) {
-    // Erro da API (400, 500, etc.)
-    console.error(error.statusCode, error.message);
-  } else {
-    // Erro de rede
-    console.error('Falha de conexão');
-  }
+```json
+{
+	"CosmosDB": {
+		"ConnectionString": "<sua-cosmos-connection-string>",
+		"DatabaseId": "ReportsDb",
+		"ContainerId": "Reports"
+	},
+	"ApplicationInsights": {
+		"ConnectionString": "<opcional>"
+	},
+	"Cors": {
+		"AllowedOrigins": [
+			"https://localhost:3000"
+		]
+	}
 }
 ```
 
-## 📁 Estrutura de Arquivos
+- Porta/local por padrão (launchSettings):
+		- HTTP: http://localhost:5206
+		- HTTPS: https://localhost:7040
 
-### Backend (API)
-```
-api/
-├── appsettings.json              # Config de produção
-├── appsettings.Development.json  # Config de dev
-├── Program.cs                    # CORS configurado
-├── Controllers/
-│   └── ReportsController.cs      # Endpoints
-├── Services/
-│   └── ReportService.cs          # Lógica de negócio
-└── Models/
-    └── Report.cs                 # Modelos de dados
-```
+- CORS: ajuste `Cors:AllowedOrigins` no `appsettings.Development.json` para incluir o front (`https://localhost:3000`).
 
-### Frontend (Web)
-```
-web/
-├── .env.local                    # Variáveis de ambiente
-├── lib/
-│   ├── api/
-│   │   ├── types.ts             # Tipos TypeScript
-│   │   ├── reports-client.ts    # Cliente HTTP
-│   │   └── index.ts             # Exportações
-│   └── utils/
-│       ├── date-utils.ts        # Conversão de datas
-│       └── form-mappers.ts      # Mapeamento PT→EN
-└── app/
-    └── components/
-        └── denuncia/
-            └── denuncia.tsx     # Formulário integrado
-```
+2) Web (Next.js)
 
-## 🎨 Padrões Utilizados
+- A base de URL da API é lida de `NEXT_PUBLIC_API_BASE_URL`. O cliente já usa por padrão `http://localhost:5206`.
+- Se precisar customizar, crie `web/.env.local`:
 
-✅ **Nomenclatura**:
-- Código: inglês
-- Comentários: português
-- Variáveis: `camelCase`
-- Classes/Tipos: `PascalCase`
-- Arquivos: `kebab-case`
-
-✅ **Separação de Responsabilidades**:
-- Cliente HTTP separado (`reports-client.ts`)
-- Utilitários isolados (`date-utils.ts`, `form-mappers.ts`)
-- Tipos centralizados (`types.ts`)
-
-✅ **Tratamento de Erros**:
-- Classes de erro customizadas
-- Try-catch em todas as operações assíncronas
-- Mensagens de erro amigáveis ao usuário
-
-## 🧪 Como Testar
-
-### Teste Manual
-
-```powershell
-# Terminal 1: Backend
-cd api
-dotnet run
-
-# Terminal 2: Frontend
+```bash
 cd web
+npm install
+printf "NEXT_PUBLIC_API_BASE_URL=http://localhost:5206\n" > .env.local
+```
+
+### Subindo os serviços
+
+Em dois terminais:
+
+1) API
+```bash
+cd api
+dotnet restore
+dotnet build
+dotnet run
+```
+
+2) Web
+```bash
+cd web
+npm install
+npm run build
+npm run lint
 npm run dev
-
-# Browser: http://localhost:3000
-# Preencha formulário e envie
 ```
 
-### Teste via API Direta
+### Verificação rápida
 
-```powershell
-# Swagger UI
-https://localhost:5001/swagger
+- Front-end: http://localhost:3000
+- Swagger (API):
+	- https://localhost:7040/swagger
+	- ou http://localhost:5206/swagger
 
-# PowerShell
-Invoke-WebRequest -Uri "https://localhost:5001/api/reports" `
-    -Method POST -Headers @{"Content-Type"="application/json"} `
-    -Body $jsonBody -SkipCertificateCheck
-```
+## Documentação e convenções
 
-📖 **Mais exemplos**: Veja `QUICK_START.md`
-
-## 🐛 Problemas Comuns
-
-| Erro | Causa | Solução |
-|------|-------|---------|
-| CORS blocked | API não permite origem | Configure `Cors:AllowedOrigins` |
-| Failed to fetch | API offline | Inicie a API: `dotnet run` |
-| Date invalid | Formato incorreto | Use DD/MM/YYYY |
-| 400 Bad Request | Validação falhou | Preencha todos os campos obrigatórios |
-
-📖 **Troubleshooting completo**: Veja `QUICK_START.md` ou `api-integration.md`
-
-## 🚀 Próximos Passos
-
-### Para Desenvolvedores
-
-1. ✅ Complete o checklist: `INTEGRATION_CHECKLIST.md`
-2. 📖 Leia a documentação técnica: `api-integration.md`
-3. 🧪 Implemente testes automatizados
-4. 🎨 Adicione melhorias de UX
-
-### Para Deploy
-
-1. Configure variáveis de ambiente no Azure
-2. Adicione domínios aos CORS allowed origins
-3. Configure Application Insights
-4. Execute pipeline de CI/CD
-
-📖 **Guia de deploy**: Veja `api-integration.md` seção "Deploy"
-
-## 📞 Suporte
-
-- 📖 Documentação: Esta pasta `docs/`
-- 💬 Discord: Canal do projeto
-- 🐛 Issues: GitHub Issues
-- 📧 Email: Equipe SafeZone
-
-## 🎓 Recursos de Aprendizado
-
-- [Next.js Documentation](https://nextjs.org/docs)
-- [ASP.NET Core Web API](https://learn.microsoft.com/en-us/aspnet/core/web-api/)
-- [Azure Cosmos DB](https://learn.microsoft.com/en-us/azure/cosmos-db/)
-- [Fetch API](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API)
-
-## 📝 Changelog
-
-### v1.0.0 (Janeiro 2025)
-- ✅ Implementação inicial da integração
-- ✅ Cliente HTTP completo
-- ✅ Mapeamento de dados PT→EN
-- ✅ Validação de campos
-- ✅ Tratamento de erros
-- ✅ Documentação completa
-- ✅ CORS configurado
-- ✅ Guias e checklists
-
----
-
-**Última atualização**: Janeiro 2025  
-**Versão**: 1.0.0  
-**Status**: ✅ Completo  
-**Mantenedores**: Equipe SafeZone
+- Documentação geral: veja a pasta `docs/` (ex.: [`docs/README.md`](./docs/README.md))
+- Convenções do projeto (estrutura, branches, padrões): [`docs/conventions.md`](./docs/conventions.md)
+- Guia rápido e integrações: [`docs/QUICK_START.md`](./docs/QUICK_START.md), [`docs/api.md`](./docs/api.md), [`docs/api-integration.md`](./docs/api-integration.md)
