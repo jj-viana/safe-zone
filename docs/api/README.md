@@ -66,7 +66,7 @@ A aplicação pode ser configurada através do arquivo `appsettings.json` ou var
 }
 ```
 
-> **⚠️ Segurança:** Nunca versione credenciais no `appsettings.json`. Use User Secrets localmente e App Settings/Key Vault em produção.
+> **⚠️ Segurança:** Nunca versione credenciais no `appsettings.json`. Use User Secrets localmente e variáveis de ambiente via App Settings (App Service/SWA Configuration) em produção.
 
 ### 2. Configuração do Cosmos DB
 

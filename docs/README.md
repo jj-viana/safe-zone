@@ -24,7 +24,7 @@ O sistema contará com dois perfis de acesso principais:
 
 ## Diagrama do Produto
 
-O diagrama abaixo representa, em alto nível, os atores, o Web Dashboard exposto pelo Next.js, e os principais componentes na Azure: Azure Static Web Apps (Next.js com SSR/SSG/ISR), APIs .NET no App Service (Controllers/Services/Middleware), Cosmos DB, Key Vault e Application Insights.
+O diagrama abaixo representa, em alto nível, os atores, o Web Dashboard exposto pelo Next.js, e os principais componentes na Azure: Azure Static Web Apps (Next.js com SSR/SSG/ISR), APIs .NET no App Service (Controllers/Services/Middleware), Cosmos DB e Application Insights.
 
 ```mermaid
 flowchart LR
@@ -48,8 +48,7 @@ flowchart LR
 		end
 
 		Cosmos[("Azure Cosmos DB
-        (No SQL)")]
-		KeyVault[["Azure Key Vault"]]
+		(No SQL)")]
 		AppInsights[("Application Insights")]
 	end
 
@@ -63,7 +62,6 @@ flowchart LR
 
 	%% Regras de negócio e dados
 	API -->|Dados| Cosmos
-	API -->|Segredos| KeyVault
 	API -->|Telemetria/Monitoramento| AppInsights
 	Next -->|Telemetria/Monitoramento| AppInsights
 
@@ -75,7 +73,7 @@ flowchart LR
 
 	class Next,API,Dashboard svc;
 	class Cosmos data;
-	class KeyVault,AppInsights sec;
+	class AppInsights sec;
 	class U,Admin,Agencies user;
 ```
 
@@ -83,7 +81,7 @@ Legenda rápida:
 - Frontend: Next.js hospedado em Azure Static Web Apps, renderiza React/Tailwind e realiza chamadas server-side para a API .NET (evitando CORS). Client-side fetch é opcional e requer CORS.
 - .NET API (App Service): controllers finos; regras de negócio em services; middleware de erros padronizados.
 - Cosmos DB: persistência (Core SQL), propriedades camelCase.
-- Key Vault: segredos referenciados via App Settings.
+- Segredos: apenas variáveis de ambiente (App Settings / SWA Configuration).
 - Application Insights: telemetria entre serviços.
 
 
@@ -94,7 +92,7 @@ A equipe de desenvolvimento utilizará as seguintes tecnologias para a construç
 * **APIs:** C#/.NET 9 (Controllers finos; regras em Services; Middleware central de erros/logs).
 * **Hospedagem:** Azure Static Web Apps (Next.js) e Azure App Service (APIs .NET).
 * **Banco de Dados:** Azure Cosmos DB (Core SQL), com propriedades em camelCase.
-* **Segurança e Segredos:** Azure Key Vault + App Settings.
+* **Segurança e Segredos:** variáveis de ambiente (App Settings, SWA Configuration).
 * **Observabilidade:** Azure Application Insights.
 * **Metodologia:** Scrum, com sprints semanais.
 * **Ferramentas:** Azure, GitHub Actions, Discord, Google Docs, GitHub, Git, VSCode, entre outras.

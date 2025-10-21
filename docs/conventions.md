@@ -261,7 +261,7 @@ Next.js é responsável por SSR/SSG/ISR, servir estáticos e orquestrar chamadas
 - Variáveis de ambiente: definir em Azure Static Web Apps (Configuration). Privadas: `API_BASE_URL`; públicas: `NEXT_PUBLIC_*`. Evitar `.env` commitado; fornecer `.env.example` sem segredos.
 
 ### Boas Práticas
-- Nunca expor chaves/segredos — usar App Settings/Key Vault.
+- Nunca expor chaves/segredos — usar variáveis de ambiente (App Settings/SWA Configuration/GitHub Secrets).
 - Não criar rotas `app/api/*` para regras de negócio; use somente para adaptações pontuais da UI.
 - Tratar indisponibilidade da API com mensagens amigáveis e status adequados (ex.: 503) na UI.
 
@@ -426,7 +426,6 @@ A aplicação é implantada inteiramente em serviços gerenciados Azure. Infra c
 - Azure App Service para hospedar:
   - APIs .NET (separar em apps distintas conforme domínios)
 - Azure Cosmos DB (Core SQL) para persistência.
-- Azure Key Vault para segredos e chaves.
 - Azure Application Insights para telemetria e Logs para observabilidade.
 
 ### Ambientes
@@ -435,15 +434,14 @@ A aplicação é implantada inteiramente em serviços gerenciados Azure. Infra c
 - Nome de Static Web App: `swa-web-next-<env>` (Next.js).
 - Nome de App Service: `app-api-core-<env>` (.NET).
 - Cosmos DB: `cosmos-app-core-<env>`.
-- Key Vault: `kv-app-core-<env>`.
 
 ### Naming Guidelines (Geral)
 - Seguir padrão: `<context>-<role>-<env>`.
 - Usar somente minúsculas e hifens onde o recurso permitir.
 
 ### Configuração e Segredos
-- Variáveis de aplicação definidas em App Service (Application Settings) com prefixos por domínio (`COSMOS__CONNECTION`, `AUTH__ISSUER`).
-- Segredos sensíveis armazenados no Key Vault e referenciados em App Settings via `@Microsoft.KeyVault(SecretUri=...)`.
+- Variáveis de aplicação definidas em App Service (Application Settings) e Azure Static Web Apps (Configuration) com prefixos por domínio (`COSMOS__CONNECTION`, `AUTH__ISSUER`).
+- Segredos sensíveis mantidos como variáveis de ambiente (App Settings no App Service e Configuration no SWA). Para CI/CD, utilizar GitHub Secrets. Não versionar `.env`.
 
 ### Deploy e CI/CD
 - Pipelines (GitHub Actions):
@@ -461,7 +459,6 @@ A aplicação é implantada inteiramente em serviços gerenciados Azure. Infra c
 ### Segurança
 - HTTPS only e TLS 1.2+.
 - Restrição de acesso a App Service (Access Restrictions) para endpoints de administração.
-- Key Vault Firewall habilitado (permitindo somente redes necessárias + serviços confiáveis).
 
 ### Anti-padrões a Evitar
 - Segredos commitados em repositório.
@@ -494,8 +491,7 @@ A aplicação é implantada inteiramente em serviços gerenciados Azure. Infra c
 
 ## Segurança e Configurações
 ### Gerenciamento de Segredos
-- Segredos armazenados no Azure Key Vault (connection strings, tokens externos). Nenhum segredo versionado.
-- App Settings referenciam segredos via sintaxe: `@Microsoft.KeyVault(SecretUri=...)`.
+- Segredos armazenados exclusivamente como variáveis de ambiente (App Settings no App Service e Configuration no SWA) e, no CI/CD, via GitHub Secrets. Nenhum segredo versionado no repositório.
 
 ### Variáveis e Configuração
 - `.env` local apenas para desenvolvimento isolado (não commitado); fornecer `.env.example` mínimo sem valores sensíveis.
@@ -543,5 +539,5 @@ A aplicação é implantada inteiramente em serviços gerenciados Azure. Infra c
 - [ ] Testes passaram e cobertura ok
 - [ ] Migrations/Seeds (se aplicável) revisados
 - [ ] Configurações de App Service / Slots revisadas
-- [ ] Segredos referenciados via Key Vault
+- [ ] Segredos configurados via App Settings/SWA Configuration/GitHub Secrets
 - [ ] Documentação ajustada
