@@ -1,0 +1,148 @@
+name: Release Deploy
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Deploy to Azure and Create Release
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+    env:
+      DOTNET_NOLOGO: true
+      DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+      DOTNET_CLI_TELEMETRY_OPTOUT: true
+      RESOURCE_GROUP: ${{ secrets.AZURE_RESOURCE_GROUP }}
+      WEBAPP_NAME: ${{ secrets.AZURE_WEBAPP_NAME }}
+      STATIC_WEB_APP_TOKEN: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
+      STATIC_WEB_APP_LOCATION: web
+      STATIC_WEB_APP_CONFIG: web
+      API_HEALTHCHECK_URL: ${{ secrets.AZURE_API_HEALTHCHECK_URL }}
+      WEB_HEALTHCHECK_URL: ${{ secrets.AZURE_STATIC_WEB_APP_HEALTHCHECK_URL }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: web/package-lock.json
+
+      - name: Install web dependencies
+        working-directory: web
+        run: npm ci
+
+      - name: Inject web environment variables
+        working-directory: web
+        run: echo "NEXT_PUBLIC_API_BASE_URL=${{ secrets.NEXT_PUBLIC_API_BASE_URL }}" >> $GITHUB_ENV
+
+      - name: Build web application
+        working-directory: web
+        run: npm run build
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Restore API dependencies
+        run: dotnet restore api/api.sln
+
+      - name: Publish API
+        run: dotnet publish api/api.csproj --configuration Release --no-restore --output publish/api
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Deploy Azure Static Web App
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ env.STATIC_WEB_APP_TOKEN }}
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          action: upload
+          production_branch: main
+          app_location: ${{ env.STATIC_WEB_APP_LOCATION }}
+          api_location: ""
+          output_location: .next
+          config_file_location: ${{ env.STATIC_WEB_APP_CONFIG }}
+          skip_app_build: true
+          skip_api_build: true
+          app_artifact_location: web/.next
+
+      - name: Deploy API to App Service
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ env.WEBAPP_NAME }}
+          resource-group-name: ${{ env.RESOURCE_GROUP }}
+          package: publish/api
+
+      - name: Define health_check function
+        run: |
+          cat <<'EOF' > health_check.sh
+          #!/bin/bash
+          health_check() {
+            local url="$1"
+            for attempt in {1..5}; do
+              if curl --fail --silent --show-error "$url"; then
+                return 0
+              fi
+              sleep 10
+            done
+            return 1
+          }
+          EOF
+          chmod +x health_check.sh
+
+      - name: Verify API health
+        if: env.API_HEALTHCHECK_URL != ''
+        run: |
+          source ./health_check.sh
+          health_check "$API_HEALTHCHECK_URL"
+
+      - name: Verify Web health
+        if: env.WEB_HEALTHCHECK_URL != ''
+        run: |
+          source ./health_check.sh
+          health_check "$WEB_HEALTHCHECK_URL"
+
+      - name: Determine next release tag
+        id: release_tag
+        shell: bash
+        run: |
+          git fetch --tags
+          latest=$(git tag -l 'v[0-9]*.[0-9]*.[0-9]*' --sort=-version:refname | head -n 1)
+          if [ -z "$latest" ]; then
+            next="v0.1.0"
+          else
+            version=${latest#v}
+            IFS='.' read -r major minor patch <<<"$version"
+            major=${major:-0}
+            minor=${minor:-0}
+            patch=${patch:-0}
+            patch=$((patch + 1))
+            next="v${major}.${minor}.${patch}"
+          fi
+          echo "tag=$next" >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.release_tag.outputs.tag }}
+          name: Release ${{ steps.release_tag.outputs.tag }}
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

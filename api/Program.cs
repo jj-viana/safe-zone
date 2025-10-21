@@ -52,6 +52,22 @@ builder.Services.AddScoped<IReportService, ReportService>();
 builder.Services.AddControllers();
 builder.Services.AddHealthChecks();
 builder.Services.AddEndpointsApiExplorer();
+
+// Configuração de CORS para permitir APENAS chamadas do frontend
+builder.Services.AddCors(options =>
+{
+	options.AddPolicy("AllowFrontend", policy =>
+	{
+		var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
+			?? new[] { "http://localhost:3000" };
+
+		policy.WithOrigins(allowedOrigins)
+			.AllowAnyMethod()
+			.AllowAnyHeader()
+			.WithExposedHeaders("Location");
+	});
+});
+
 builder.Services.AddSwaggerGen(options =>
 {
 	options.SwaggerDoc("v1", new OpenApiInfo
@@ -65,6 +81,7 @@ builder.Services.AddSwaggerGen(options =>
 var app = builder.Build();
 
 app.UseHttpsRedirection();
+app.UseCors("AllowFrontend");
 
 if (app.Environment.IsDevelopment())
 {
