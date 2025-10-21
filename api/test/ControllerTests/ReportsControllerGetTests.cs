@@ -139,14 +139,14 @@ public class ReportsControllerGetTests
     //Valores para serem testados em GetCrimeByTypeAsync_WhenServiceReturnsOk_CheckIfCorrect
     public static IEnumerable<object[]> GetReportResponseData()
     {
-        // Cenário 1: Dois reports de Burglery
+        // Cenário 1: Dois reports de Burglary
         yield return new object[]
         {
-            "Burglery",
+            "Burglary",
             new List<ReportResponse>
             {
-                new ReportResponse("114234", "Crime", "Burglery", "Home invasion", "Kansas", DateTime.UtcNow, null, DateTime.UtcNow, true),
-                new ReportResponse("52355", "Crime", "Burglery", "School theft", "Acre", DateTime.UtcNow.AddDays(-1), null, DateTime.UtcNow, true)
+                new ReportResponse("114234", "Crime", "Burglary", "Home invasion", "Kansas", DateTime.UtcNow, null, DateTime.UtcNow, true),
+                new ReportResponse("52355", "Crime", "Burglary", "School theft", "Acre", DateTime.UtcNow.AddDays(-1), null, DateTime.UtcNow, true)
             }
         };
 
@@ -201,7 +201,7 @@ public class ReportsControllerGetTests
         }
     }
 
-
+    [Fact]
     public async Task GetByCrimeGenreAsync_WhenServiceReturnsValidReport_ReturnsOk()
     {
         string testGenre = "Hate Crime";
