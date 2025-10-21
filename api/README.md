@@ -1,121 +1,152 @@
-# Incident Reports API
+# API - Safe Zone
 
-API ASP.NET Core que expõe operações de CRUD para incident reports armazenados em uma conta Azure Cosmos DB (modo NoSQL). O projeto utiliza o `Microsoft.Azure.Cosmos` SDK v3 com as melhores práticas descritas na [documentação oficial](https://learn.microsoft.com/en-us/azure/cosmos-db/partial-document-update) para atualizações parciais.
+API REST desenvolvida em ASP.NET Core 9.0 para gerenciamento de denúncias de incidentes. A aplicação fornece endpoints para operações de CRUD, integra-se com Azure Cosmos DB (API NoSQL) para persistência de dados e utiliza Application Insights para observabilidade.
+
+## Visão Geral
+
+Este projeto segue os princípios de Clean Architecture, separando responsabilidades em camadas distintas:
+
+- **Controllers**: Coordenação de requisições HTTP e mapeamento de respostas
+- **Services**: Lógica de negócio e orquestração de operações
+- **Models**: DTOs e entidades de domínio
+- **Interfaces**: Abstrações e contratos de serviços
+- **Configuration**: Configuração de injeção de dependências e opções
+
+A API utiliza o SDK `Microsoft.Azure.Cosmos` v3 com boas práticas de performance e consistência, incluindo suporte a operações de patch para atualizações parciais eficientes.
+
+## Tecnologias
+
+- **.NET 9.0**: Framework principal
+- **ASP.NET Core**: Web API
+- **Azure Cosmos DB**: Banco de dados NoSQL (API SQL)
+- **Application Insights**: Telemetria e monitoramento
+- **Swagger/OpenAPI**: Documentação de API
 
 ## Pré-requisitos
 
-- .NET SDK 9.0 ou superior instalado.
-- Conta Azure Cosmos DB (API for NoSQL) com um banco de dados e contêiner configurados.
-- Para uso com identidade gerenciada, garanta que a identidade tenha permissões de *Cosmos DB Built-in Data Contributor* ou superior.
+Antes de executar a aplicação, certifique-se de ter:
+
+- [.NET SDK 9.0](https://dotnet.microsoft.com/download/dotnet/9.0) ou superior instalado
+- Conta Azure ativa com:
+  - Azure Cosmos DB (API for NoSQL) provisionado
+  - Application Insights (opcional, para telemetria)
+- Editor de código (recomendado: Visual Studio Code com extensão C# Dev Kit)
 
 ## Configuração
 
-As definições ficam na seção `CosmosDB` dos arquivos `appsettings.json` ou variáveis de ambiente:
+### 1. Variáveis de Ambiente
+
+A aplicação pode ser configurada através do arquivo `appsettings.json` ou variáveis de ambiente. Para desenvolvimento local, utilize **User Secrets** para armazenar credenciais sensíveis.
+
+#### Estrutura do `appsettings.json`
 
 ```json
-"CosmosDB": {
-  "ConnectionString": "AccountEndpoint=https://your-account.documents.azure.com:443/;AccountKey=YOUR_ACCOUNT_KEY;",
-  "DatabaseId": "IncidentReportsDb",
-  "ContainerId": "incidentReports",
-  "EnableContentResponseOnWrite": false
-}
-```
-
-> **Segurança:** Não versionar a `AccountKey`. Utilize `dotnet user-secrets` ou variáveis de ambiente (`COSMOS__ACCOUNTKEY`) durante o desenvolvimento local.
-
-O contêiner é criado automaticamente se não existir, com chave de partição `/id`.
-Os campos `id` e `createdDate` são atribuídos automaticamente pela API; os demais campos devem ser informados na requisição de criação. O bloco `reporterDetails` é opcional e todos os seus atributos também são opcionais.
-
-### Application Insights
-
-Para habilitar telemetria, defina a connection string do Application Insights via configuração:
-
-```json
-"ApplicationInsights": {
-  "ConnectionString": "InstrumentationKey=xxxx;IngestionEndpoint=https://..."
-}
-```
-
-Em ambientes Azure App Service, utilize a variável `APPLICATIONINSIGHTS_CONNECTION_STRING` ou um segredo no Key Vault referenciado via App Settings.
-
-#### Métricas de RUs (Cosmos DB)
-
-A API publica a métrica personalizada `cosmos.request.units` no Application Insights para cada operação executada no Cosmos DB. As dimensões incluem:
-
-- `operation`: nome lógico da operação (ex.: `ReportCreate`, `ReportQueryByGenreTotal`).
-- `databaseId` / `containerId`: alvo no Cosmos DB.
-- `statusCode`: resposta HTTP retornada pelo Cosmos (quando disponível).
-- Filtros específicos (`crimeGenre`, `crimeType`, `pages`, etc.), quando aplicável.
-
-Use o recurso **Metrics** do Application Insights para monitorar o consumo de RUs por operação e criar alertas conforme necessário.
-
-## Executando o projeto
-
-```bash
-cd teste
-dotnet restore
-dotnet run
-```
-
-A aplicação iniciará em `https://localhost:5001` (ou porta configurada). A UI do Swagger estará disponível em `https://localhost:5001/swagger`.
-
-## Endpoints principais
-
-| Método | Rota | Descrição |
-|--------|------|-----------|
-| `POST` | `/api/reports` | Cria um report. |
-| `GET` | `/api/reports` | Lista todos os reports. |
-| `GET` | `/api/reports/{id}` | Obtém um report por ID. |
-| `GET` | `/api/reports/crime-genre/{crimeGenre}` | Lista reports filtrando pelo gênero do crime. |
-| `PATCH` | `/api/reports/{id}` | Atualiza parcialmente um report. |
-| `DELETE` | `/api/reports/{id}` | Remove um report. |
-
-### Exemplo de criação
-
-```bash
-curl -X POST https://localhost:5001/api/reports \
-  -H "Content-Type: application/json" \
-  -d '{
-    "crimeGenre": "theft",
-    "crimeType": "burglary",
-    "description": "Bike stolen from the garage",
-    "location": "SHIGS 713",
-    "crimeDate": "2025-10-09T18:25:43Z",
-    "reporterDetails": {
-      "ageGroup": "18-30",
-      "ethnicity": "mixed",
-      "genderIdentity": "male",
-      "sexualOrientation": "heterosexual"
-    },
-    "resolved": false
-  }'
-```
-
-### Exemplo de atualização parcial
-
-```bash
-curl -X PATCH https://localhost:5001/api/reports/{id} \
-  -H "Content-Type: application/json" \
-  -d '{
-    "resolved": true,
-    "reporterDetails": {
-      "ageGroup": "30-45",
-      "ethnicity": "mixed",
-      "genderIdentity": "male",
-      "sexualOrientation": "heterosexual"
+{
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft.AspNetCore": "Warning"
     }
-  }'
+  },
+  "AllowedHosts": "*",
+  "CosmosDB": {
+    "ConnectionString": "<sua-connection-string>",
+    "DatabaseId": "ReportsDb",
+    "ContainerId": "Reports"
+  },
+  "ApplicationInsights": {
+    "ConnectionString": "<sua-connection-string>"
+  },
+  "Cors": {
+    "AllowedOrigins": [
+      "https://localhost:3000",
+      "https://seu-dominio-frontend.com"
+    ]
+  }
+}
 ```
 
-## Testes rápidos
+> **⚠️ Segurança:** Nunca versione credenciais no `appsettings.json`. Use User Secrets localmente e App Settings/Key Vault em produção.
 
-Para validar a compilação execute:
+### 2. Configuração do Cosmos DB
+
+A aplicação cria automaticamente o banco de dados e contêiner se não existirem. A configuração padrão utiliza:
+
+- **Partition Key**: `/id`
+- **Naming Policy**: camelCase
+- **Connection Mode**: Gateway (recomendado para desenvolvimento)
+
+Para ambientes de produção, considere:
+- Ajustar o throughput (RU/s) conforme demanda
+- Habilitar modo Direct para melhor performance
+- Configurar políticas de indexação otimizadas
+
+### 3. Configuração do CORS
+
+Por padrão, a API aceita requisições do front-end local (`https://localhost:3000`). Para adicionar outros domínios, atualize a seção `Cors:AllowedOrigins` no `appsettings.json` ou via variáveis de ambiente.
+
+## Executando a Aplicação
+
+### Desenvolvimento Local
+
+1. **Clone o repositório** (se ainda não o fez):
+   ```bash
+   git clone <url-do-repositorio>
+   cd safe-zone/api
+   ```
+
+2. **Restaure as dependências**:
+   ```bash
+   dotnet restore
+   ```
+
+3. **Configure os appsettings** (veja seção de Configuração acima)
+
+4. **Execute a aplicação**:
+   ```bash
+   dotnet run
+   ```
+
+5. **Acesse a documentação Swagger**:
+   - URL: `https://localhost:5001/swagger`
+   - Use a interface interativa para testar os endpoints
+
+### Executando os Testes
+
+Para executar os testes unitários e de integração:
 
 ```bash
-dotnet build
+dotnet test
 ```
 
-## Referências
+## Estrutura do Projeto
 
-- [Azure Cosmos DB .NET SDK - melhores práticas](https://learn.microsoft.com/en-us/azure/cosmos-db/nosql/best-practice-dotnet)
-- [Atualização parcial de documentos (Patch API)](https://learn.microsoft.com/en-us/azure/cosmos-db/partial-document-update)
+```
+api/
+├── Controllers/        # Endpoints HTTP
+├── Services/          # Lógica de negócio
+├── Models/            # DTOs e modelos
+├── Interfaces/        # Contratos e abstrações
+├── Configuration/     # Classes de configuração
+├── Properties/        # Configurações de launch
+├── test/             # Testes (unit/integration)
+├── Program.cs        # Ponto de entrada
+└── appsettings.json  # Configurações (sem secrets)
+```
+
+## Observabilidade
+
+A API integra-se com Azure Application Insights para monitoramento e telemetria:
+
+### Métricas Customizadas
+
+- **cosmos.request.units**: Consumo de RUs por operação no Cosmos DB
+  - Dimensões: `operation`, `databaseId`, `containerId`, `statusCode`
+
+### Logs Estruturados
+
+Todos os serviços utilizam `ILogger<T>` para logging contextual. Logs são enviados automaticamente para Application Insights quando configurado.
+
+### Correlation ID
+
+Requisições podem incluir o header `x-correlation-id` para rastreamento distribuído. Se ausente, um ID será gerado automaticamente.
