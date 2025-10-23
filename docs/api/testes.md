@@ -190,6 +190,30 @@ Nesta seção, detalhamos os testes automatizados implementados para as funçõe
 ---
 
 ### 4. Funções Update
+**Endpoint:** `PATCH /api/reports/{id}`
+
+**Objetivo:** Garantir que o endpoint de atualização (`UpdateAsync`) valide entrada, trate exceções e traduza corretamente os resultados do *service* em respostas HTTP apropriadas.
+
+**Cenários testados (baseado em `api/test/ControllerTests/ReportsControllerUpdateTests.cs`):**
+
+| Cenário | Comportamento esperado | Código HTTP | Teste (nome) |
+| :--- | :--- | :---: | :--- |
+| Modelo inválido (ModelState) | Retorna payload de validação (ValidationProblemDetails). | 400 Bad Request | UpdateAsync_WhenModelStateInvalid_ReturnsValidationProblem |
+| `ArgumentException` lançado pelo service | Converte para BadRequest com detalhe do erro. | 400 Bad Request | UpdateAsync_WhenServiceThrowsArgumentException_ReturnsBadRequest |
+| `InvalidOperationException` lançado pelo service | Converte para BadRequest com detalhe do erro. | 400 Bad Request | UpdateAsync_WhenServiceThrowsInvalidOperationException_ReturnsBadRequest |
+| Exceção genérica lançada pelo service | Converte para Problem (500) sinalizando erro inesperado. | 500 Internal Server Error | UpdateAsync_WhenServiceThrowsException_ReturnsProblem |
+| Atualização não encontrada (service retorna `null`) | Retorna NotFound quando o relatório a atualizar não existe. | 404 Not Found | UpdateAsync_WhenUpdateNotFound_ReturnsNotFound |
+| Atualização bem-sucedida (service retorna `ReportResponse`) | Retorna 200 OK com o `ReportResponse` no body.
+ | 200 OK | UpdateAsync_WhenUpdateSucceeds_ReturnsOk |
+
+Observações técnicas:
+- O controller valida `ModelState` antes de chamar o service e usa `ValidationProblem(ModelState)` para reportar erros de validação.
+- Exceções específicas de validação/negócio (ex.: `ArgumentException`, `InvalidOperationException`) são tratadas como `BadRequest` com payload de erro; exceções não tratadas são convertidas para `Problem` com status 500.
+- Os testes unitários usam *mocks* (Moq) para simular o comportamento do `IReportService` e assertam os tipos de `IActionResult` retornados.
+
+Referência de testes:
+- Arquivo: `api/test/ControllerTests/ReportsControllerUpdateTests.cs`
+- Framework: xUnit + Moq
 
 
 
