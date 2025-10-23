@@ -1,4 +1,5 @@
 import Navbar from "../components/navbar/navbar";
+import GraficodeBarras from "../components/graficoBarras/graficoBarras"
 import { Merriweather } from "next/font/google";
 
 const merriweather = Merriweather({
@@ -20,7 +21,7 @@ export default function DashboardPage() {
             <div className="w-8 h-[3px] bg-cyan-500 mb-5"></div>
           </div>
         </section>
-
+        <GraficodeBarras></GraficodeBarras>
       </main>
     </>
   );
