@@ -133,14 +133,68 @@ O workflow de Deploy (Implantação Contínua – CD) move o código validado de
 
 ## Controller
 
+Nesta seção, detalhamos os testes automatizados implementados para as funções **Create**, **Delete**, **Get** e **Update** do `ReportsController`, com foco no comportamento esperado em diferentes respostas da camada de *Service*.
+
+---
+
 ### 1. Funções Create
+
+
+
+---
 
 ### 2. Funções Delete
 
+**Endpoint:** `DELETE /api/reports/{id}`
+
+**Objetivo:** Validar se o *endpoint* de exclusão se comunica corretamente com a camada de *Service*, retornando o código HTTP apropriado conforme o resultado da operação.
+
+**Cenários Testados (Baseado em `ReportsControllerDeleteTests`):**
+
+| Cenário | Comportamento Esperado | Código HTTP |
+| :--- | :--- | :--- |
+| **Exclusão com Sucesso** | O *Service* confirma a exclusão (retorna `true`). | **204 No Content** |
+| **Recurso Não Encontrado** | O *Service* informa que o ID não existe para exclusão (retorna `false`). | **404 Not Found** |
+| **Erro Inesperado do Service** | O *Service* lança uma exceção inesperada durante o processo. | **500 Internal Server Error** |
+
+---
+
 ### 3. Funções Get
 
+**Endpoints:**  
+`GET /api/reports`  
+`GET /api/reports/{id}`  
+`GET /api/reports/crime-genre/{crimeGenre}`  
+`GET /api/reports/crime-type/{crimeType}`
+
+**Objetivo:** Garantir que a API recupere corretamente os dados sob diferentes critérios de busca (ID, gênero do crime, tipo do crime ou todos), e que trate adequadamente os casos de ausência de resultados e falhas internas.
+
+**Cenários Testados (Baseado em `ReportsControllerGetTests`):**
+
+#### Get por ID (`GET /api/reports/{id}`):
+
+| Cenário | Comportamento Esperado | Código HTTP |
+| :--- | :--- | :--- |
+| **Busca com Sucesso** | O *Service* retorna um objeto válido (`ReportResponse`). | **200 OK** |
+| **Recurso Não Encontrado** | O *Service* retorna `null` (ausência do recurso). | **404 Not Found** |
+| **Erro no Service** | O *Service* lança uma exceção durante a busca. | **500 Internal Server Error** |
+
+#### Get por Gênero, Tipo e Todos (`/api/reports/crime-genre/{crimeGenre}`, `/api/reports/crime-type/{crimeType}`, `/api/reports`):
+
+| Cenário | Comportamento Esperado | Código HTTP |
+| :--- | :--- | :--- |
+| **Busca com Resultados** | O *Service* retorna uma lista de relatórios (1 ou mais itens). | **200 OK** com a lista preenchida |
+| **Lista Vazia (Nenhum Resultado)** | O *Service* retorna uma lista vazia (`new List<ReportResponse>()`). | **200 OK** com um *array* JSON vazio |
+| **Erro no Service (Geral)** | O *Service* lança uma exceção durante o processamento da busca. | **500 Internal Server Error** |
+
+---
+
 ### 4. Funções Update
+
+
 
 ---
 
 ## Service
+
+
