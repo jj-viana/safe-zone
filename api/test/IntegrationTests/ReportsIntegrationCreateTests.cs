@@ -8,6 +8,9 @@ using Xunit;
 using System;
 using Microsoft.AspNetCore.Mvc;
 using System.IO;
+using System.Text;
+using System.Linq;
+using System.Threading;
 
 namespace ReportsApi.Tests.IntegrationTests;
 
@@ -67,6 +70,47 @@ public class ReportsApiIntegrationTests : IClassFixture<CustomWebApplicationFact
             await _client.DeleteAsync($"/api/reports/{createdReport.Id}");
         }
     }
+    [Fact]
+    public async Task CreateReport_WithWrongTypeInPayload_ReturnsBadRequest()
+    {
+        // Arrange: enviar JSON onde alguns campos têm tipos incorretos
+        var invalidJson = @"{
+            ""CrimeGenre"": 123,                // número em vez de string
+            ""CrimeType"": ""Burglary"",
+            ""Description"": ""Stolen laptop"",
+            ""Location"": ""My house"",
+            ""CrimeDate"": ""not-a-date"",      // string inválida para DateTime
+            ""Resolved"": ""notabool""          // string em vez de boolean
+        }";
+
+        var content = new StringContent(invalidJson, Encoding.UTF8, "application/json");
+
+        // Act
+        var response = await _client.PostAsync("/api/reports", content, CancellationToken.None);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+
+        /*
+        Lê como string e não como objeto ValidationProblemDetails pq como múltiplos campos falham
+        não conseguimos prever o comportamento exato para poder dar map nessa classe 
+        (alguns campos aparecem com $ ou sem mensgem quando deveriam ter) 
+        */
+        var responseBody = await response.Content.ReadAsStringAsync();
+        Assert.False(string.IsNullOrWhiteSpace(responseBody), "Expected error response body");
+        
+        /* 
+        Verificar que o corpo da resposta contém indicações de erro
+        (mais flexível que verificar estrutura específica do ValidationProblemDetails)
+        o importante é que o erro seja o correto(badrequest) os detalhes da resposta
+        não importam muito para o teste
+        */       
+         Assert.True(
+            responseBody.Contains("error", StringComparison.OrdinalIgnoreCase) ||
+            responseBody.Contains("invalid", StringComparison.OrdinalIgnoreCase) ||
+            responseBody.Contains("type", StringComparison.OrdinalIgnoreCase),
+            $"Expected error message in response body. Received: {responseBody}");
+    }
 
     [Fact]
     public async Task CreateReport_WithInvalidPayload_ReturnsBadRequest()
@@ -104,8 +148,8 @@ public class ReportsApiIntegrationTests : IClassFixture<CustomWebApplicationFact
 
 
     }
-    
-    
+
+
 
 }
 
