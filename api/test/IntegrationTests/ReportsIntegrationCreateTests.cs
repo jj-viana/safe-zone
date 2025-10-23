@@ -6,6 +6,8 @@ using Microsoft.AspNetCore.Hosting;
 using ReportsApi.Models;
 using Xunit;
 using System;
+using Microsoft.AspNetCore.Mvc;
+using System.IO;
 
 namespace ReportsApi.Tests.IntegrationTests;
 
@@ -39,7 +41,7 @@ public class ReportsApiIntegrationTests : IClassFixture<CustomWebApplicationFact
         // Arrange
         var request = new CreateReportRequest
         {
-            CrimeGenre = "novo método?",
+            CrimeGenre = "Crime",
             CrimeType = "Burglary",
             Description = "Stolen laptop",
             Location = "My house",
@@ -65,6 +67,46 @@ public class ReportsApiIntegrationTests : IClassFixture<CustomWebApplicationFact
             await _client.DeleteAsync($"/api/reports/{createdReport.Id}");
         }
     }
+
+    [Fact]
+    public async Task CreateReport_WithInvalidPayload_ReturnsBadRequest()
+    {
+        //Arrange
+        var request = new CreateReportRequest
+        {
+            CrimeGenre = "", // crimeGenre é um campo obrigatório
+            CrimeType = "Burglary",
+            Description = "Stolen laptop",
+            Location = "My house",
+            CrimeDate = DateTime.UtcNow,
+            Resolved = false
+        };
+
+        //Act
+        var response = await _client.PostAsJsonAsync("/api/reports", request, CancellationToken.None);
+
+        //Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+
+        var problem = await response.Content.ReadFromJsonAsync<ValidationProblemDetails>();
+        Assert.NotNull(problem);
+
+        /*
+        Garantir pelo menos uma mensagem não vazia de erro relacionado a CrimeGenre
+        IA tava sugerindo fazer apenas checagem se a chave CrimeGenre existe, mas é melhor
+        verificar se há mensagem de erro porque a chave pode existir e o valor ser nulo 
+        */
+        var messages = problem.Errors
+            .Where(kv => string.Equals(kv.Key, "CrimeGenre", StringComparison.OrdinalIgnoreCase))
+            .SelectMany(kv => kv.Value);
+
+        Assert.True(messages.Any(m => !string.IsNullOrWhiteSpace(m)), "Expected at least one validation message for 'CrimeGenre'.");
+
+
+    }
+    
+    
+
 }
 
 
