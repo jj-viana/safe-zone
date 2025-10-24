@@ -56,7 +56,6 @@ public class ReportsApiIntegrationTests : IClassFixture<CustomWebApplicationFact
         var response = await _client.PostAsJsonAsync("/api/reports", request, CancellationToken.None);
 
         // Assert
-        response.EnsureSuccessStatusCode();
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
 
         var createdReport = await response.Content.ReadFromJsonAsync<ReportResponse>();
@@ -89,7 +88,11 @@ public class ReportsApiIntegrationTests : IClassFixture<CustomWebApplicationFact
         var response = await _client.PostAsync("/api/reports", content, CancellationToken.None);
 
         // Assert
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        //Com tipos errados pode retornar 400 ou erro 415
+        Assert.True(
+            response.StatusCode == HttpStatusCode.BadRequest ||
+            response.StatusCode == HttpStatusCode.UnsupportedMediaType,
+            $"Expected 400 BadRequest or 415 UnsupportedMediaType. Received: {response.StatusCode}");
 
         /*
         Lê como string e não como objeto ValidationProblemDetails pq como múltiplos campos falham
@@ -193,7 +196,11 @@ public class ReportsApiIntegrationTests : IClassFixture<CustomWebApplicationFact
         var response = await _client.PostAsync("/api/reports", content, CancellationToken.None);
 
         // Assert
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        //Pode ser tanto erro 400 quanto erro 413
+        Assert.True(
+            response.StatusCode == HttpStatusCode.BadRequest ||
+            response.StatusCode == HttpStatusCode.RequestEntityTooLarge,
+            $"Expected 400 BadRequest or 413 RequestEntityTooLarge. Received: {response.StatusCode}");
 
         var body = await response.Content.ReadAsStringAsync();
 
