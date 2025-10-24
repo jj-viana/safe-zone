@@ -41,11 +41,27 @@ public class ReportsControllerCreateTests
         var result = await _controller.CreateAsync(request, CancellationToken.None);
 
         var problemResult = Assert.IsType<ObjectResult>(result);
-        
+
         Assert.Null(problemResult.StatusCode);
 
         Assert.IsType<ValidationProblemDetails>(problemResult.Value);
-        
+
+    }
+
+    [Fact]
+    
+    public async Task CreateAsync_WhenServiceThrowsArgumentException_ReturnsBadRequest()
+    {
+        var request = CreateSampleReport();
+
+        _serviceMock
+            .Setup(s => s.CreateAsync(request, It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new ArgumentException("Invalid payload"));
+
+        var result = await _controller.CreateAsync(request, CancellationToken.None);
+
+        var badRequest = Assert.IsType<BadRequestObjectResult>(result);
+        Assert.Equal(StatusCodes.Status400BadRequest, badRequest.StatusCode);
     }
     
 }
