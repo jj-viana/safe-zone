@@ -24,42 +24,69 @@ namespace ReportsApi.Tests.IntegrationTests
             Resolved = true
         };
 
-        [Fact]
-        public async Task UpdateReport_WithValidPayload_ReturnsOk()
+        // o create a report 
+        private async Task<ReportResponse> CreateReportAndGetIdAsync(CreateReportRequest createRequest)
         {
-            // Arrange
-            var createRequest = new CreateReportRequest
-            {
-                CrimeGenre = "Hate Crime",
-                CrimeType = "Assault",
-                Description = "Initial description",
-                Location = "Central Park",
-                CrimeDate = DateTime.UtcNow,
-                Resolved = false
-            };
-
-            // create the report 
             var createResponse = await _client.PostAsJsonAsync("/api/reports", createRequest);
             createResponse.EnsureSuccessStatusCode();
             var createdReport = await createResponse.Content.ReadFromJsonAsync<ReportResponse>();
             Assert.NotNull(createdReport);
+            return createdReport;
+        }
 
-            // prepare the update
-            var updateRequest = new UpdateReportRequest
+        // tries to delete the created record after the test execution
+        private async Task CleanupReportAsync(string? reportId)
+        {
+           
+            if (!string.IsNullOrEmpty(reportId))
             {
-                Description = "Updated description",
-                Resolved = true
-            };
+                await _client.DeleteAsync($"/api/reports/{reportId}");
+            }
+        }
 
-            // Act
-            var updateResponse = await _client.PatchAsJsonAsync($"/api/Reports/{createdReport.Id}", updateRequest);
+        [Fact]
+        public async Task UpdateReport_WithValidPayload_ReturnsOk()
+        {
+            string? reportId = null; 
+            try
+            {
+                // Arrange
+                var createRequest = new CreateReportRequest
+                {
+                    CrimeGenre = "Hate Crime",
+                    CrimeType = "Assault",
+                    Description = "Initial description",
+                    Location = "Central Park",
+                    CrimeDate = DateTime.UtcNow,
+                    Resolved = false
+                };
 
-            // Assert
-            Assert.Equal(HttpStatusCode.OK, updateResponse.StatusCode);
-            var updatedReport = await updateResponse.Content.ReadFromJsonAsync<ReportResponse>();
-            Assert.NotNull(updatedReport);
-            Assert.Equal(updateRequest.Description, updatedReport.Description);
-            Assert.Equal(updateRequest.Resolved, updatedReport.Resolved);
+                // create the report 
+                var createdReport = await CreateReportAndGetIdAsync(createRequest);
+                reportId = createdReport.Id; // Capture Id for cleanup
+
+                // prepare the update
+                var updateRequest = new UpdateReportRequest
+                {
+                    Description = "Updated description",
+                    Resolved = true
+                };
+
+                // Act
+                var updateResponse = await _client.PatchAsJsonAsync($"/api/Reports/{reportId}", updateRequest);
+
+                // Assert
+                Assert.Equal(HttpStatusCode.OK, updateResponse.StatusCode);
+                var updatedReport = await updateResponse.Content.ReadFromJsonAsync<ReportResponse>();
+                Assert.NotNull(updatedReport);
+                Assert.Equal(updateRequest.Description, updatedReport.Description);
+                Assert.Equal(updateRequest.Resolved, updatedReport.Resolved);
+            }
+            finally
+            {
+                
+                await CleanupReportAsync(reportId);
+            }
         }
 
         [Fact]
@@ -67,11 +94,7 @@ namespace ReportsApi.Tests.IntegrationTests
         {
             // Arrange
             var nonExistentId = "non-existent-id";
-            var updateRequest = new UpdateReportRequest
-            {
-                Description = "Updated description",
-                Resolved = true
-            };
+            var updateRequest = CreateSampleUpdateRequest();
 
             // Act
             var response = await _client.PatchAsJsonAsync($"/api/Reports/{nonExistentId}", updateRequest);
@@ -88,7 +111,7 @@ namespace ReportsApi.Tests.IntegrationTests
             var invalidContent = new
             {
                 description = 123, // number instead of string
-                resolved = "true" //  string instead of bool
+                resolved = "true" //  string instead of bool
             };
 
             // Act
@@ -98,84 +121,132 @@ namespace ReportsApi.Tests.IntegrationTests
             Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         }
 
+        // send null to a required field 
+        [Fact]
+        public async Task UpdateReport_WithNullRequiredField_ReturnsBadRequest()
+        {
+            string? reportId = null;
+            try
+            {
+                // Arrange 
+                var createdReport = await CreateReportAndGetIdAsync(new CreateReportRequest 
+                {
+                    CrimeGenre = "Initial Genre",
+                    CrimeType = "Assault",
+                    Description = "Initial description",
+                    Location = "Central Park",
+                    CrimeDate = DateTime.UtcNow,
+                    Resolved = false
+                });
+                reportId = createdReport.Id;
+
+                var updateContentWithNullRequired = new
+                {
+                    crimeGenre = (string?)null, 
+                    resolved = true
+                };
+
+                // Act
+                var response = await _client.PatchAsJsonAsync($"/api/Reports/{reportId}", updateContentWithNullRequired);
+
+                // Assert
+                Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            }
+            finally
+            {
+                // CLEANUP
+                await CleanupReportAsync(reportId);
+            }
+        }
+
+
         [Fact]
         public async Task UpdateReport_WithNullDescription_ReturnsOk()
         {
-            // Arrange 
-
-            // create report
-            var createRequest = new CreateReportRequest
+            string? reportId = null;
+            try
             {
-                CrimeGenre = "Hate Crime",
-                CrimeType = "Assault",
-                Description = "Initial description",
-                Location = "Central Park",
-                CrimeDate = DateTime.UtcNow,
-                Resolved = false
-            };
+                // Arrange
+                var createRequest = new CreateReportRequest
+                {
+                    CrimeGenre = "Hate Crime",
+                    CrimeType = "Assault",
+                    Description = "Initial description",
+                    Location = "Central Park",
+                    CrimeDate = DateTime.UtcNow,
+                    Resolved = false
+                };
 
-            var createResponse = await _client.PostAsJsonAsync("/api/Reports", createRequest);
-            createResponse.EnsureSuccessStatusCode();
-            var createdReport = await createResponse.Content.ReadFromJsonAsync<ReportResponse>();
-            Assert.NotNull(createdReport);
+                var createdReport = await CreateReportAndGetIdAsync(createRequest);
+                reportId = createdReport.Id;
 
-            // Prepare the update with null description
-            var updateRequest = new UpdateReportRequest
+                var updateRequest = new UpdateReportRequest
+                {
+                    Description = null,
+                    Resolved = true
+                };
+
+                // Act
+                var response = await _client.PatchAsJsonAsync($"/api/Reports/{createdReport.Id}", updateRequest);
+
+                // Assert
+                Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+                // verify if the original description was maintained
+                var updatedReport = await response.Content.ReadFromJsonAsync<ReportResponse>();
+                Assert.NotNull(updatedReport);
+                Assert.Equal(createdReport.Description, updatedReport.Description);
+                Assert.True(updatedReport.Resolved);
+            }
+            finally
             {
-                Description = null,
-                Resolved = true
-            };
-
-            // Act
-            var response = await _client.PatchAsJsonAsync($"/api/Reports/{createdReport.Id}", updateRequest);
-
-            // Assert
-            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-            
-            // verify if the original description was maintained
-            var updatedReport = await response.Content.ReadFromJsonAsync<ReportResponse>();
-            Assert.NotNull(updatedReport);
-            Assert.Equal(createdReport.Description, updatedReport.Description); 
-            Assert.True(updatedReport.Resolved); 
+                // CLEANUP
+                await CleanupReportAsync(reportId);
+            }
         }
 
         [Fact]
         public async Task UpdateReport_WithTooLongDescription_ReturnsBadRequest()
         {
-            // Arrange 
-            var createRequest = new CreateReportRequest
+            string? reportId = null;
+            try
             {
-                CrimeGenre = "Hate Crime",
-                CrimeType = "Assault",
-                Description = "Initial description",
-                Location = "Central Park",
-                CrimeDate = DateTime.UtcNow,
-                Resolved = false
-            };
+                // Arrange 
+                var createRequest = new CreateReportRequest
+                {
+                    CrimeGenre = "Hate Crime",
+                    CrimeType = "Assault",
+                    Description = "Initial description",
+                    Location = "Central Park",
+                    CrimeDate = DateTime.UtcNow,
+                    Resolved = false
+                };
 
-        
-            var createResponse = await _client.PostAsJsonAsync("/api/Reports", createRequest);
-            createResponse.EnsureSuccessStatusCode();
-            var createdReport = await createResponse.Content.ReadFromJsonAsync<ReportResponse>();
-            Assert.NotNull(createdReport);
+                var createdReport = await CreateReportAndGetIdAsync(createRequest);
+                reportId = createdReport.Id;
 
-            
-            var updateRequest = new UpdateReportRequest
+             
+                var updateRequest = new UpdateReportRequest
+                {
+                    Description = new string('x', 2049), 
+                    Resolved = true
+                };
+
+                // Act
+                var response = await _client.PatchAsJsonAsync($"/api/Reports/{createdReport.Id}", updateRequest);
+
+                // Assert
+                Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+            }
+            finally
             {
-                Description = new string('x', 2049), // Excede o limite de 2048 caracteres
-                Resolved = true
-            };
-
-            // Act
-            var response = await _client.PatchAsJsonAsync($"/api/Reports/{createdReport.Id}", updateRequest);
-
-            // Assert
-            Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+                // CLEANUP
+                await CleanupReportAsync(reportId);
+            }
         }
     }
 
-    // method extension to support PATCH (pieces)
-
+  // method extension to support PATCH (pieces)
     public static class HttpClientExtensions
     {
         public static Task<HttpResponseMessage> PatchAsJsonAsync<TValue>(this HttpClient client, string requestUri, TValue value)
