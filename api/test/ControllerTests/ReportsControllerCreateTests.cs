@@ -66,7 +66,7 @@ public class ReportsControllerCreateTests
 [Fact]
     public async Task CreateAsync_WhenServiceReturnsCreatedReport_ReturnsCreatedAtRoute()
     {
-        // Arrange
+        
         var request = new CreateReportRequest
         {
             CrimeGenre = "Hate Crime",
@@ -104,10 +104,10 @@ public class ReportsControllerCreateTests
             .Setup(s => s.CreateAsync(It.IsAny<CreateReportRequest>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(reportResponse);
 
-        // Act
+        
         var result = await _controller.CreateAsync(request, CancellationToken.None);
 
-        // Assert
+        
         var createdAtRouteResult = Assert.IsType<CreatedAtRouteResult>(result);
         Assert.Equal(StatusCodes.Status201Created, createdAtRouteResult.StatusCode);
         Assert.Equal("GetReportById", createdAtRouteResult.RouteName);
