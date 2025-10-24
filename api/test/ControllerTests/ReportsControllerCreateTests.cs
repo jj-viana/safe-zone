@@ -49,7 +49,7 @@ public class ReportsControllerCreateTests
     }
 
     [Fact]
-    
+
     public async Task CreateAsync_WhenServiceThrowsArgumentException_ReturnsBadRequest()
     {
         var request = CreateSampleReport();
@@ -63,5 +63,57 @@ public class ReportsControllerCreateTests
         var badRequest = Assert.IsType<BadRequestObjectResult>(result);
         Assert.Equal(StatusCodes.Status400BadRequest, badRequest.StatusCode);
     }
-    
+[Fact]
+    public async Task CreateAsync_WhenServiceReturnsCreatedReport_ReturnsCreatedAtRoute()
+    {
+        // Arrange
+        var request = new CreateReportRequest
+        {
+            CrimeGenre = "Hate Crime",
+            CrimeType = "Assault",
+            Description = "Incident description",
+            Location = "Central Park",
+            CrimeDate = DateTime.UtcNow,
+            Resolved = false
+        };
+
+        var createdReport = new Report
+        {
+            Id = "12345",
+            CrimeGenre = "Hate Crime",
+            CrimeType = "Assault",
+            Description = "Incident description",
+            Location = "Central Park",
+            CrimeDate = DateTime.UtcNow,
+            Resolved = false
+        };
+
+        var reportResponse = new ReportResponse(
+            createdReport.Id,
+            createdReport.CrimeGenre,
+            createdReport.CrimeType,
+            createdReport.Description,
+            createdReport.Location,
+            createdReport.CrimeDate,
+            null,
+            DateTime.UtcNow,
+            createdReport.Resolved
+        );
+
+        _serviceMock
+            .Setup(s => s.CreateAsync(It.IsAny<CreateReportRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(reportResponse);
+
+        // Act
+        var result = await _controller.CreateAsync(request, CancellationToken.None);
+
+        // Assert
+        var createdAtRouteResult = Assert.IsType<CreatedAtRouteResult>(result);
+        Assert.Equal(StatusCodes.Status201Created, createdAtRouteResult.StatusCode);
+        Assert.Equal("GetReportById", createdAtRouteResult.RouteName);
+        Assert.Equal(createdReport.Id, createdAtRouteResult.RouteValues!["id"]);
+
+        var value = createdAtRouteResult.Value;
+        Assert.NotNull(value);
+    }
 }
