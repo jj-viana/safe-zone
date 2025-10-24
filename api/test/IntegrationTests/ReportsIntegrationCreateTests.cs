@@ -98,18 +98,18 @@ public class ReportsApiIntegrationTests : IClassFixture<CustomWebApplicationFact
         */
         var responseBody = await response.Content.ReadAsStringAsync();
         Assert.False(string.IsNullOrWhiteSpace(responseBody), "Expected error response body");
-        
+
         /* 
         Verificar que o corpo da resposta contém indicações de erro
         (mais flexível que verificar estrutura específica do ValidationProblemDetails)
         o importante é que o erro seja o correto(badrequest) os detalhes da resposta
         não importam muito para o teste
-        */       
-         Assert.True(
-            responseBody.Contains("error", StringComparison.OrdinalIgnoreCase) ||
-            responseBody.Contains("invalid", StringComparison.OrdinalIgnoreCase) ||
-            responseBody.Contains("type", StringComparison.OrdinalIgnoreCase),
-            $"Expected error message in response body. Received: {responseBody}");
+        */
+        Assert.True(
+           responseBody.Contains("error", StringComparison.OrdinalIgnoreCase) ||
+           responseBody.Contains("invalid", StringComparison.OrdinalIgnoreCase) ||
+           responseBody.Contains("type", StringComparison.OrdinalIgnoreCase),
+           $"Expected error message in response body. Received: {responseBody}");
     }
 
     [Fact]
@@ -145,6 +145,66 @@ public class ReportsApiIntegrationTests : IClassFixture<CustomWebApplicationFact
             .SelectMany(kv => kv.Value);
 
         Assert.True(messages.Any(m => !string.IsNullOrWhiteSpace(m)), "Expected at least one validation message for 'CrimeGenre'.");
+
+
+    }
+    [Fact]
+    public async Task CreateReport_WithNullPayload_ReturnsBadRequest()
+    {
+        // Arrange: 
+        string? invalidJson = null;
+        var content = new StringContent(invalidJson ?? string.Empty, Encoding.UTF8, "application/json");
+
+        // Act
+        var response = await _client.PostAsync("/api/reports", content, CancellationToken.None);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+
+        var responseBody = await response.Content.ReadAsStringAsync();
+        Assert.False(string.IsNullOrWhiteSpace(responseBody), "Expected error response body");
+
+        //Verifica mensagem de erro pelas palavras chave a seguir
+        Assert.True(
+            responseBody.Contains("error", StringComparison.OrdinalIgnoreCase) ||
+            responseBody.Contains("invalid", StringComparison.OrdinalIgnoreCase) ||
+            responseBody.Contains("null", StringComparison.OrdinalIgnoreCase) ||
+            responseBody.Contains("payload", StringComparison.OrdinalIgnoreCase) ||
+            responseBody.Contains("request", StringComparison.OrdinalIgnoreCase),
+            $"Expected error message in response body. Received: {responseBody}");
+    }
+
+    [Fact]
+    public async Task CreateReport_ToBigOfaRequest_ReturnsBadRequest()
+    {
+        //descrição estoura limite de caracteres
+        var invalidJson = "{\n" +
+            "  \"CrimeGenre\": \"Crime\",\n" +
+            "  \"CrimeType\": \"Burglary\",\n" +
+            $"  \"Description\": \"{new string('x', 2050)}\",\n" +
+            "  \"Location\": \"My house\",\n" +
+            $"  \"CrimeDate\": \"{DateTime.UtcNow:o}\",\n" +
+            "  \"Resolved\": false\n" +
+            "}";
+
+        var content = new StringContent(invalidJson, Encoding.UTF8, "application/json");
+
+        // Act
+        var response = await _client.PostAsync("/api/reports", content, CancellationToken.None);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+
+        var body = await response.Content.ReadAsStringAsync();
+
+        Assert.False(string.IsNullOrWhiteSpace(body), "Expected error response body");
+        //Procura por palavras chave do erro na string de resposta do servidor
+        Assert.True(
+            body.Contains("description", StringComparison.OrdinalIgnoreCase) ||
+            body.Contains("length", StringComparison.OrdinalIgnoreCase) ||
+            body.Contains("max", StringComparison.OrdinalIgnoreCase) ||
+            body.Contains("2050"),
+            $"Expected error message related to description length. Received: {body}");
 
 
     }
