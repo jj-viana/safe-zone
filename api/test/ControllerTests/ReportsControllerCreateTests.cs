@@ -63,9 +63,11 @@ public class ReportsControllerCreateTests
         var badRequest = Assert.IsType<BadRequestObjectResult>(result);
         Assert.Equal(StatusCodes.Status400BadRequest, badRequest.StatusCode);
     }
-[Fact]
+    [Fact]
     public async Task CreateAsync_WhenServiceReturnsCreatedReport_ReturnsCreatedAtRoute()
     {
+        // use same timestamp for all objects to avoid flakiness
+        var now = DateTime.UtcNow;
         
         var request = new CreateReportRequest
         {
@@ -73,7 +75,7 @@ public class ReportsControllerCreateTests
             CrimeType = "Assault",
             Description = "Incident description",
             Location = "Central Park",
-            CrimeDate = DateTime.UtcNow,
+            CrimeDate = now,
             Resolved = false
         };
 
@@ -84,7 +86,7 @@ public class ReportsControllerCreateTests
             CrimeType = "Assault",
             Description = "Incident description",
             Location = "Central Park",
-            CrimeDate = DateTime.UtcNow,
+            CrimeDate = now,
             Resolved = false
         };
 
@@ -96,7 +98,7 @@ public class ReportsControllerCreateTests
             createdReport.Location,
             createdReport.CrimeDate,
             null,
-            DateTime.UtcNow,
+            now,
             createdReport.Resolved
         );
 
@@ -104,10 +106,8 @@ public class ReportsControllerCreateTests
             .Setup(s => s.CreateAsync(It.IsAny<CreateReportRequest>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(reportResponse);
 
-        
         var result = await _controller.CreateAsync(request, CancellationToken.None);
 
-        
         var createdAtRouteResult = Assert.IsType<CreatedAtRouteResult>(result);
         Assert.Equal(StatusCodes.Status201Created, createdAtRouteResult.StatusCode);
         Assert.Equal("GetReportById", createdAtRouteResult.RouteName);
