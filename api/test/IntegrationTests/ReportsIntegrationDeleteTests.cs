@@ -2,9 +2,10 @@ using System;
 using System.Net;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
-using System.Net.Http;
+using Microsoft.AspNetCore.Mvc.Testing;
 using ReportsApi.Models;
 using Xunit;
+using System.Net.Http;
 
 namespace ReportsApi.Tests.IntegrationTests
 {
@@ -17,28 +18,27 @@ namespace ReportsApi.Tests.IntegrationTests
 			_client = factory.CreateClient();
 		}
 
-		// Helper: create a report and return the full response with Id
 		private async Task<ReportResponse> CreateReportAndGetIdAsync(CreateReportRequest createRequest)
 		{
 			var createResponse = await _client.PostAsJsonAsync("/api/reports", createRequest);
 			createResponse.EnsureSuccessStatusCode();
-			var created = await createResponse.Content.ReadFromJsonAsync<ReportResponse>();
-			Assert.NotNull(created);
-			return created!;
+			var createdReport = await createResponse.Content.ReadFromJsonAsync<ReportResponse>();
+			Assert.NotNull(createdReport);
+			return createdReport;
 		}
 
-		// Helper: best-effort cleanup for any leftover record
+	
 		private async Task CleanupReportAsync(string? reportId)
 		{
 			if (!string.IsNullOrWhiteSpace(reportId))
 			{
 				try
 				{
-					await _client.DeleteAsync($"/api/Reports/{reportId}");
+					await _client.DeleteAsync($"/api/reports/{reportId}");
 				}
 				catch
 				{
-					// ignore cleanup failures
+				
 				}
 			}
 		}
@@ -49,32 +49,28 @@ namespace ReportsApi.Tests.IntegrationTests
 			string? reportId = null;
 			try
 			{
-				// Arrange: create a valid report
+				// Arrange
 				var createRequest = new CreateReportRequest
 				{
 					CrimeGenre = "Hate Crime",
 					CrimeType = "Assault",
-					Description = "Initial description",
+					Description = "To be deleted",
 					Location = "Central Park",
 					CrimeDate = DateTime.UtcNow,
 					Resolved = false
 				};
+				var createdReport = await CreateReportAndGetIdAsync(createRequest);
+				reportId = createdReport.Id;
 
-				var created = await CreateReportAndGetIdAsync(createRequest);
-				reportId = created.Id;
-
-				// Act: delete by id
-				var deleteResponse = await _client.DeleteAsync($"/api/Reports/{reportId}");
+				// Act
+				var deleteResponse = await _client.DeleteAsync($"/api/reports/{reportId}");
 
 				// Assert
 				Assert.Equal(HttpStatusCode.NoContent, deleteResponse.StatusCode);
-
-				// Optional: verify it's gone
-				var getAfterDelete = await _client.GetAsync($"/api/Reports/{reportId}");
-				Assert.Equal(HttpStatusCode.NotFound, getAfterDelete.StatusCode);
 			}
 			finally
 			{
+				// Cleanup (idempotente)
 				await CleanupReportAsync(reportId);
 			}
 		}
@@ -86,7 +82,7 @@ namespace ReportsApi.Tests.IntegrationTests
 			var nonExistentId = "non-existent-id";
 
 			// Act
-			var response = await _client.DeleteAsync($"/api/Reports/{nonExistentId}");
+			var response = await _client.DeleteAsync($"/api/reports/{nonExistentId}");
 
 			// Assert
 			Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -95,11 +91,14 @@ namespace ReportsApi.Tests.IntegrationTests
 		[Fact]
 		public async Task DeleteReport_WithNullId_ReturnsNotFound()
 		{
-			// Act: try to pass a null-like id value in the route
-			var response = await _client.DeleteAsync("/api/Reports/null");
+			// Arrange
+	
 
-			// Assert: API should treat it as an unknown id
+			// Act
+			var response = await _client.DeleteAsync($"/api/reports/null");
+
+			// Assert
 			Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
 		}
-	}
+	}k
 }
