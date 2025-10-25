@@ -2,10 +2,13 @@
 'use client'; 
 
 import { useState, useEffect } from 'react';
+// app/dashboards/page.tsx
+
 import Navbar from "../components/navbar/navbar";
 import GraficoPizza from "../components/graficoPizza/graficoPizza"; 
 import GraficodeBarras from "../components/graficoBarras/graficoBarras"
 import { Merriweather } from "next/font/google";
+import AreaGraficos from "../components/graficoLinha/areagrafico"; //
 
 const merriweather = Merriweather({
   subsets: ["latin"],
@@ -33,18 +36,23 @@ const merriweather = Merriweather({
 
 //     fetchData();
 //   }, []); 
-
-  return (
-
+   
+    return (
     <>
       <Navbar />
       <main className="min-h-screen flex flex-col items-center bg-neutral-900 text-white">
-        <section className="w-full max-w-[1920px] px-[128px] py-12 flex flex-col md:flex-row items-start justify-between gap-6">
-          <div className="md:w-1/2 mt-3">
+        
+        <section className="w-full max-w-[1920px] px-[128px] py-16 flex flex-col gap-6">
+          <div className="w-full mt-3">
             <h1 className={`${merriweather.className} text-4xl font-bold mb-3`}>
               Dashboards
             </h1>
             <div className="w-8 h-[3px] bg-cyan-500 mb-5"></div>
+          </div>
+          <div className="w-full flex flex-row gap-6">
+            <div className="w-6/7">
+              <AreaGraficos />
+            </div>
           </div>
         </section>
           <GraficodeBarras>
