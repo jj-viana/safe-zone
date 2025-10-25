@@ -205,7 +205,7 @@ export default function GraficoPizza({ data }: GraficoPizzaProps) {
   }, [crimeData]);
 
   return (
-    <section className="w-full max-w-[1920px] px-[128px] py-16">
+    <section className="w-full max-w-[1920px] px-[128px] py-0">
       <AreaPizza data={chartData} colors={COLORS} />
     </section>
   );
