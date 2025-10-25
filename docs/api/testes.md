@@ -36,11 +36,13 @@ Os testes de integração e unidade focam em aspectos técnicos cruciais como:
 * Tratamento robusto e correto de exceções.
 * Integração fluida entre as camadas Controller e Service.
 
+Para atingir esse objetivo utilizamos os Frameworks xUnit e Moq do próprio .NET, que oferecem uma base sólida para a criação de testes automatizados eficazes.
+
 ### Fluxo de Funcionamento
 
 O fluxo de trabalho de CI/CD é baseado nas branches (`feature`, `development` e `main`) e é totalmente orquestrado pelo **GitHub Actions**. O processo é dividido em dois momentos de validação e um de entrega final:
 
-#### 1. Validação em Feature (Integração Contínua - CI)
+### 1. Validação em Feature (Integração Contínua - CI)
 
 Este fluxo é acionado sempre que um desenvolvedor abre ou atualiza um **Pull Request (PR)** com destino à branch `development`.
 
@@ -62,7 +64,7 @@ O GitHub Actions executa dois workflows em paralelo: um para o **Web (Front-end)
 **Portão de Qualidade:**  
 Se todos esses comandos de ambos os workflows passarem, o teste é aprovado e o merge para `development` é liberado.
 
-#### 2. Lançamento e Implantação Contínua (CD)
+### 2. Lançamento e Implantação Contínua (CD)
 
 Esta fase é acionada pelo PR de `development` para `main`, que indica a criação de uma nova release e sua implantação em produção.
 
@@ -139,6 +141,25 @@ Nesta seção, detalhamos os testes automatizados implementados para as funçõe
 
 ### 1. Funções Create
 
+**Endpoint:** `POST /api/reports`
+
+**Objetivo:** Validar se o *endpoint* de criação se comunica corretamente com a camada de *Service*, garantindo que o modelo de entrada seja válido, que exceções sejam tratadas adequadamente e que o código HTTP retornado reflita o resultado da operação.
+
+**Cenários Testados (Baseado em `ReportsControllerCreateTests`):**
+
+| Cenário | Comportamento Esperado | Código HTTP |
+| :--- | :--- | :--- |
+| **Modelo Inválido (ModelState)** | O controller valida o `ModelState` antes de processar. Se inválido, retorna um objeto de validação. | **400 Bad Request** |
+| **Criação com Sucesso** | O *Service* processa o `CreateReportRequest` e retorna um `ReportResponse` válido. | **201 Created** |
+| **Dados Inválidos (ArgumentException)** | O *Service* lança `ArgumentException` ao detectar dados inconsistentes ou inválidos no payload. | **400 Bad Request** |
+| **Operação Inválida (InvalidOperationException)** | O *Service* lança `InvalidOperationException` ao encontrar uma condição de negócio que impede a criação. | **400 Bad Request** |
+| **Erro Inesperado do Service** | O *Service* lança uma exceção genérica durante o processamento. | **500 Internal Server Error** |
+
+**Observações Técnicas:**
+- O controller valida o `ModelState` antes de invocar o *service* e utiliza `ValidationProblem(ModelState)` para reportar erros de validação de entrada.
+- Exceções específicas de validação/regras de negócio (`ArgumentException`, `InvalidOperationException`) são convertidas em `BadRequest` com detalhes do erro.
+- Exceções não tratadas são convertidas para `Problem` com status 500, sinalizando erro interno.
+- Em caso de sucesso, o *endpoint* retorna `CreatedAtAction` com o `ReportResponse` no body e referência ao método `GetByIdAsync`.
 
 
 ---
@@ -210,10 +231,6 @@ Observações técnicas:
 - O controller valida `ModelState` antes de chamar o service e usa `ValidationProblem(ModelState)` para reportar erros de validação.
 - Exceções específicas de validação/negócio (ex.: `ArgumentException`, `InvalidOperationException`) são tratadas como `BadRequest` com payload de erro; exceções não tratadas são convertidas para `Problem` com status 500.
 - Os testes unitários usam *mocks* (Moq) para simular o comportamento do `IReportService` e assertam os tipos de `IActionResult` retornados.
-
-Referência de testes:
-- Arquivo: `api/test/ControllerTests/ReportsControllerUpdateTests.cs`
-- Framework: xUnit + Moq
 
 
 
