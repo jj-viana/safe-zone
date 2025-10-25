@@ -33,7 +33,7 @@ namespace ReportsApi.Tests.ControllerTests
         };
 
         [Fact]
-        public async Task CreteAsync_ReturnsException_Returns500Error()
+        public async Task CreateAsync_ReturnsException_Returns500Error()
         {
             // Arrange
             var request = CreateSampleReport();
