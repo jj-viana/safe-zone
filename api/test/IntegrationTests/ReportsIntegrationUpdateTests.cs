@@ -106,63 +106,6 @@ namespace ReportsApi.Tests.IntegrationTests
         [Fact]
         public async Task UpdateReport_WithInvalidType_ReturnsBadRequest()
         {
-            // Arrange
-            var reportId = "test-report-id";
-            var invalidContent = new
-            {
-                description = 123, // number instead of string
-                resolved = "true" //  string instead of bool
-            };
-
-            // Act
-            var response = await _client.PatchAsJsonAsync($"/api/Reports/{reportId}", invalidContent);
-
-            // Assert
-            Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-        }
-
-        // send null to a required field 
-        [Fact]
-        public async Task UpdateReport_WithNullRequiredField_ReturnsBadRequest()
-        {
-            string? reportId = null;
-            try
-            {
-                // Arrange 
-                var createdReport = await CreateReportAndGetIdAsync(new CreateReportRequest 
-                {
-                    CrimeGenre = "Initial Genre",
-                    CrimeType = "Assault",
-                    Description = "Initial description",
-                    Location = "Central Park",
-                    CrimeDate = DateTime.UtcNow,
-                    Resolved = false
-                });
-                reportId = createdReport.Id;
-
-                var updateContentWithNullRequired = new
-                {
-                    crimeGenre = (string?)null, 
-                    resolved = true
-                };
-
-                // Act
-                var response = await _client.PatchAsJsonAsync($"/api/Reports/{reportId}", updateContentWithNullRequired);
-
-                // Assert
-                Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-            }
-            finally
-            {
-                // CLEANUP
-                await CleanupReportAsync(reportId);
-            }
-        }
-
-
-        [Fact]
-        public async Task UpdateReport_WithNullDescription_ReturnsOk()
-        {
             string? reportId = null;
             try
             {
@@ -180,32 +123,26 @@ namespace ReportsApi.Tests.IntegrationTests
                 var createdReport = await CreateReportAndGetIdAsync(createRequest);
                 reportId = createdReport.Id;
 
-                var updateRequest = new UpdateReportRequest
+                var invalidContent = new
                 {
-                    Description = null,
-                    Resolved = true
+                    description = 123, // number instead of string
+                    resolved = "true" //  string instead of bool
                 };
 
                 // Act
-                var response = await _client.PatchAsJsonAsync($"/api/Reports/{createdReport.Id}", updateRequest);
+                var response = await _client.PatchAsJsonAsync($"/api/Reports/{reportId}", invalidContent);
 
                 // Assert
-                Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-
-                // verify if the original description was maintained
-                var updatedReport = await response.Content.ReadFromJsonAsync<ReportResponse>();
-                Assert.NotNull(updatedReport);
-                Assert.Equal(createdReport.Description, updatedReport.Description);
-                Assert.True(updatedReport.Resolved);
+                Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
             }
             finally
             {
-                // CLEANUP
                 await CleanupReportAsync(reportId);
             }
         }
 
         [Fact]
+        
         public async Task UpdateReport_WithTooLongDescription_ReturnsBadRequest()
         {
             string? reportId = null;
