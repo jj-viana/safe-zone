@@ -24,7 +24,7 @@ namespace ReportsApi.Tests.IntegrationTests
             Resolved = true
         };
 
-        // o create a report 
+        // ocreate a report 
         private async Task<ReportResponse> CreateReportAndGetIdAsync(CreateReportRequest createRequest)
         {
             var createResponse = await _client.PostAsJsonAsync("/api/reports", createRequest);
@@ -137,6 +137,49 @@ namespace ReportsApi.Tests.IntegrationTests
             }
             finally
             {
+                await CleanupReportAsync(reportId);
+            }
+        }
+
+        [Fact]
+        public async Task UpdateReport_WithNullDescription_ReturnsOk()
+        {
+            string? reportId = null;
+            try
+            {
+                // Arrange
+                var createRequest = new CreateReportRequest
+                {
+                    CrimeGenre = "Hate Crime",
+                    CrimeType = "Assault",
+                    Description = "Initial description",
+                    Location = "Central Park",
+                    CrimeDate = DateTime.UtcNow,
+                    Resolved = false
+                };
+
+                var createdReport = await CreateReportAndGetIdAsync(createRequest);
+                reportId = createdReport.Id;
+
+                var updateRequest = new UpdateReportRequest
+                {
+                    Description = null,
+                    Resolved = true
+                };
+
+                // Act
+                var response = await _client.PatchAsJsonAsync($"/api/Reports/{reportId}", updateRequest);
+
+                // Assert
+                Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+                var updatedReport = await response.Content.ReadFromJsonAsync<ReportResponse>();
+                Assert.NotNull(updatedReport);
+                Assert.Equal("Initial description", updatedReport.Description);
+                Assert.True(updatedReport.Resolved);
+            }
+            finally
+            {
+                // CLEANUP
                 await CleanupReportAsync(reportId);
             }
         }
