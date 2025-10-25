@@ -212,7 +212,7 @@ namespace ReportsApi.Tests.IntegrationTests
                     Resolved = true
                 };
 
-                // Ac
+                // Act
                 var response = await _client.PatchAsJsonAsync($"/api/Reports/{createdReport.Id}", updateRequest);
 
                 // Assert
