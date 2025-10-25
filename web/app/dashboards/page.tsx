@@ -1,38 +1,16 @@
+
 'use client'; 
 
 import { useState, useEffect } from 'react';
 import Navbar from "../components/navbar/navbar";
 import GraficoPizza from "../components/graficoPizza/graficoPizza"; 
+import GraficodeBarras from "../components/graficoBarras/graficoBarras"
 import { Merriweather } from "next/font/google";
 
 const merriweather = Merriweather({
   subsets: ["latin"],
   weight: ["700"],
 });
-
-interface CrimeData {
-  id: string;
-  crimeGenre: string;
-  crimeType: string;
-  description: string;
-  location: string;
-  crimeDate: string;
-  reporterDetails: {
-    ageGroup: string;
-    ethnicity: string;
-    genderIdentity: string;
-    sexualOrientation: string;
-  };
-  createdDate: string;
-  resolved: boolean;
-  partitionKey: string;
-  _rid: string;
-  _self: string;
-  _etag: string;
-  _attachments: string;
-  _ts: number;
-}
-
 
 export default function DashboardPage() {
   const [apiData, setApiData] = useState<CrimeData[]>([]);
@@ -57,6 +35,7 @@ export default function DashboardPage() {
   }, []); 
 
   return (
+
     <>
       <Navbar />
       <main className="min-h-screen flex flex-col items-center bg-neutral-900 text-white">

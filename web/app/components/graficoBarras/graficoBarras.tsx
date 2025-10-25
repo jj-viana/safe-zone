@@ -1,0 +1,211 @@
+'use client';
+
+import { useMemo } from 'react';
+import AreaGrafico from './areaGrafico';
+
+interface CrimeData {
+  id: string;
+  crimeGenre: string;
+  crimeType: string;
+  description: string;
+  location: string;
+  crimeDate: string;
+  reporterDetails: {
+    ageGroup: string;
+    ethnicity: string;
+    genderIdentity: string;
+    sexualOrientation: string;
+  };
+  createdDate: string;
+  resolved: boolean;
+  partitionKey: string;
+  _rid: string;
+  _self: string;
+  _etag: string;
+  _attachments: string;
+  _ts: number;
+}
+
+interface ChartData {
+  name: string;
+  value: number;
+}
+
+const COLORS = ['#EC4899', '#F97316', '#06B6D4', '#FBBF24', '#EF4444'];
+
+const CRIME_TYPE_MAPPING: { [key: string]: string } = {
+  'homicidios': 'Homicídios e Tentativas',
+  'trafico': 'Tráfico de Drogas',
+  'crimes_sem_violencia': 'Crimes sem Violência',
+  'violencia_domestica': 'Violência Doméstica',
+  'crimes_patrimonio': 'Crimes Contra o Patrimônio',
+};
+
+interface GraficodeBarrasProps {
+  data?: CrimeData[];
+}
+
+export default function GraficodeBarras({ data }: GraficodeBarrasProps) {
+  // Dados fictícios para demonstração
+  const mockData: CrimeData[] = [
+    {
+      id: '1',
+      crimeGenre: 'crime',
+      crimeType: 'homicidios',
+      description: 'Homicídio doloso',
+      location: 'Centro',
+      crimeDate: '2025-10-21T22:00:21.354Z',
+      reporterDetails: {
+        ageGroup: '25-34',
+        ethnicity: 'pardo',
+        genderIdentity: 'masculino',
+        sexualOrientation: 'heterossexual',
+      },
+      createdDate: '2025-10-21T22:00:24.952316Z',
+      resolved: false,
+      partitionKey: '1',
+      _rid: 'v2InAL8nuYkZAAAAAAAAAA==',
+      _self: 'dbs/v2InAA==/colls/v2InAL8nuYk=/docs/v2InAL8nuYkZAAAAAAAAAA==/',
+      _etag: '"34087f34-0000-0200-0000-68f802790000"',
+      _attachments: 'attachments/',
+      _ts: 1761084025,
+    },
+    {
+      id: '2',
+      crimeGenre: 'crime',
+      crimeType: 'trafico',
+      description: 'Tráfico de drogas',
+      location: 'Periferia',
+      crimeDate: '2025-10-21T22:00:21.354Z',
+      reporterDetails: {
+        ageGroup: '18-24',
+        ethnicity: 'negro',
+        genderIdentity: 'masculino',
+        sexualOrientation: 'heterossexual',
+      },
+      createdDate: '2025-10-21T22:00:24.952316Z',
+      resolved: true,
+      partitionKey: '2',
+      _rid: 'v2InAL8nuYkZAAAAAAAAAA==',
+      _self: 'dbs/v2InAA==/colls/v2InAL8nuYk=/docs/v2InAL8nuYkZAAAAAAAAAA==/',
+      _etag: '"34087f34-0000-0200-0000-68f802790000"',
+      _attachments: 'attachments/',
+      _ts: 1761084025,
+    },
+    {
+      id: '3',
+      crimeGenre: 'crime',
+      crimeType: 'crimes_sem_violencia',
+      description: 'Roubo de bicicleta',
+      location: 'Bairro A',
+      crimeDate: '2025-10-21T22:00:21.354Z',
+      reporterDetails: {
+        ageGroup: '35-44',
+        ethnicity: 'branco',
+        genderIdentity: 'feminino',
+        sexualOrientation: 'heterossexual',
+      },
+      createdDate: '2025-10-21T22:00:24.952316Z',
+      resolved: false,
+      partitionKey: '3',
+      _rid: 'v2InAL8nuYkZAAAAAAAAAA==',
+      _self: 'dbs/v2InAA==/colls/v2InAL8nuYk=/docs/v2InAL8nuYkZAAAAAAAAAA==/',
+      _etag: '"34087f34-0000-0200-0000-68f802790000"',
+      _attachments: 'attachments/',
+      _ts: 1761084025,
+    },
+    {
+      id: '4',
+      crimeGenre: 'crime',
+      crimeType: 'violencia_domestica',
+      description: 'Agressão doméstica',
+      location: 'Residencial',
+      crimeDate: '2025-10-21T22:00:21.354Z',
+      reporterDetails: {
+        ageGroup: '25-34',
+        ethnicity: 'pardo',
+        genderIdentity: 'feminino',
+        sexualOrientation: 'heterossexual',
+      },
+      createdDate: '2025-10-21T22:00:24.952316Z',
+      resolved: true,
+      partitionKey: '4',
+      _rid: 'v2InAL8nuYkZAAAAAAAAAA==',
+      _self: 'dbs/v2InAA==/colls/v2InAL8nuYk=/docs/v2InAL8nuYkZAAAAAAAAAA==/',
+      _etag: '"34087f34-0000-0200-0000-68f802790000"',
+      _attachments: 'attachments/',
+      _ts: 1761084025,
+    },
+    {
+      id: '5',
+      crimeGenre: 'crime',
+      crimeType: 'crimes_patrimonio',
+      description: 'Roubo de carro',
+      location: 'Estacionamento',
+      crimeDate: '2025-10-21T22:00:21.354Z',
+      reporterDetails: {
+        ageGroup: '45-54',
+        ethnicity: 'branco',
+        genderIdentity: 'masculino',
+        sexualOrientation: 'heterossexual',
+      },
+      createdDate: '2025-10-21T22:00:24.952316Z',
+      resolved: false,
+      partitionKey: '5',
+      _rid: 'v2InAL8nuYkZAAAAAAAAAA==',
+      _self: 'dbs/v2InAA==/colls/v2InAL8nuYk=/docs/v2InAL8nuYkZAAAAAAAAAA==/',
+      _etag: '"34087f34-0000-0200-0000-68f802790000"',
+      _attachments: 'attachments/',
+      _ts: 1761084025,
+    },
+    {
+      id: '6',
+      crimeGenre: 'crime',
+      crimeType: 'homicidios',
+      description: 'Homicídio doloso',
+      location: 'Rua Principal',
+      crimeDate: '2025-10-21T22:00:21.354Z',
+      reporterDetails: {
+        ageGroup: '25-34',
+        ethnicity: 'negro',
+        genderIdentity: 'masculino',
+        sexualOrientation: 'heterossexual',
+      },
+      createdDate: '2025-10-21T22:00:24.952316Z',
+      resolved: false,
+      partitionKey: '6',
+      _rid: 'v2InAL8nuYkZAAAAAAAAAA==',
+      _self: 'dbs/v2InAA==/colls/v2InAL8nuYk=/docs/v2InAL8nuYkZAAAAAAAAAA==/',
+      _etag: '"34087f34-0000-0200-0000-68f802790000"',
+      _attachments: 'attachments/',
+      _ts: 1761084025,
+    },
+  ];
+
+  // Usar dados fornecidos ou dados fictícios
+  const crimeData = data || mockData;
+
+  // Agrupar e contar ocorrências por crimeType
+  const chartData = useMemo(() => {
+    const grouped: { [key: string]: number } = {};
+
+    crimeData.forEach((crime) => {
+      const crimeTypeKey = crime.crimeType.toLowerCase();
+      const displayName = CRIME_TYPE_MAPPING[crimeTypeKey] || crime.crimeType;
+
+      grouped[displayName] = (grouped[displayName] || 0) + 1;
+    });
+
+    return Object.entries(grouped).map(([name, value]) => ({
+      name,
+      value,
+    })) as ChartData[];
+  }, [crimeData]);
+
+  return (
+    <section className="w-full max-w-[1920px] px-[128px] py-16">
+      <AreaGrafico data={chartData} colors={COLORS} />
+    </section>
+  );
+}
+
