@@ -97,7 +97,7 @@ public class ReportsApiIntegrationTests : IClassFixture<CustomWebApplicationFact
         /*
         Lê como string e não como objeto ValidationProblemDetails pq como múltiplos campos falham
         não conseguimos prever o comportamento exato para poder dar map nessa classe 
-        (alguns campos aparecem com $ ou sem mensgem quando deveriam ter) 
+        (alguns campos aparecem com $ ou sem mensagem quando deveriam ter) 
         */
         var responseBody = await response.Content.ReadAsStringAsync();
         Assert.False(string.IsNullOrWhiteSpace(responseBody), "Expected error response body");
