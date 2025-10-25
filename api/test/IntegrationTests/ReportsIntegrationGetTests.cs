@@ -132,7 +132,7 @@ public class ReportsApiIntegrationTests : IClassFixture<CustomWebApplicationFact
         // Arrange
         // Em um roteamento ASP.NET Core, um segmento de URL ausente (que simula 'null' ou vazio)
         // para um parâmetro obrigatório de rota geralmente resulta em 404 Not Found antes de chegar ao controller.
-        string invalidPath = "/api/reports/genre/";
+        string invalidPath = "/api/reports/crime-genre/";
 
         // Act
         var response = await _client.GetAsync(invalidPath);
@@ -286,6 +286,24 @@ public class ReportsApiIntegrationTests : IClassFixture<CustomWebApplicationFact
         // Assert
         // A API REST deve retornar 404 Not Found quando o recurso não é encontrado.
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    // ---
+
+    [Fact]
+    public async Task GetByIdAsync_WhenIdIsNull_ReturnsOk()
+    {
+        // Arrange
+        // Quando não passamos nenhum ID após /api/reports/, a rota /api/reports/ 
+        // corresponde ao endpoint GetAllAsync, não ao GetByIdAsync.
+        // Portanto, deve retornar 200 OK com a lista de todos os reports.
+
+        // Act
+        var response = await _client.GetAsync("/api/reports/");
+
+        // Assert
+        // Deve retornar 200 OK porque /api/reports/ chama GetAllAsync.
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
 
     // ---
