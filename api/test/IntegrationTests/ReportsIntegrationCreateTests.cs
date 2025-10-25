@@ -178,7 +178,7 @@ public class ReportsApiIntegrationTests : IClassFixture<CustomWebApplicationFact
     }
 
     [Fact]
-    public async Task CreateReport_ToBigOfaRequest_ReturnsBadRequest()
+    public async Task CreateReport_TooBigOfARequest_ReturnsBadRequest()
     {
         //descrição estoura limite de caracteres
         var invalidJson = "{\n" +
