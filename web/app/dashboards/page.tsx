@@ -1,6 +1,12 @@
+
+'use client'; 
+
+import { useState, useEffect } from 'react';
 // app/dashboards/page.tsx
 
 import Navbar from "../components/navbar/navbar";
+import GraficoPizza from "../components/graficoPizza/graficoPizza"; 
+import GraficodeBarras from "../components/graficoBarras/graficoBarras"
 import { Merriweather } from "next/font/google";
 import AreaGraficos from "../components/graficoLinha/areagrafico"; //
 
@@ -9,8 +15,28 @@ const merriweather = Merriweather({
   weight: ["700"],
 });
 
+ export default function DashboardPage() {
+//   const [apiData, setApiData] = useState<CrimeData[]>([]);
 
-export default function DashboardPage() {
+//   useEffect(() => {
+//     const fetchData = async () => {
+//       try {
+//         const response = await fetch('/api/reports'); 
+        
+//         if (!response.ok) {
+//           throw new Error('Falha ao buscar dados da API');
+//         }
+        
+//         const data = await response.json();
+//         setApiData(data); 
+//       } catch (error) {
+//         console.error("Erro ao buscar dados:", error);
+//       }
+//     };
+
+//     fetchData();
+//   }, []); 
+   
     return (
     <>
       <Navbar />
@@ -29,7 +55,9 @@ export default function DashboardPage() {
             </div>
           </div>
         </section>
-
+          <GraficodeBarras>
+          </GraficodeBarras>
+          <GraficoPizza></GraficoPizza>
       </main>
     </>
   );

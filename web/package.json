@@ -9,6 +9,7 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@types/recharts": "^1.8.29",
     "framer-motion": "^12.23.24",
     "leaflet": "^1.9.4",
     "next": "15.5.4",
