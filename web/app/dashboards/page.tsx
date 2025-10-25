@@ -50,7 +50,7 @@ const merriweather = Merriweather({
             <div className="w-8 h-[3px] bg-cyan-500 mb-5"></div>
           </div>
           <div className="w-full flex flex-row gap-6">
-            <div className="w-6/7">
+            <div className="w-full">
               <AreaGraficos />
             </div>
           </div>
