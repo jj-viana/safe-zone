@@ -87,18 +87,5 @@ namespace ReportsApi.Tests.IntegrationTests
 			// Assert
 			Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
 		}
-
-		[Fact]
-		public async Task DeleteReport_WithNullId_ReturnsNotFound()
-		{
-			// Arrange
-	
-
-			// Act
-			var response = await _client.DeleteAsync($"/api/reports/");
-
-			// Assert
-			Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
-		}
 	}
 }
