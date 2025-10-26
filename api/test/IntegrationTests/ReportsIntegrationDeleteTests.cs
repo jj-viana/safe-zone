@@ -95,10 +95,10 @@ namespace ReportsApi.Tests.IntegrationTests
 	
 
 			// Act
-			var response = await _client.DeleteAsync($"/api/reports/null");
+			var response = await _client.DeleteAsync($"/api/reports/");
 
 			// Assert
 			Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
 		}
-	}k
+	}
 }
