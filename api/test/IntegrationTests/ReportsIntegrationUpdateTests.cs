@@ -173,6 +173,7 @@ namespace ReportsApi.Tests.IntegrationTests
                 // Assert
                 Assert.Equal(HttpStatusCode.OK, response.StatusCode);
                 var updatedReport = await response.Content.ReadFromJsonAsync<ReportResponse>();
+                
                 Assert.NotNull(updatedReport);
                 Assert.Equal("Initial description", updatedReport.Description);
                 Assert.True(updatedReport.Resolved);
@@ -185,7 +186,6 @@ namespace ReportsApi.Tests.IntegrationTests
         }
 
         [Fact]
-        
         public async Task UpdateReport_WithTooLongDescription_ReturnsBadRequest()
         {
             string? reportId = null;
@@ -205,10 +205,10 @@ namespace ReportsApi.Tests.IntegrationTests
                 var createdReport = await CreateReportAndGetIdAsync(createRequest);
                 reportId = createdReport.Id;
 
-             
+
                 var updateRequest = new UpdateReportRequest
                 {
-                    Description = new string('x', 2049), 
+                    Description = new string('x', 2049),
                     Resolved = true
                 };
 
