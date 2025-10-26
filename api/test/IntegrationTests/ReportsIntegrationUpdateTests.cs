@@ -24,7 +24,7 @@ namespace ReportsApi.Tests.IntegrationTests
             Resolved = true
         };
 
-        // o create a report 
+        // ocreate a report 
         private async Task<ReportResponse> CreateReportAndGetIdAsync(CreateReportRequest createRequest)
         {
             var createResponse = await _client.PostAsJsonAsync("/api/reports", createRequest);
@@ -173,8 +173,8 @@ namespace ReportsApi.Tests.IntegrationTests
                 // Assert
                 Assert.Equal(HttpStatusCode.OK, response.StatusCode);
                 var updatedReport = await response.Content.ReadFromJsonAsync<ReportResponse>();
+                
                 Assert.NotNull(updatedReport);
-                // Service ignores null description on PATCH and keeps previous value
                 Assert.Equal("Initial description", updatedReport.Description);
                 Assert.True(updatedReport.Resolved);
             }
