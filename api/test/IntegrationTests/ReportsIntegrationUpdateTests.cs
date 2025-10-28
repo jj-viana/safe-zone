@@ -24,7 +24,7 @@ namespace ReportsApi.Tests.IntegrationTests
             Resolved = true
         };
 
-        // ocreate a report 
+        // create a report 
         private async Task<ReportResponse> CreateReportAndGetIdAsync(CreateReportRequest createRequest)
         {
             var createResponse = await _client.PostAsJsonAsync("/api/reports", createRequest);
