@@ -95,8 +95,15 @@ export default function DenunciaModal({ show, onCloseAction }: { show: boolean, 
 
   const goToHome = () => setFormStep(0)
 
-  const handleSelect = (value: string, setter: (val: string) => void) => {
-    setter(value)
+  /**
+   * Permite selecionar e desmarcar uma opção clicando novamente
+   */
+  const handleSelect = (value: string, currentValue: string | null, setter: (val: string | null) => void) => {
+    if (currentValue === value) {
+      setter(null) // Desmarca se clicar novamente
+    } else {
+      setter(value) // Marca a nova opção
+    }
   }
 
   const resetForm = () => {
@@ -233,7 +240,7 @@ export default function DenunciaModal({ show, onCloseAction }: { show: boolean, 
                               type="button"
                               key={item.label}
                               onClick={() => {
-                                handleSelect(item.label, setCrimeGenre)
+                                handleSelect(item.label, crimeGenre, setCrimeGenre)
                                 setValidationErrors({ ...validationErrors, crimeGenre: false })
                               }}
                               className={`px-4 py-2 rounded-full border text-sm font-medium transition-all flex items-center gap-2 ${
@@ -284,7 +291,7 @@ export default function DenunciaModal({ show, onCloseAction }: { show: boolean, 
                               type="button"
                               key={item.label}
                               onClick={() => {
-                                handleSelect(item.label, setCrimeType)
+                                handleSelect(item.label, crimeType, setCrimeType)
                                 setValidationErrors({ ...validationErrors, crimeType: false })
                               }}
                               className={`px-4 py-2 rounded-full border text-sm font-medium transition-all flex items-center gap-2 ${
@@ -434,7 +441,7 @@ export default function DenunciaModal({ show, onCloseAction }: { show: boolean, 
                             type="button"
                             key={item.label}
                             onClick={() => {
-                              setResolved(item.label)
+                              handleSelect(item.label, resolved, setResolved)
                               setValidationErrors({ ...validationErrors, resolved: false })
                             }}
                             className={`px-4 py-2 rounded-full border text-sm font-medium transition-all flex items-center gap-2 ${
@@ -540,7 +547,7 @@ export default function DenunciaModal({ show, onCloseAction }: { show: boolean, 
                           <button
                             type="button"
                             key={item.label}
-                            onClick={() => setAgeGroup(item.label)}
+                            onClick={() => handleSelect(item.label, ageGroup, setAgeGroup)}
                             className={`px-4 py-2 rounded-full border text-sm font-medium transition-all flex items-center gap-2 ${
                               selected
                                 ? "border-[#FF7A00] text-white"
@@ -580,7 +587,7 @@ export default function DenunciaModal({ show, onCloseAction }: { show: boolean, 
                           <button
                             type="button"
                             key={item.label}
-                            onClick={() => setGenderIdentity(item.label)}
+                            onClick={() => handleSelect(item.label, genderIdentity, setGenderIdentity)}
                             className={`px-4 py-2 rounded-full border text-sm font-medium transition-all flex items-center gap-2 ${
                               selected
                                 ? "border-[#FF7A00] text-white"
@@ -660,7 +667,7 @@ export default function DenunciaModal({ show, onCloseAction }: { show: boolean, 
                           <button
                             type="button"
                             key={item.label}
-                            onClick={() => setSexualOrientation(item.label)}
+                            onClick={() => handleSelect(item.label, sexualOrientation, setSexualOrientation)}
                             className={`px-4 py-2 rounded-full border text-sm font-medium transition-all flex items-center gap-2 ${
                               selected
                                 ? "border-[#FF7A00] text-white"
@@ -699,7 +706,7 @@ export default function DenunciaModal({ show, onCloseAction }: { show: boolean, 
                           <button
                             type="button"
                             key={item.label}
-                            onClick={() => setEthnicity(item.label)}
+                            onClick={() => handleSelect(item.label, ethnicity, setEthnicity)}
                             className={`px-4 py-2 rounded-full border text-sm font-medium transition-all flex items-center gap-2 ${
                               selected
                                 ? "border-[#FF7A00] text-white"
