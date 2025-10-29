@@ -22,7 +22,7 @@ export default function Navbar({ onOpenDenuncia }: NavbarProps) {
 
   return (
     <nav className="w-full bg-neutral-900 text-white border-b border-gray-700">
-      <div className="flex items-center justify-between py-5 px-[128px] max-w-[1920px] mx-auto">
+      <div className="flex items-center justify-between py-1 px-[128px] max-w-[1920px] mx-auto">
         <Link href="/" className="flex items-center gap-2">
           <Image
             src="/logo2.svg"

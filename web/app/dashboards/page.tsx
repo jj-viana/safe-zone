@@ -1,64 +1,81 @@
-
-'use client'; 
-
-import { useState, useEffect } from 'react';
-// app/dashboards/page.tsx
-
 import Navbar from "../components/navbar/navbar";
-import GraficoPizza from "../components/graficoPizza/graficoPizza"; 
-import GraficodeBarras from "../components/graficoBarras/graficoBarras"
 import { Merriweather } from "next/font/google";
-import AreaGraficos from "../components/graficoLinha/areagrafico"; //
 
 const merriweather = Merriweather({
   subsets: ["latin"],
   weight: ["700"],
 });
 
- export default function DashboardPage() {
-//   const [apiData, setApiData] = useState<CrimeData[]>([]);
-
-//   useEffect(() => {
-//     const fetchData = async () => {
-//       try {
-//         const response = await fetch('/api/reports'); 
-        
-//         if (!response.ok) {
-//           throw new Error('Falha ao buscar dados da API');
-//         }
-        
-//         const data = await response.json();
-//         setApiData(data); 
-//       } catch (error) {
-//         console.error("Erro ao buscar dados:", error);
-//       }
-//     };
-
-//     fetchData();
-//   }, []); 
-   
-    return (
-    <>
+export default function DashboardPage() {
+  return (
+    // Estrutura principal para ocupar a tela inteira sem scroll
+    <div className="h-screen flex flex-col bg-neutral-900">
       <Navbar />
-      <main className="min-h-screen flex flex-col items-center bg-neutral-900 text-white">
-        
-        <section className="w-full max-w-[1920px] px-[128px] py-16 flex flex-col gap-6">
-          <div className="w-full mt-3">
-            <h1 className={`${merriweather.className} text-4xl font-bold mb-3`}>
-              Dashboards
-            </h1>
-            <div className="w-8 h-[3px] bg-cyan-500 mb-5"></div>
-          </div>
-          <div className="w-full flex flex-row gap-6">
-            <div className="w-full">
-              <AreaGraficos />
+      <main className="flex-1 text-white pt-4 px-6 pb-6 overflow-hidden">
+        <div className="w-full h-full">
+
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 h-full">
+
+            {/* --- Coluna da Esquerda (sem alterações) --- */}
+            <div className="lg:col-span-1 flex flex-col gap-4">
+              <div className="bg-[#1F1F1F] shadow-xl shadow-black/50 rounded-lg p-6 h-36 flex items-center justify-center">
+                <p className="text-white"></p>
+              </div>
+              <div className="bg-[#1F1F1F] shadow-xl shadow-black/50 rounded-lg p-6 flex-1 flex items-center justify-center">
+                <p className="text-white"></p>
+              </div>
+            </div>
+
+            {/* --- Coluna da Direita (COM A NOVA ESTRUTURA) --- */}
+            <div className="lg:col-span-3 flex gap-4">
+              
+              {/* Sub-coluna Esquerda (2/3 da largura) */}
+              <div className="w-2/3 flex flex-col gap-4">
+                {/* Filtros Principais */}
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="bg-[#373737] shadow-xl shadow-black/50 rounded-lg p-4 h-12 flex items-center justify-center">
+                    <p className="text-white">Crime</p>
+                  </div>
+                  <div className="bg-[#373737] shadow-xl shadow-black/50 rounded-lg p-4 h-12 flex items-center justify-center">
+                    <p className="text-white">Natureza</p>
+                  </div>
+                  <div className="bg-[#373737] shadow-xl shadow-black/50 rounded-lg p-4 h-12 flex items-center justify-center">
+                    <p className="text-white">Região</p>
+                  </div>
+                </div>
+                {/* Gráfico Principal */}
+                <div className="bg-[#1F1F1F] shadow-xl shadow-black/50 rounded-lg p-6 h-56 flex items-center justify-center">
+                  <p className="text-white"></p>
+                </div>
+                {/* Indicadores 1 e 2 (crescem para preencher) */}
+                <div className="flex-1 grid grid-cols-2 gap-4">
+                  <div className="bg-[#1F1F1F] shadow-xl shadow-black/50 rounded-lg p-6 flex items-center justify-center">
+                    <p className="text-white"></p>
+                  </div>
+                  <div className="bg-[#1F1F1F] shadow-xl shadow-black/50 rounded-lg p-6 flex items-center justify-center">
+                    <p className="text-white"></p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Sub-coluna Direita (1/3 da largura) */}
+              <div className="w-1/3 flex flex-col gap-4">
+                {/* Visualização Secundária (altura calculada para alinhar) */}
+                <div className="bg-[#1F1F1F] shadow-xl shadow-black/50 rounded-lg p-6 h-[18rem] flex items-center justify-center">
+                  <p className="text-white"></p>
+                </div>
+                {/* Indicador 3 (cresce para preencher) */}
+                <div className="flex-1 grid">
+                  <div className="bg-[#1F1F1F] shadow-xl shadow-black/50 rounded-lg p-6 flex items-center justify-center">
+                    <p className="text-white"></p>
+                  </div>
+                </div>
+              </div>
+
             </div>
           </div>
-        </section>
-          <GraficodeBarras>
-          </GraficodeBarras>
-          <GraficoPizza></GraficoPizza>
+        </div>
       </main>
-    </>
+    </div>
   );
 }
