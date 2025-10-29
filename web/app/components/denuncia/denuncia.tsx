@@ -11,6 +11,10 @@ const MapaDepoimentos = dynamic(() => import("../map/map"), {
   ssr: false,
 })
 
+const MapSelector = dynamic(() => import("../map/map-selector"), {
+  ssr: false,
+})
+
 export default function DenunciaModal({ show, onCloseAction }: { show: boolean, onCloseAction: () => void }) {
   const [formStep, setFormStep] = useState(0)
   const [crimeGenre, setCrimeGenre] = useState<string | null>(null)
@@ -22,7 +26,7 @@ export default function DenunciaModal({ show, onCloseAction }: { show: boolean, 
   const [sexualOrientation, setSexualOrientation] = useState<string | null>(null)
   const [ethnicity, setEthnicity] = useState<string | null>(null)
   const [description, setDescription] = useState("")
-  const [location, setLocation] = useState("Brasília, DF") // TODO: Integrar com mapa
+  const [location, setLocation] = useState("")
   const [validationErrors, setValidationErrors] = useState<Record<string, boolean>>({})
   
   // Hook customizado para gerenciar a submissão do relatório
@@ -99,6 +103,15 @@ export default function DenunciaModal({ show, onCloseAction }: { show: boolean, 
     setter(value)
   }
 
+  
+   // Handler para capturar coordenadas selecionadas no mapa
+
+      // transforma as coordenadas em string "lat,lng"
+   
+  const handleLocationSelect = (lat: number, lng: number) => {
+    setLocation(`${lat},${lng}`)
+  }
+
   const resetForm = () => {
     setFormStep(0)
     setCrimeGenre(null)
@@ -110,7 +123,7 @@ export default function DenunciaModal({ show, onCloseAction }: { show: boolean, 
     setSexualOrientation(null)
     setEthnicity(null)
     setDescription("")
-    setLocation("Brasília, DF")
+    setLocation("")
     setValidationErrors({})
     clearError()
   }
@@ -378,8 +391,13 @@ export default function DenunciaModal({ show, onCloseAction }: { show: boolean, 
                   <div>
                     <p className="font-semibold mb-2">Onde aconteceu?</p>
                     <div className="w-full h-[250px] rounded-lg overflow-hidden">
-                      <MapaDepoimentos hideMarkers={true} hideTitle={true} />
+                      <MapSelector onLocationSelect={handleLocationSelect} />
                     </div>
+                    {location && (
+                      <p className="text-xs text-gray-400 mt-2">
+                        Coordenadas selecionadas: {location}
+                      </p>
+                    )}
                   </div>
 
                   <div className="flex justify-between mt-6">
