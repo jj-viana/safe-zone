@@ -95,3 +95,6 @@ app.MapControllers();
 app.MapHealthChecks("/");
 
 app.Run();
+
+//Referência importante para os testes de integração
+public partial class Program { }
