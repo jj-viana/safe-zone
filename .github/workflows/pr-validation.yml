@@ -44,7 +44,6 @@ jobs:
       DOTNET_NOLOGO: true
       DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
       DOTNET_CLI_TELEMETRY_OPTOUT: true
-      TEST_COSMOS_CONNECTION_STRING: ${{ secrets.TEST_COSMOS_CONNECTION_STRING }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -63,13 +62,29 @@ jobs:
         run: dotnet build api/api.sln --configuration Release --no-restore
 
       - name: Ensure Cosmos DB connection string is available
+        env:
+          TEST_COSMOS_CONNECTION_STRING: ${{ secrets.TEST_COSMOS_CONNECTION_STRING }}
+          TEST_COSMOS_DATABASE_ID: ${{ secrets.TEST_COSMOS_DATABASE_ID }}
+          TEST_COSMOS_CONTAINER_ID: ${{ secrets.TEST_COSMOS_CONTAINER_ID }}
         run: |
+          missing=""
           if [ -z "$TEST_COSMOS_CONNECTION_STRING" ]; then
-            echo "::error::Missing TEST_COSMOS_CONNECTION_STRING secret. Configure it in the repository or organization settings before running integration tests."
+            missing="TEST_COSMOS_CONNECTION_STRING"
+          fi
+          if [ -z "$TEST_COSMOS_DATABASE_ID" ]; then
+            missing="$missing TEST_COSMOS_DATABASE_ID"
+          fi
+          if [ -z "$TEST_COSMOS_CONTAINER_ID" ]; then
+            missing="$missing TEST_COSMOS_CONTAINER_ID"
+          fi
+          if [ -n "$missing" ]; then
+            echo "::error::Missing Cosmos DB secrets:$missing"
             exit 1
           fi
 
       - name: Test
         env:
-          CosmosDB__ConnectionString: ${{ env.TEST_COSMOS_CONNECTION_STRING }}
+          CosmosDB__ConnectionString: ${{ secrets.TEST_COSMOS_CONNECTION_STRING }}
+          CosmosDB__DatabaseId: ${{ secrets.TEST_COSMOS_DATABASE_ID }}
+          CosmosDB__ContainerId: ${{ secrets.TEST_COSMOS_CONTAINER_ID }}
         run: dotnet test api/api.sln --configuration Release --no-build --verbosity normal
