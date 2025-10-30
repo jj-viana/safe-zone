@@ -33,7 +33,7 @@ export default function AreaPizza({ data, colors = COLORS }: GraficoAreaProps) {
             borderRadius: '8px',
             color: '#F3F4F6',
           }}
-          labelStyle={{ color: '#F3F4F6' }}
+          itemStyle={{ color: '#fff' }}
           formatter={(value: any) => [value, 'Ocorrências']}
         />
         <Legend />
