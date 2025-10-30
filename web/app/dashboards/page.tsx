@@ -3,15 +3,23 @@
 import Navbar from "../components/navbar/navbar";
 import { Merriweather } from "next/font/google";
 import { useState } from "react";
+import GraficodeBarras from "../components/graficoBarras/graficoBarras";
+import GraficoPizza from "../components/graficoPizza/graficoPizza";
+import GraficoPizzaGenero from "../components/graficoPizza/graficoPizzaGenero";
+import GraficoDistribuicao from "../components/graficoDistribuicao/GraficoDistribuicao";
+import GraficoDeLinha from '../components/graficoLinha/graficolinha';
+import GraficoNatureza from "../components/graficoNatureza.tsx/graficoNatureza";
+import { MOCK_CRIME_DATA, CrimeData } from './data/mockData'
 
 
 const merriweather = Merriweather({
   subsets: ["latin"],
   weight: ["700"],
 });
-
+  
 export default function DashboardPage() {
   const [openFilter, setOpenFilter] = useState<string | null>(null);
+  const totalDenuncias = MOCK_CRIME_DATA.length;
   const [selectedFilters, setSelectedFilters] = useState({
     crime: "Crime",
     natureza: "Natureza",
@@ -20,7 +28,7 @@ export default function DashboardPage() {
 
   const filterOptions = {
     crime: ["Crime", "Sensação de Insegurança"],
-    natureza: ["Assalto ou tentativa de assalto", "Violência Verbal", "Violência Física", "Furto", "Vandalismo", "Assédio", "Iluminação Precária", "Abandono de local público"],
+    natureza: ["Todas", "Assalto ou tentativa de assalto", "Violência Verbal", "Violência Física", "Furto", "Vandalismo", "Assédio", "Iluminação Precária", "Abandono de local público"],
     regiao: ["Todas", "Norte", "Nordeste", "Centro-Oeste", "Sudeste", "Sul"],
   };
 
@@ -56,12 +64,13 @@ export default function DashboardPage() {
             <div className="lg:col-span-1 flex flex-col gap-4">
               {/* Classes de centralização removidas */}
               <div className="bg-[#1F1F1F] shadow-xl shadow-black/50 flex flex-col justify-end items-center rounded-lg p-6 h-36">
-                <p className="text-white text-5xl font-bold">3.276</p>
+                <p className="text-4xl font-bold">{totalDenuncias}</p>
                 <p className="text-white ">Total Denúncias</p>
               </div>
               {/* Classes de centralização removidas */}
               <div className="bg-[#1F1F1F] shadow-xl shadow-black/50 rounded-lg p-6 flex-1">
                 <p className="text-white">Distribuição por Natureza de Ocorrência</p>
+                <GraficoNatureza></GraficoNatureza>
               </div>
             </div>
 
@@ -81,7 +90,7 @@ export default function DashboardPage() {
                       <div style={{ fontSize: calculateFontSize(selectedFilters.crime) }}>
                         {selectedFilters.crime}
                       </div>
-                    </button>
+                    </button>   
                     {openFilter === "crime" && (
                       <div className="absolute top-full left-0 w-full mt-2 bg-[#2A2A2A] border border-[#373737] rounded-lg shadow-xl shadow-black/50 z-10">
                         {filterOptions.crime.map((option) => (
@@ -148,8 +157,9 @@ export default function DashboardPage() {
                   </div>
                 </div>
                 {/* Gráfico Principal - Classes de centralização removidas */}
-                <div className="bg-[#1F1F1F] shadow-xl shadow-black/50 rounded-lg p-6 h-56">
+                <div className="bg-[#1F1F1F] shadow-xl shadow-black/50 rounded-lg p-6 h-75">
                   <p className="text-white">Número de denúncias por mês</p>
+                  <GraficoDeLinha></GraficoDeLinha>
                 </div>
                 {/* Indicadores 1 e 2 - Classes de centralização removidas */}
                 <div className="flex-1 grid grid-cols-2 gap-4">
@@ -158,6 +168,7 @@ export default function DashboardPage() {
                   </div>
                   <div className="bg-[#1F1F1F] shadow-xl shadow-black/50 rounded-lg p-6">
                     <p className="text-white">Distribuição por Orientação Sexual</p>
+                    <GraficoDistribuicao></GraficoDistribuicao>
                   </div>
                 </div>
               </div>
@@ -165,13 +176,19 @@ export default function DashboardPage() {
               {/* Sub-coluna Direita (1/3 da largura) */}
               <div className="w-1/3 flex flex-col gap-4">
                 {/* Visualização Secundária - Classes de centralização removidas */}
-                <div className="bg-[#1F1F1F] shadow-xl shadow-black/50 rounded-lg p-6 h-[18rem]">
-                  <p className="text-white">Distribuição por Faixa Etária</p>
+                <div className="flex-1 grid"> 
+                  <div className="bg-[#1F1F1F] shadow-xl shadow-black/50 rounded-lg p-6 h-91 flex flex-col">
+                    <p className="text-white">Distribuição por Faixa Etária</p>
+                    <GraficoPizza></GraficoPizza>
+                  </div>
                 </div>
                 {/* Indicador 3 - Classes de centralização removidas */}
                 <div className="flex-1 grid">
-                  <div className="bg-[#1F1F1F] shadow-xl shadow-black/50 rounded-lg p-6">
+                  <div className="bg-[#1F1F1F] shadow-xl shadow-black/50 rounded-lg p-6 flex flex-col justify-between">
                     <p className="text-white">Distribuição por Raça/Cor</p>
+                    <div className="flex items-center justify-center">
+                      <GraficodeBarras />
+                    </div>
                   </div>
                 </div>
               </div>
