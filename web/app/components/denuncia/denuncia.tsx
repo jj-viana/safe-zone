@@ -3,19 +3,25 @@
 import { motion, AnimatePresence } from "framer-motion"
 import dynamic from "next/dynamic"
 import Image from "next/image"
-import { useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { FaArrowRight, FaArrowLeft } from "react-icons/fa"
 import { useReportSubmission } from "@/lib/hooks/use-report-submission"
-
-const MapaDepoimentos = dynamic(() => import("../map/map"), {
-  ssr: false,
-})
 
 const MapSelector = dynamic(() => import("../map/map-selector"), {
   ssr: false,
 })
 
-export default function DenunciaModal({ show, onCloseAction }: { show: boolean, onCloseAction: () => void }) {
+type PresetLocation = { lat: number; lng: number }
+
+const formatCoordinates = (lat: number, lng: number) => `${lat.toFixed(6)},${lng.toFixed(6)}`
+
+interface DenunciaModalProps {
+  show: boolean
+  onCloseAction: () => void
+  presetLocation?: PresetLocation | null
+}
+
+export default function DenunciaModal({ show, onCloseAction, presetLocation = null }: DenunciaModalProps) {
   const [formStep, setFormStep] = useState(0)
   const [crimeGenre, setCrimeGenre] = useState<string | null>(null)
   const [crimeType, setCrimeType] = useState<string | null>(null)
@@ -116,7 +122,7 @@ export default function DenunciaModal({ show, onCloseAction }: { show: boolean, 
       // transforma as coordenadas em string "lat,lng"
    
   const handleLocationSelect = (lat: number, lng: number) => {
-    setLocation(`${lat},${lng}`)
+    setLocation(formatCoordinates(lat, lng))
   }
 
   const resetForm = () => {
@@ -165,6 +171,22 @@ export default function DenunciaModal({ show, onCloseAction }: { show: boolean, 
       setFormStep(6)
     }
   }
+
+  // Preenche a localização quando o modal é aberto a partir do mapa
+  useEffect(() => {
+    if (!show || !presetLocation) return
+    const formatted = formatCoordinates(presetLocation.lat, presetLocation.lng)
+    setLocation((prev) => (prev === formatted ? prev : formatted))
+  }, [presetLocation, show])
+
+  const parsedLocation = useMemo(() => {
+    if (!location) return null
+    const [latStr, lngStr] = location.split(",")
+    const lat = parseFloat(latStr)
+    const lng = parseFloat(lngStr)
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null
+    return [lat, lng] as [number, number]
+  }, [location])
 
   return (
     <AnimatePresence>
@@ -398,7 +420,10 @@ export default function DenunciaModal({ show, onCloseAction }: { show: boolean, 
                   <div>
                     <p className="font-semibold mb-2">Onde aconteceu?</p>
                     <div className="w-full h-[250px] rounded-lg overflow-hidden">
-                      <MapSelector onLocationSelect={handleLocationSelect} />
+                      <MapSelector
+                        onLocationSelect={handleLocationSelect}
+                        selectedPosition={parsedLocation}
+                      />
                     </div>
                     {location && (
                       <p className="text-xs text-gray-400 mt-2">
