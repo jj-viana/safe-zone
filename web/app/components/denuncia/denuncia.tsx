@@ -32,24 +32,18 @@ export default function DenunciaModal({ show, onCloseAction, presetLocation = nu
   const [sexualOrientation, setSexualOrientation] = useState<string | null>(null)
   const [ethnicity, setEthnicity] = useState<string | null>(null)
   const [description, setDescription] = useState("")
+
   const [location, setLocation] = useState("")
   const [validationErrors, setValidationErrors] = useState<Record<string, boolean>>({})
   
-  // Hook customizado para gerenciar a submissão do relatório
   const { submitReport, isSubmitting, submitError, clearError } = useReportSubmission()
 
-  /**
-   * Valida se a data está no formato correto DD/MM/YYYY
-   */
   const isValidDate = (date: string): boolean => {
     if (!date || date.length !== 10) return false
     const regex = /^\d{2}\/\d{2}\/\d{4}$/
     return regex.test(date)
   }
 
-  /**
-   * Valida os campos obrigatórios de cada step
-   */
   const validateStep = (step: number): boolean => {
     const errors: Record<string, boolean> = {}
     
@@ -73,9 +67,6 @@ export default function DenunciaModal({ show, onCloseAction, presetLocation = nu
     return Object.keys(errors).length === 0
   }
 
-  /**
-   * Verifica se pode avançar para o próximo step
-   */
   const canProceed = (step: number): boolean => {
     switch (step) {
       case 1:
@@ -92,7 +83,6 @@ export default function DenunciaModal({ show, onCloseAction, presetLocation = nu
   const nextStep = (e: React.FormEvent) => {
     e.preventDefault()
     
-    // Valida o step atual antes de avançar
     if (validateStep(formStep)) {
       setValidationErrors({})
       setFormStep((prev) => prev + 1)
@@ -105,14 +95,11 @@ export default function DenunciaModal({ show, onCloseAction, presetLocation = nu
 
   const goToHome = () => setFormStep(0)
 
-  /**
-   * Permite selecionar e desmarcar uma opção clicando novamente
-   */
   const handleSelect = (value: string, currentValue: string | null, setter: (val: string | null) => void) => {
     if (currentValue === value) {
-      setter(null) // Desmarca se clicar novamente
+      setter(null)
     } else {
-      setter(value) // Marca a nova opção
+      setter(value) 
     }
   }
 
@@ -143,7 +130,6 @@ export default function DenunciaModal({ show, onCloseAction, presetLocation = nu
 
   const handleClose = () => {
     onCloseAction()
-    // Aguarda um momento antes de resetar para permitir animação de saída
     setTimeout(() => {
       resetForm()
     }, 300)
@@ -152,7 +138,6 @@ export default function DenunciaModal({ show, onCloseAction, presetLocation = nu
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    // Submete o relatório usando o hook customizado
     const result = await submitReport({
       crimeGenre,
       crimeType,
@@ -166,12 +151,25 @@ export default function DenunciaModal({ show, onCloseAction, presetLocation = nu
       location,
     })
 
-    // Se sucesso, avança para a tela de confirmação
     if (result.success) {
       setFormStep(6)
     }
   }
 
+  const crimeTypeOptions: Record<string, { id: string; label: string }[]> = {
+    "Crime": [
+      { id: "A", label: "Assalto ou tentativa de assalto" },
+      { id: "B", label: "Violência Verbal" },
+      { id: "C", label: "Violência Física" },
+      { id: "D", label: "Furto" },
+      { id: "E", label: "Vandalismo" },
+      { id: "F", label: "Assédio" },
+    ],
+    "Sensação de insegurança": [
+      { id: "G", label: "Iluminação Precária" },
+      { id: "H", label: "Abandono de local público" },
+    ],
+  };
   // Preenche a localização quando o modal é aberto a partir do mapa
   useEffect(() => {
     if (!show || !presetLocation) return
@@ -310,17 +308,8 @@ export default function DenunciaModal({ show, onCloseAction, presetLocation = nu
                         Qual é a natureza da ocorrência? <span className="text-red-400">*</span>
                       </p>
                       <div className="flex flex-wrap gap-3">
-                        {[
-                          { id: "A", label: "Assalto ou tentativa de assalto" },
-                          { id: "B", label: "Violência Verbal" },
-                          { id: "C", label: "Violência Física" },
-                          { id: "D", label: "Furto" },
-                          { id: "E", label: "Vandalismo" },
-                          { id: "F", label: "Assédio" },
-                          { id: "G", label: "Iluminação Precária" },
-                          { id: "H", label: "Abandono de local público" },
-                        ].map((item) => {
-                          const selected = crimeType === item.label
+                          {(crimeTypeOptions[crimeGenre ?? ""] || []).map((item) => {
+                          const selected = crimeType === item.label;
                           return (
                             <button
                               type="button"
@@ -346,7 +335,7 @@ export default function DenunciaModal({ show, onCloseAction, presetLocation = nu
                               </span>
                               {item.label}
                             </button>
-                          )
+                          );
                         })}
                       </div>
                       {validationErrors.crimeType && (
