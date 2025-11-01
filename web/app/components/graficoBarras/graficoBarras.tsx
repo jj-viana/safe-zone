@@ -9,7 +9,7 @@ interface ChartData {
   value: number;
 }
 
-const COLORS = ['#EC4899', '#F97316', '#06B6D4', '#FBBF24', '#EF4444'];
+const COLORS = ['#EC4899', '#F97316', '#06B6D4', '#FBBF24', '#EF4444', '#22C55E', '#8B5CF6'];
 
 const ETHNICITY_MAPPING: { [key: string]: string } = {
   'branco': 'Branco',

@@ -163,8 +163,11 @@ export default function DashboardPage() {
                 </div>
                 {/* Indicadores 1 e 2 - Classes de centralização removidas */}
                 <div className="flex-1 grid grid-cols-2 gap-4">
-                  <div className="bg-[#1F1F1F] shadow-xl shadow-black/50 rounded-lg p-6">
+                  <div className="bg-[#1F1F1F] shadow-xl shadow-black/50 rounded-lg p-6 flex flex-col">
                     <p className="text-white">Distribuição por Identidade de Gênero</p>
+                    <div className="flex-1 w-full h-full">
+                      <GraficoPizzaGenero />
+                    </div>
                   </div>
                   <div className="bg-[#1F1F1F] shadow-xl shadow-black/50 rounded-lg p-6">
                     <p className="text-white">Distribuição por Orientação Sexual</p>
@@ -179,7 +182,9 @@ export default function DashboardPage() {
                 <div className="flex-1 grid"> 
                   <div className="bg-[#1F1F1F] shadow-xl shadow-black/50 rounded-lg p-6 h-91 flex flex-col">
                     <p className="text-white">Distribuição por Faixa Etária</p>
-                    <GraficoPizza></GraficoPizza>
+                    <div className="flex-1 w-full h-full">
+                      <GraficoPizza />
+                    </div>
                   </div>
                 </div>
                 {/* Indicador 3 - Classes de centralização removidas */}

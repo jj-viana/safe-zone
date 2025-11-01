@@ -21,7 +21,7 @@ export default function AreaGraficoLinha({ data, colors, crimeTypes }: AreaGrafi
     <ResponsiveContainer width="100%" height="100%">
       <LineChart  
         data={data}
-        margin={{ top: 5, right: 30, left: 0, bottom: 5 }}
+        margin={{ top: 5, right: 30, left: 0, bottom: 20 }}
       >
         <XAxis dataKey="name" stroke="#fff" style={{ fontSize: '13px' }} />
         <YAxis stroke="#fff" style={{ fontSize: '16px' }}/>
@@ -31,9 +31,11 @@ export default function AreaGraficoLinha({ data, colors, crimeTypes }: AreaGrafi
               border: '1px solid #404040',
               borderRadius: '8px',
               color: '#F3F4F6',
+              fontSize: '14px',
             }} 
+            wrapperStyle={{ zIndex: 1000 }}
         />
-        <Legend wrapperStyle={{ color: '#fff'}}/>
+        <Legend wrapperStyle={{ color: '#fff', fontSize: '12px', paddingTop: '5px' }}/>
         {crimeTypes.map((crimeName, index) => (
           <Line 
             key={crimeName}

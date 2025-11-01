@@ -41,7 +41,7 @@ export default function AreaGraficoNatureza({ data, colors }: AreaGraficoNaturez
           itemStyle={{ color: '#fff' }}
           formatter={(value) => [value, 'Ocorrências']}
         />
-        <Bar dataKey="value" fill="#8884d8" radius={[0, 8, 8, 0]} barSize={20}>
+        <Bar dataKey="value" fill="#8884d8" radius={[0, 8, 8, 0]} barSize={30}>
           {data.map((entry, index) => (
             <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
           ))}
