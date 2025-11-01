@@ -3,15 +3,25 @@
 import { motion, AnimatePresence } from "framer-motion"
 import dynamic from "next/dynamic"
 import Image from "next/image"
-import { useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { FaArrowRight, FaArrowLeft } from "react-icons/fa"
 import { useReportSubmission } from "@/lib/hooks/use-report-submission"
 
-const MapaDepoimentos = dynamic(() => import("../map/map"), {
+const MapSelector = dynamic(() => import("../map/map-selector"), {
   ssr: false,
 })
 
-export default function DenunciaModal({ show, onCloseAction }: { show: boolean, onCloseAction: () => void }) {
+type PresetLocation = { lat: number; lng: number }
+
+const formatCoordinates = (lat: number, lng: number) => `${lat.toFixed(6)},${lng.toFixed(6)}`
+
+interface DenunciaModalProps {
+  show: boolean
+  onCloseAction: () => void
+  presetLocation?: PresetLocation | null
+}
+
+export default function DenunciaModal({ show, onCloseAction, presetLocation = null }: DenunciaModalProps) {
   const [formStep, setFormStep] = useState(0)
   const [crimeGenre, setCrimeGenre] = useState<string | null>(null)
   const [crimeType, setCrimeType] = useState<string | null>(null)
@@ -22,7 +32,8 @@ export default function DenunciaModal({ show, onCloseAction }: { show: boolean, 
   const [sexualOrientation, setSexualOrientation] = useState<string | null>(null)
   const [ethnicity, setEthnicity] = useState<string | null>(null)
   const [description, setDescription] = useState("")
-  const [location, setLocation] = useState("Brasília, DF") 
+
+  const [location, setLocation] = useState("")
   const [validationErrors, setValidationErrors] = useState<Record<string, boolean>>({})
   
   const { submitReport, isSubmitting, submitError, clearError } = useReportSubmission()
@@ -92,6 +103,15 @@ export default function DenunciaModal({ show, onCloseAction }: { show: boolean, 
     }
   }
 
+  
+   // Handler para capturar coordenadas selecionadas no mapa
+
+      // transforma as coordenadas em string "lat,lng"
+   
+  const handleLocationSelect = (lat: number, lng: number) => {
+    setLocation(formatCoordinates(lat, lng))
+  }
+
   const resetForm = () => {
     setFormStep(0)
     setCrimeGenre(null)
@@ -103,7 +123,7 @@ export default function DenunciaModal({ show, onCloseAction }: { show: boolean, 
     setSexualOrientation(null)
     setEthnicity(null)
     setDescription("")
-    setLocation("Brasília, DF")
+    setLocation("")
     setValidationErrors({})
     clearError()
   }
@@ -150,6 +170,21 @@ export default function DenunciaModal({ show, onCloseAction }: { show: boolean, 
       { id: "H", label: "Abandono de local público" },
     ],
   };
+  // Preenche a localização quando o modal é aberto a partir do mapa
+  useEffect(() => {
+    if (!show || !presetLocation) return
+    const formatted = formatCoordinates(presetLocation.lat, presetLocation.lng)
+    setLocation(formatted)
+  }, [presetLocation, show])
+
+  const parsedLocation = useMemo(() => {
+    if (!location) return null
+    const [latStr, lngStr] = location.split(",")
+    const lat = parseFloat(latStr)
+    const lng = parseFloat(lngStr)
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null
+    return [lat, lng] as [number, number]
+  }, [location])
 
   return (
     <AnimatePresence>
@@ -374,8 +409,16 @@ export default function DenunciaModal({ show, onCloseAction }: { show: boolean, 
                   <div>
                     <p className="font-semibold mb-2">Onde aconteceu?</p>
                     <div className="w-full h-[250px] rounded-lg overflow-hidden">
-                      <MapaDepoimentos hideMarkers={true} hideTitle={true} />
+                      <MapSelector
+                        onLocationSelect={handleLocationSelect}
+                        selectedPosition={parsedLocation}
+                      />
                     </div>
+                    {location && (
+                      <p className="text-xs text-gray-400 mt-2">
+                        Coordenadas selecionadas: {location}
+                      </p>
+                    )}
                   </div>
 
                   <div className="flex justify-between mt-6">
