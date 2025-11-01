@@ -19,6 +19,13 @@ interface MapaDepoimentosProps {
 }
 
 export default function MapaDepoimentos({ hideMarkers = false, hideTitle = false, height = "100%" }: MapaDepoimentosProps) {
+  type ReporterDetails = {
+    ageGroup: string | null
+    ethnicity: string | null
+    genderIdentity: string | null
+    sexualOrientation: string | null
+  }
+
   type Depoimento = {
     id: string
     crimeGenre: string
@@ -26,7 +33,7 @@ export default function MapaDepoimentos({ hideMarkers = false, hideTitle = false
     description: string
     location: [number, number]
     crimeDate: string
-    reporterDetails: string | null
+    reporterDetails: ReporterDetails | null
     createdDate: string
     resolved: boolean
     cor?: string // opcional para definir a cor do marcador
@@ -42,7 +49,12 @@ export default function MapaDepoimentos({ hideMarkers = false, hideTitle = false
       description: "Fui vítima de assédio em uma parada de ônibus no centro.",
       location: [-15.7801, -47.9292],
       crimeDate: "2025-10-15T14:30:00Z",
-      reporterDetails: "Mulher, 28 anos, estudante",
+      reporterDetails: {
+        ageGroup: "18 - 29",
+        ethnicity: "Parda",
+        genderIdentity: "Mulher Cisgênero",
+        sexualOrientation: "Heterossexual",
+      },
       createdDate: "2025-10-15T14:35:00Z",
       resolved: false,
       cor: "#ef4444",
@@ -54,7 +66,12 @@ export default function MapaDepoimentos({ hideMarkers = false, hideTitle = false
       description: "Tive meu carro arrombado em estacionamento público.",
       location: [-15.7101, -47.9502],
       crimeDate: "2025-10-20T09:15:00Z",
-      reporterDetails: "Homem, 35 anos, empresário",
+      reporterDetails: {
+        ageGroup: "30 - 44",
+        ethnicity: "Branca",
+        genderIdentity: "Homem Cisgênero",
+        sexualOrientation: "Heterossexual",
+      },
       createdDate: "2025-10-20T10:00:00Z",
       resolved: true,
       cor: "#3b82f6",
@@ -66,7 +83,24 @@ export default function MapaDepoimentos({ hideMarkers = false, hideTitle = false
       description: "Fui assaltado à noite, mas recebi apoio rapidamente.",
       location: [-15.8601, -47.9002],
       crimeDate: "2025-10-25T22:45:00Z",
-      reporterDetails: "Homem, 42 anos, professor",
+      reporterDetails: {
+        ageGroup: "45 - 59",
+        ethnicity: "Negra",
+        genderIdentity: "Homem Cisgênero",
+        sexualOrientation: null
+      },
+      createdDate: "2025-10-25T23:00:00Z",
+      resolved: true,
+      cor: "#22c55e",
+    },
+    {
+      id: "24daa097-76ba-4622-98a7-cc829841c3e4",
+      crimeGenre: "Crime",
+      crimeType: "Tentativa de assassinato",
+      description: "Minha prima foi esfaqueada na minha frente.",
+      location: [-15.7101, -47.9002],
+      crimeDate: "2025-10-25T22:45:00Z",
+      reporterDetails: null,
       createdDate: "2025-10-25T23:00:00Z",
       resolved: true,
       cor: "#22c55e",
@@ -253,7 +287,7 @@ export default function MapaDepoimentos({ hideMarkers = false, hideTitle = false
                           : 'bg-red-500/20 text-red-400 border border-red-500/50'
                       }`}
                     >
-                      {selectedDepoimento.resolved ? 'Resolvido' : 'Pendente'}
+                      {selectedDepoimento.resolved ? 'Resolvido' : 'Não resolvido'}
                     </span>
                   </p>
                 </div>
@@ -263,9 +297,36 @@ export default function MapaDepoimentos({ hideMarkers = false, hideTitle = false
                 <h4 className="text-sm font-semibold text-[#24BBE0] uppercase mb-2">
                   Informações do Denunciante
                 </h4>
-                <p className="text-white">
-                  {selectedDepoimento.reporterDetails || 'Informações não disponíveis'}
-                </p>
+                {selectedDepoimento.reporterDetails ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
+                    {selectedDepoimento.reporterDetails.ageGroup && (
+                      <div>
+                        <p className="text-xs text-gray-400 uppercase">Faixa Etária</p>
+                        <p className="text-white">{selectedDepoimento.reporterDetails.ageGroup}</p>
+                      </div>
+                    )}
+                    {selectedDepoimento.reporterDetails.genderIdentity && (
+                      <div>
+                        <p className="text-xs text-gray-400 uppercase">Identidade de Gênero</p>
+                        <p className="text-white">{selectedDepoimento.reporterDetails.genderIdentity}</p>
+                      </div>
+                    )}
+                    {selectedDepoimento.reporterDetails.sexualOrientation && (
+                      <div>
+                        <p className="text-xs text-gray-400 uppercase">Orientação Sexual</p>
+                        <p className="text-white">{selectedDepoimento.reporterDetails.sexualOrientation}</p>
+                      </div>
+                    )}
+                    {selectedDepoimento.reporterDetails.ethnicity && (
+                      <div>
+                        <p className="text-xs text-gray-400 uppercase">Raça/Cor</p>
+                        <p className="text-white">{selectedDepoimento.reporterDetails.ethnicity}</p>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-white">Informações não fornecidas pelo denunciante</p>
+                )}
               </div>
             </div>
 
