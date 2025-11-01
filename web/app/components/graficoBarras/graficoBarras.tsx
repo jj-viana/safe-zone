@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react';
 import AreaGrafico from './areaGrafico';
-import { MOCK_CRIME_DATA, CrimeData } from '../../dashboards/data/mockData';
+import { CrimeData } from '../../dashboards/data/mockData';
 
 interface ChartData {
   name: string;
@@ -11,29 +11,28 @@ interface ChartData {
 
 const COLORS = ['#EC4899', '#F97316', '#06B6D4', '#FBBF24', '#EF4444', '#22C55E', '#8B5CF6'];
 
-const ETHNICITY_MAPPING: { [key: string]: string } = {
-  'branco': 'Branco',
-  'negro': 'Negro',
-  'pardo': 'Pardo',
-  'asiatico': 'Asiático',
-  'indigena': 'Indígena',
-  'outro': 'Outro',
+const ETHNICITY_MAPPING: Record<string, string> = {
+  branco: 'Branco',
+  negro: 'Negro',
+  pardo: 'Pardo',
+  asiatico: 'Asiático',
+  indigena: 'Indígena',
+  outro: 'Outro',
 };
 
 interface GraficodeBarrasProps {
-  data?: CrimeData[];
+  data: CrimeData[]; // agora obrigatorio
 }
 
 export default function GraficodeBarras({ data }: GraficodeBarrasProps) {
-  const crimeData = data || MOCK_CRIME_DATA;
-
-  // Agrupar e contar ocorrências por ethnicity
+  // usa apenas os dados filtrados vindos do Dashboard
   const chartData = useMemo(() => {
-    const grouped: { [key: string]: number } = {};
+    const grouped: Record<string, number> = {};
 
-    crimeData.forEach((crime) => {
+    data.forEach((crime) => {
       const ethnicityKey = crime.reporterDetails.ethnicity.toLowerCase();
-      const displayName = ETHNICITY_MAPPING[ethnicityKey] || crime.reporterDetails.ethnicity;
+      const displayName =
+        ETHNICITY_MAPPING[ethnicityKey] || crime.reporterDetails.ethnicity;
 
       grouped[displayName] = (grouped[displayName] || 0) + 1;
     });
@@ -42,7 +41,7 @@ export default function GraficodeBarras({ data }: GraficodeBarrasProps) {
       name,
       value,
     })) as ChartData[];
-  }, [crimeData]);
+  }, [data]);
 
   return (
     <section className="w-full h-full">
