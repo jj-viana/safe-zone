@@ -1,6 +1,6 @@
 'use client'
 
-import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet"
+import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from "react-leaflet"
 import L from "leaflet"
 import "leaflet/dist/leaflet.css"
 import { useState, useEffect, useMemo } from "react"
@@ -8,6 +8,7 @@ import { useState, useEffect, useMemo } from "react"
 interface MapSelectorProps {
   onLocationSelect: (lat: number, lng: number) => void
   initialPosition?: [number, number]
+  selectedPosition?: [number, number] | null
 }
 
 // gerencia os cliques no mapa
@@ -32,26 +33,31 @@ function MapClickHandler({
 
 export default function MapSelector({ 
   onLocationSelect, 
-  initialPosition = [-15.7801, -47.9292] 
+  initialPosition = [-15.983774, -47.921338],
+  selectedPosition = null,
 }: MapSelectorProps) {
-  const [markerPosition, setMarkerPosition] = useState<[number, number] | null>(null)
+  const [markerPosition, setMarkerPosition] = useState<[number, number] | null>(selectedPosition)
 
-  
-const customIcon = useMemo(() => 
-  L.icon({
-    
-    iconUrl: '/marcador.svg', 
-    
-    iconSize: [25, 41], 
-    iconAnchor: [12.5, 41], 
-    popupAnchor: [0, -41], 
-    
-  })
-, [])
-
+  const customIcon = useMemo(
+    () =>
+      L.icon({
+        iconUrl: "/marcador.svg",
+        iconSize: [25, 41],
+        iconAnchor: [12.5, 41],
+        popupAnchor: [0, -41],
+      }),
+    []
+  )
 
   useEffect(() => {
-    
+    if (selectedPosition) {
+      setMarkerPosition(selectedPosition)
+    } else {
+      setMarkerPosition(null)
+    }
+  }, [selectedPosition])
+
+  useEffect(() => {
     const style = document.createElement("style")
     style.innerHTML = `
       .leaflet-container {
@@ -71,10 +77,21 @@ const customIcon = useMemo(() =>
     }
   }, [])
 
+  function MapCenterUpdater({ position }: { position: [number, number] | null }) {
+    const map = useMap()
+
+    useEffect(() => {
+      if (!position) return
+      map.setView(position)
+    }, [map, position])
+
+    return null
+  }
+
   return (
     <div className="w-full h-full relative">
       <MapContainer
-        center={initialPosition}
+        center={markerPosition ?? initialPosition}
         zoom={11}
         scrollWheelZoom={true}
         doubleClickZoom={true}
@@ -82,6 +99,7 @@ const customIcon = useMemo(() =>
         className="w-full h-full rounded-lg"
         style={{ cursor: 'crosshair' }}
       >
+        <MapCenterUpdater position={markerPosition ?? null} />
         <TileLayer
           attribution='&copy; <a href="https://cartodb.com/">CartoDB</a> contributors'
           url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
