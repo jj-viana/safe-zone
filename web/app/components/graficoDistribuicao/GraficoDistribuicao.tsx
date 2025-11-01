@@ -10,7 +10,7 @@ interface DistributionData {
   color: string;
 }
 
-const COLORS = ['#EC4899', '#F97316', '#06B6D4', '#FBBF24', '#EF4444'];
+const COLORS = ['#EC4899', '#F97316', '#06B6D4', '#FBBF24', '#EF4444', '#22C55E', '#8B5CF6'];
 
 const SEXUAL_ORIENTATION_MAPPING: Record<string, string> = {
   heterossexual: 'Heterossexual',
@@ -56,7 +56,7 @@ export default function GraficoDistribuicao({ data }: GraficoDistribuicaoProps) 
       {distributionData.map((item, index) => (
         <div key={index} className="flex items-center justify-between">
           <span className="text-white text-sm font-medium">{item.label}</span>
-          <span className="text-sm font-bold" style={{ color: item.color }}>
+          <span className="text-sm font-extrabold" style={{ color: item.color }}>
             {item.percentage}%
           </span>
         </div>

@@ -14,8 +14,7 @@ interface GraficoPizzaProps {
   data: CrimeData[]; // Recebe os dados filtrados
 }
 
-// Cores e mapeamentos
-const COLORS = ['#EC4899', '#F97316', '#06B6D4', '#FBBF24', '#EF4444'];
+const COLORS = ['#EC4899', '#F97316', '#06B6D4', '#FBBF24', '#EF4444', '#22C55E', '#8B5CF6'];
 
 const CRIME_TYPE_MAPPING: Record<string, string> = {
   homicidios: 'Homicídios e Tentativas',
@@ -43,7 +42,7 @@ export default function GraficoPizza({ data }: GraficoPizzaProps) {
   }, [crimeData]);
 
   return (
-    <section className="w-full max-w-[1920px] px-[128px] py-0">
+    <section className="w-full h-full">
       <AreaPizza data={chartData} colors={COLORS} />
     </section>
   );

@@ -23,6 +23,7 @@ export interface CrimeData {
 
 // Dados simulados de crimes e sensações de insegurança
 export const MOCK_CRIME_DATA: CrimeData[] = [
+  // --- DADOS ANTIGOS (DATAS ATUALIZADAS) ---
   {
     id: '1',
     crimeGenre: 'crime',
