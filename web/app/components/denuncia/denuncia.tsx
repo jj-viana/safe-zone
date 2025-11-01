@@ -16,6 +16,7 @@ export default function DenunciaModal({ show, onCloseAction }: { show: boolean, 
   const [crimeGenre, setCrimeGenre] = useState<string | null>(null)
   const [crimeType, setCrimeType] = useState<string | null>(null)
   const [crimeDate, setCrimeDate] = useState("")
+  const [crimeTime, setCrimeTime] = useState("")
   const [resolved, setResolved] = useState<string | null>(null)
   const [ageGroup, setAgeGroup] = useState<string | null>(null)
   const [genderIdentity, setGenderIdentity] = useState<string | null>(null)
@@ -38,6 +39,15 @@ export default function DenunciaModal({ show, onCloseAction }: { show: boolean, 
   }
 
   /**
+   * Valida se o horário está no formato correto HH:mm
+   */
+  const isValidTime = (time: string): boolean => {
+    if (!time) return false
+    const regex = /^([01]\d|2[0-3]):([0-5]\d)$/
+    return regex.test(time)
+  }
+
+  /**
    * Valida os campos obrigatórios de cada step
    */
   const validateStep = (step: number): boolean => {
@@ -50,6 +60,7 @@ export default function DenunciaModal({ show, onCloseAction }: { show: boolean, 
         break
       case 2:
         if (!isValidDate(crimeDate)) errors.crimeDate = true
+        if (!isValidTime(crimeTime)) errors.crimeTime = true
         break
       case 3:
         if (!resolved) errors.resolved = true
@@ -71,7 +82,7 @@ export default function DenunciaModal({ show, onCloseAction }: { show: boolean, 
       case 1:
         return !!(crimeGenre && crimeType)
       case 2:
-        return isValidDate(crimeDate)
+        return isValidDate(crimeDate) && isValidTime(crimeTime)
       case 3:
         return !!(resolved && description && description.trim().length > 0)
       default:
@@ -111,6 +122,7 @@ export default function DenunciaModal({ show, onCloseAction }: { show: boolean, 
     setCrimeGenre(null)
     setCrimeType(null)
     setCrimeDate("")
+  setCrimeTime("")
     setResolved(null)
     setAgeGroup(null)
     setGenderIdentity(null)
@@ -137,7 +149,8 @@ export default function DenunciaModal({ show, onCloseAction }: { show: boolean, 
     const result = await submitReport({
       crimeGenre,
       crimeType,
-      crimeDate,
+  crimeDate,
+  crimeTime,
       description,
       resolved,
       ageGroup,
@@ -346,40 +359,61 @@ export default function DenunciaModal({ show, onCloseAction }: { show: boolean, 
                 <h2 className="text-3xl font-bold mb-6 text-center">Informações básicas</h2>
 
                 <form className="flex flex-col gap-6" onSubmit={nextStep}>
-                  <div>
-                    <p className="font-semibold mb-2">
-                      Quando aconteceu? <span className="text-red-400">*</span>
-                    </p>
-                    <input
-                      type="text"
-                      placeholder="DD / MM / YYYY"
-                      value={crimeDate}
-                      onChange={(e) => {
-                        let input = e.target.value.replace(/\D/g, "")
-                        if (input.length > 8) input = input.slice(0, 8)
-                        if (input.length >= 7) {
-                          // Format as DD/MM/YYYY when 7 or 8 digits are present
-                          input = input.replace(/^(\d{2})(\d{2})(\d{3,4}).*/, "$1/$2/$3")
-                        } else if (input.length > 4) {
-                          // Format as DD/MM/YY or DD/MM/Y
-                          input = input.replace(/^(\d{2})(\d{2})(\d{1,2})/, "$1/$2/$3")
-                        } else if (input.length > 2) {
-                          // Format as DD/MM
-                          input = input.replace(/^(\d{2})(\d{0,2})/, "$1/$2")
-                        }
-                        setCrimeDate(input)
-                        setValidationErrors({ ...validationErrors, crimeDate: false })
-                      }}
-                      maxLength={10}
-                      className={`bg-neutral-800 text-white p-2 rounded-md w-40 text-center focus:outline-none focus:ring-2 ${
-                        validationErrors.crimeDate ? 'ring-2 ring-red-400' : 'focus:ring-[#24BBE0]'
-                      }`}
-                    />
-                    {validationErrors.crimeDate && (
-                      <p className="text-sm text-red-400 mt-2">
-                        Por favor, insira uma data válida no formato DD/MM/YYYY
+                  <div className="flex flex-wrap gap-6">
+                    <div>
+                      <p className="font-semibold mb-2">
+                        Quando aconteceu? <span className="text-red-400">*</span>
                       </p>
-                    )}
+                      <input
+                        type="text"
+                        placeholder="DD / MM / YYYY"
+                        value={crimeDate}
+                        onChange={(e) => {
+                          let input = e.target.value.replace(/\D/g, "")
+                          if (input.length > 8) input = input.slice(0, 8)
+                          if (input.length >= 7) {
+                            input = input.replace(/^(\d{2})(\d{2})(\d{3,4}).*/, "$1/$2/$3")
+                          } else if (input.length > 4) {
+                            input = input.replace(/^(\d{2})(\d{2})(\d{1,2})/, "$1/$2/$3")
+                          } else if (input.length > 2) {
+                            input = input.replace(/^(\d{2})(\d{0,2})/, "$1/$2")
+                          }
+                          setCrimeDate(input)
+                          setValidationErrors((prev) => ({ ...prev, crimeDate: false }))
+                        }}
+                        maxLength={10}
+                        className={`bg-neutral-800 text-white p-2 rounded-md w-40 text-center focus:outline-none focus:ring-2 ${
+                          validationErrors.crimeDate ? 'ring-2 ring-red-400' : 'focus:ring-[#24BBE0]'
+                        }`}
+                      />
+                      {validationErrors.crimeDate && (
+                        <p className="text-sm text-red-400 mt-2">
+                          Por favor, insira uma data válida no formato DD/MM/YYYY
+                        </p>
+                      )}
+                    </div>
+
+                    <div>
+                      <p className="font-semibold mb-2">
+                        Em qual horário? <span className="text-red-400">*</span>
+                      </p>
+                      <input
+                        type="time"
+                        value={crimeTime}
+                        onChange={(e) => {
+                          setCrimeTime(e.target.value)
+                          setValidationErrors((prev) => ({ ...prev, crimeTime: false }))
+                        }}
+                        className={`bg-neutral-800 text-white p-2 rounded-md w-32 text-center focus:outline-none focus:ring-2 ${
+                          validationErrors.crimeTime ? 'ring-2 ring-red-400' : 'focus:ring-[#24BBE0]'
+                        }`}
+                      />
+                      {validationErrors.crimeTime && (
+                        <p className="text-sm text-red-400 mt-2">
+                          Por favor, selecione um horário válido no formato HH:mm
+                        </p>
+                      )}
+                    </div>
                   </div>
 
                   <div>
