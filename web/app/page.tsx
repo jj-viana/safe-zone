@@ -104,8 +104,8 @@ export default function Home() {
       </div>
 
       <div className="relative z-10 w-full flex justify-center py-20 bg-neutral-900">
-        <div className="w-[90%] h-[500px] rounded-2xl overflow-hidden">
-          <MapaDepoimentos height="200%" />
+        <div className="w-[90%] h-[700px] rounded-2xl overflow-hidden">
+          <MapaDepoimentos height="100%" />
         </div>
       </div>
 

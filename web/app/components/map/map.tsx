@@ -3,7 +3,7 @@
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet"
 import L from "leaflet"
 import "leaflet/dist/leaflet.css"
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 
 delete (L.Icon.Default.prototype as unknown as { _getIconUrl?: unknown })._getIconUrl
 L.Icon.Default.mergeOptions({
@@ -20,30 +20,56 @@ interface MapaDepoimentosProps {
 
 export default function MapaDepoimentos({ hideMarkers = false, hideTitle = false, height = "100%" }: MapaDepoimentosProps) {
   type Depoimento = {
-    id: number
-    pos: [number, number]
-    cor: string
-    texto: string
+    id: string
+    crimeGenre: string
+    crimeType: string
+    description: string
+    location: [number, number]
+    crimeDate: string
+    reporterDetails: string | null
+    createdDate: string
+    resolved: boolean
+    cor?: string // opcional para definir a cor do marcador
   }
+
+  const [selectedDepoimento, setSelectedDepoimento] = useState<Depoimento | null>(null)
 
   const depoimentos: Depoimento[] = [
     {
-      id: 1,
-      pos: [-15.7801, -47.9292],
+      id: "24daa097-76ba-4622-98a7-cc829841c3e1",
+      crimeGenre: "Violência contra a pessoa",
+      crimeType: "Assédio sexual",
+      description: "Fui vítima de assédio em uma parada de ônibus no centro.",
+      location: [-15.7801, -47.9292],
+      crimeDate: "2025-10-15T14:30:00Z",
+      reporterDetails: "Mulher, 28 anos, estudante",
+      createdDate: "2025-10-15T14:35:00Z",
+      resolved: false,
       cor: "#ef4444",
-      texto: "Fui vítima de assédio em uma parada de ônibus no centro.",
     },
     {
-      id: 2,
-      pos: [-15.7101, -47.9502],
+      id: "24daa097-76ba-4622-98a7-cc829841c3e2",
+      crimeGenre: "Crime contra o patrimônio",
+      crimeType: "Furto de veículo",
+      description: "Tive meu carro arrombado em estacionamento público.",
+      location: [-15.7101, -47.9502],
+      crimeDate: "2025-10-20T09:15:00Z",
+      reporterDetails: "Homem, 35 anos, empresário",
+      createdDate: "2025-10-20T10:00:00Z",
+      resolved: true,
       cor: "#3b82f6",
-      texto: "Tive meu carro arrombado em estacionamento público.",
     },
     {
-      id: 3,
-      pos: [-15.8601, -47.9002],
+      id: "24daa097-76ba-4622-98a7-cc829841c3e3",
+      crimeGenre: "Crime contra o patrimônio",
+      crimeType: "Roubo",
+      description: "Fui assaltado à noite, mas recebi apoio rapidamente.",
+      location: [-15.8601, -47.9002],
+      crimeDate: "2025-10-25T22:45:00Z",
+      reporterDetails: "Homem, 42 anos, professor",
+      createdDate: "2025-10-25T23:00:00Z",
+      resolved: true,
       cor: "#22c55e",
-      texto: "Fui assaltado à noite, mas recebi apoio rapidamente.",
     },
   ]
 
@@ -143,13 +169,117 @@ export default function MapaDepoimentos({ hideMarkers = false, hideTitle = false
 
         {!hideMarkers &&
           depoimentos.map((dep) => (
-            <Marker key={dep.id} position={dep.pos} icon={createIcon(dep.cor)}>
+            <Marker key={dep.id} position={dep.location} icon={createIcon(dep.cor || "#3b82f6")}>
               <Popup>
-                <p className="text-gray-800 font-medium">{dep.texto}</p>
+                <div className="text-gray-800 flex flex-col items-center">
+                  <p className="font-medium mb-2 text-center">{dep.description}</p>
+                  <button
+                    onClick={() => setSelectedDepoimento(dep)}
+                    className="mt-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm font-medium"
+                  >
+                    Saiba mais
+                  </button>
+                </div>
               </Popup>
             </Marker>
           ))}
       </MapContainer>
+
+      {/* Modal de Detalhes */}
+      {selectedDepoimento && (
+        <div
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-[10000] p-4"
+          onClick={() => setSelectedDepoimento(null)}
+        >
+          <div
+            className="bg-neutral-900 rounded-2xl shadow-xl max-w-2xl w-full p-8 max-h-[90vh] overflow-y-auto border border-[#24BBE0]/30 relative"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Botão de fechar no canto superior direito */}
+            <button
+              onClick={() => setSelectedDepoimento(null)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-white text-2xl font-bold"
+            >
+              ✕
+            </button>
+
+            <div className="mb-6">
+              <h3 className="text-3xl font-bold text-white">
+                Detalhes do Depoimento
+              </h3>
+            </div>
+
+            <div className="space-y-6">
+              <div>
+                <h4 className="text-sm font-semibold text-[#24BBE0] uppercase mb-2">
+                  Descrição
+                </h4>
+                <p className="text-white">{selectedDepoimento.description}</p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <h4 className="text-sm font-semibold text-[#24BBE0] uppercase mb-2">
+                    Gênero do Crime
+                  </h4>
+                  <p className="text-white">{selectedDepoimento.crimeGenre}</p>
+                </div>
+
+                <div>
+                  <h4 className="text-sm font-semibold text-[#24BBE0] uppercase mb-2">
+                    Tipo de Crime
+                  </h4>
+                  <p className="text-white">{selectedDepoimento.crimeType}</p>
+                </div>
+
+                <div>
+                  <h4 className="text-sm font-semibold text-[#24BBE0] uppercase mb-2">
+                    Data do Ocorrido
+                  </h4>
+                  <p className="text-white">
+                    {new Date(selectedDepoimento.crimeDate).toLocaleDateString('pt-BR')}
+                  </p>
+                </div>
+
+                <div>
+                  <h4 className="text-sm font-semibold text-[#24BBE0] uppercase mb-2">
+                    Status
+                  </h4>
+                  <p className="text-white">
+                    <span
+                      className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
+                        selectedDepoimento.resolved
+                          ? 'bg-green-500/20 text-green-400 border border-green-500/50'
+                          : 'bg-red-500/20 text-red-400 border border-red-500/50'
+                      }`}
+                    >
+                      {selectedDepoimento.resolved ? 'Resolvido' : 'Pendente'}
+                    </span>
+                  </p>
+                </div>
+              </div>
+
+              <div>
+                <h4 className="text-sm font-semibold text-[#24BBE0] uppercase mb-2">
+                  Informações do Denunciante
+                </h4>
+                <p className="text-white">
+                  {selectedDepoimento.reporterDetails || 'Informações não disponíveis'}
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-8 flex justify-center">
+              <button
+                onClick={() => setSelectedDepoimento(null)}
+                className="px-8 py-2 bg-[#24BBE0] hover:bg-blue-500 text-white rounded-md transition-colors font-semibold"
+              >
+                Fechar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
