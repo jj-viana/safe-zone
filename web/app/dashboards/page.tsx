@@ -245,9 +245,9 @@ export default function DashboardPage() {
                 <div className="flex-1 grid grid-cols-2 gap-4">
                   <div className="bg-[#1F1F1F] shadow-xl shadow-black/50 rounded-lg p-6 flex flex-col">
                     <p className="text-white">Distribuição por Identidade de Gênero</p>
-                    <div className="flex-1 w-full h-full">
-                      <GraficoPizzaGenero />
-                    </div>
+                    {/* <div className="flex-1 w-full h-full">
+                      <GraficoPizzaGenero data={filteredData}/>
+                    </div> */}
                   </div>
                   <div className="bg-[#1F1F1F] shadow-xl shadow-black/50 rounded-lg p-6">
                     <p>Distribuição por Orientação Sexual</p>
@@ -262,7 +262,7 @@ export default function DashboardPage() {
                   <div className="bg-[#1F1F1F] shadow-xl shadow-black/50 rounded-lg p-6 h-91 flex flex-col">
                     <p className="text-white">Distribuição por Faixa Etária</p>
                     <div className="flex-1 w-full h-full">
-                      <GraficoPizza />
+                      <GraficoPizza data={filteredData}/>
                     </div>
                   </div>
                 </div>
