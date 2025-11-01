@@ -176,7 +176,7 @@ export default function DenunciaModal({ show, onCloseAction, presetLocation = nu
   useEffect(() => {
     if (!show || !presetLocation) return
     const formatted = formatCoordinates(presetLocation.lat, presetLocation.lng)
-    setLocation((prev) => (prev === formatted ? prev : formatted))
+    setLocation(formatted)
   }, [presetLocation, show])
 
   const parsedLocation = useMemo(() => {

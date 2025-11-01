@@ -6,7 +6,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { IoIosArrowRoundDown } from "react-icons/io"
 import { FiLock } from "react-icons/fi"
-import { useCallback, useEffect, useState } from "react"
+import { useEffect, useState } from "react"
 import type { LeafletMouseEvent } from "leaflet"
 import DenunciaModal from "./components/denuncia/denuncia"
 
@@ -35,11 +35,11 @@ export default function Home() {
   } | null>(null)
   const [presetLocation, setPresetLocation] = useState<{ lat: number; lng: number } | null>(null)
 
-  const handleMapContextMenu = useCallback((event: LeafletMouseEvent) => {
+  function handleMapContextMenu(event: LeafletMouseEvent) {
     const { lat, lng } = event.latlng
     const { x, y } = event.containerPoint
     setContextMenu({ lat, lng, x, y })
-  }, [])
+  }
 
   useEffect(() => {
     const handleClick = () => setContextMenu(null)
