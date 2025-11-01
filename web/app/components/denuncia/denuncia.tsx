@@ -3,15 +3,25 @@
 import { motion, AnimatePresence } from "framer-motion"
 import dynamic from "next/dynamic"
 import Image from "next/image"
-import { useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { FaArrowRight, FaArrowLeft } from "react-icons/fa"
 import { useReportSubmission } from "@/lib/hooks/use-report-submission"
 
-const MapaDepoimentos = dynamic(() => import("../map/map"), {
+const MapSelector = dynamic(() => import("../map/map-selector"), {
   ssr: false,
 })
 
-export default function DenunciaModal({ show, onCloseAction }: { show: boolean, onCloseAction: () => void }) {
+type PresetLocation = { lat: number; lng: number }
+
+const formatCoordinates = (lat: number, lng: number) => `${lat.toFixed(6)},${lng.toFixed(6)}`
+
+interface DenunciaModalProps {
+  show: boolean
+  onCloseAction: () => void
+  presetLocation?: PresetLocation | null
+}
+
+export default function DenunciaModal({ show, onCloseAction, presetLocation = null }: DenunciaModalProps) {
   const [formStep, setFormStep] = useState(0)
   const [crimeGenre, setCrimeGenre] = useState<string | null>(null)
   const [crimeType, setCrimeType] = useState<string | null>(null)
@@ -23,15 +33,12 @@ export default function DenunciaModal({ show, onCloseAction }: { show: boolean, 
   const [sexualOrientation, setSexualOrientation] = useState<string | null>(null)
   const [ethnicity, setEthnicity] = useState<string | null>(null)
   const [description, setDescription] = useState("")
-  const [location, setLocation] = useState("Brasília, DF") // TODO: Integrar com mapa
+
+  const [location, setLocation] = useState("")
   const [validationErrors, setValidationErrors] = useState<Record<string, boolean>>({})
   
-  // Hook customizado para gerenciar a submissão do relatório
   const { submitReport, isSubmitting, submitError, clearError } = useReportSubmission()
 
-  /**
-   * Valida se a data está no formato correto DD/MM/YYYY
-   */
   const isValidDate = (date: string): boolean => {
     if (!date || date.length !== 10) return false
     const regex = /^\d{2}\/\d{2}\/\d{4}$/
@@ -74,9 +81,6 @@ export default function DenunciaModal({ show, onCloseAction }: { show: boolean, 
     return Object.keys(errors).length === 0
   }
 
-  /**
-   * Verifica se pode avançar para o próximo step
-   */
   const canProceed = (step: number): boolean => {
     switch (step) {
       case 1:
@@ -93,7 +97,6 @@ export default function DenunciaModal({ show, onCloseAction }: { show: boolean, 
   const nextStep = (e: React.FormEvent) => {
     e.preventDefault()
     
-    // Valida o step atual antes de avançar
     if (validateStep(formStep)) {
       setValidationErrors({})
       setFormStep((prev) => prev + 1)
@@ -106,15 +109,21 @@ export default function DenunciaModal({ show, onCloseAction }: { show: boolean, 
 
   const goToHome = () => setFormStep(0)
 
-  /**
-   * Permite selecionar e desmarcar uma opção clicando novamente
-   */
   const handleSelect = (value: string, currentValue: string | null, setter: (val: string | null) => void) => {
     if (currentValue === value) {
-      setter(null) // Desmarca se clicar novamente
+      setter(null)
     } else {
-      setter(value) // Marca a nova opção
+      setter(value) 
     }
+  }
+
+  
+   // Handler para capturar coordenadas selecionadas no mapa
+
+      // transforma as coordenadas em string "lat,lng"
+   
+  const handleLocationSelect = (lat: number, lng: number) => {
+    setLocation(formatCoordinates(lat, lng))
   }
 
   const resetForm = () => {
@@ -129,14 +138,13 @@ export default function DenunciaModal({ show, onCloseAction }: { show: boolean, 
     setSexualOrientation(null)
     setEthnicity(null)
     setDescription("")
-    setLocation("Brasília, DF")
+    setLocation("")
     setValidationErrors({})
     clearError()
   }
 
   const handleClose = () => {
     onCloseAction()
-    // Aguarda um momento antes de resetar para permitir animação de saída
     setTimeout(() => {
       resetForm()
     }, 300)
@@ -145,7 +153,6 @@ export default function DenunciaModal({ show, onCloseAction }: { show: boolean, 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    // Submete o relatório usando o hook customizado
     const result = await submitReport({
       crimeGenre,
       crimeType,
@@ -160,11 +167,40 @@ export default function DenunciaModal({ show, onCloseAction }: { show: boolean, 
       location,
     })
 
-    // Se sucesso, avança para a tela de confirmação
     if (result.success) {
       setFormStep(6)
     }
   }
+
+  const crimeTypeOptions: Record<string, { id: string; label: string }[]> = {
+    "Crime": [
+      { id: "A", label: "Assalto ou tentativa de assalto" },
+      { id: "B", label: "Violência Verbal" },
+      { id: "C", label: "Violência Física" },
+      { id: "D", label: "Furto" },
+      { id: "E", label: "Vandalismo" },
+      { id: "F", label: "Assédio" },
+    ],
+    "Sensação de insegurança": [
+      { id: "G", label: "Iluminação Precária" },
+      { id: "H", label: "Abandono de local público" },
+    ],
+  };
+  // Preenche a localização quando o modal é aberto a partir do mapa
+  useEffect(() => {
+    if (!show || !presetLocation) return
+    const formatted = formatCoordinates(presetLocation.lat, presetLocation.lng)
+    setLocation(formatted)
+  }, [presetLocation, show])
+
+  const parsedLocation = useMemo(() => {
+    if (!location) return null
+    const [latStr, lngStr] = location.split(",")
+    const lat = parseFloat(latStr)
+    const lng = parseFloat(lngStr)
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null
+    return [lat, lng] as [number, number]
+  }, [location])
 
   return (
     <AnimatePresence>
@@ -288,17 +324,8 @@ export default function DenunciaModal({ show, onCloseAction }: { show: boolean, 
                         Qual é a natureza da ocorrência? <span className="text-red-400">*</span>
                       </p>
                       <div className="flex flex-wrap gap-3">
-                        {[
-                          { id: "A", label: "Assalto ou tentativa de assalto" },
-                          { id: "B", label: "Violência Verbal" },
-                          { id: "C", label: "Violência Física" },
-                          { id: "D", label: "Furto" },
-                          { id: "E", label: "Vandalismo" },
-                          { id: "F", label: "Assédio" },
-                          { id: "G", label: "Iluminação Precária" },
-                          { id: "H", label: "Abandono de local público" },
-                        ].map((item) => {
-                          const selected = crimeType === item.label
+                          {(crimeTypeOptions[crimeGenre ?? ""] || []).map((item) => {
+                          const selected = crimeType === item.label;
                           return (
                             <button
                               type="button"
@@ -324,7 +351,7 @@ export default function DenunciaModal({ show, onCloseAction }: { show: boolean, 
                               </span>
                               {item.label}
                             </button>
-                          )
+                          );
                         })}
                       </div>
                       {validationErrors.crimeType && (
@@ -419,8 +446,16 @@ export default function DenunciaModal({ show, onCloseAction }: { show: boolean, 
                   <div>
                     <p className="font-semibold mb-2">Onde aconteceu?</p>
                     <div className="w-full h-[250px] rounded-lg overflow-hidden">
-                      <MapaDepoimentos hideMarkers={true} hideTitle={true} />
+                      <MapSelector
+                        onLocationSelect={handleLocationSelect}
+                        selectedPosition={parsedLocation}
+                      />
                     </div>
+                    {location && (
+                      <p className="text-xs text-gray-400 mt-2">
+                        Coordenadas selecionadas: {location}
+                      </p>
+                    )}
                   </div>
 
                   <div className="flex justify-between mt-6">
