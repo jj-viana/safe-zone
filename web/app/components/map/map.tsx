@@ -254,6 +254,7 @@ export default function MapaDepoimentos({ hideMarkers = false, hideTitle = false
             <button
               onClick={() => setSelectedDepoimento(null)}
               className="absolute top-4 right-4 text-gray-400 hover:text-white text-2xl font-bold"
+              aria-label="Fechar"
             >
               ✕
             </button>
