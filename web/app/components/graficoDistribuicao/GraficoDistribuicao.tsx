@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import { MOCK_CRIME_DATA, CrimeData } from '../../dashboards/data/mockData';
+import { CrimeData } from '../../dashboards/data/mockData';
 
 interface DistributionData {
   label: string;
@@ -12,35 +12,34 @@ interface DistributionData {
 
 const COLORS = ['#EC4899', '#F97316', '#06B6D4', '#FBBF24', '#EF4444'];
 
-const SEXUAL_ORIENTATION_MAPPING: { [key: string]: string } = {
-  'heterossexual': 'Heterossexual',
-  'homossexual': 'Homossexual',
-  'bissexual': 'Bissexual',
-  'asexual': 'Assexual',
-  'outro': 'Outro',
-  'prefiro_nao_informar': 'Prefiro Não Informar',
+const SEXUAL_ORIENTATION_MAPPING: Record<string, string> = {
+  heterossexual: 'Heterossexual',
+  homossexual: 'Homossexual',
+  bissexual: 'Bissexual',
+  assexual: 'Assexual',
+  outro: 'Outro',
+  prefiro_nao_informar: 'Prefiro Não Informar',
 };
 
 interface GraficoDistribuicaoProps {
-  data?: CrimeData[];
+  data: CrimeData[]; // ✅ agora obrigatório
 }
 
 export default function GraficoDistribuicao({ data }: GraficoDistribuicaoProps) {
-  // Usar dados fornecidos ou dados fictícios
-  const crimeData = data || MOCK_CRIME_DATA;
-
-  // Agrupar e contar ocorrências por sexualOrientation
+  // ✅ usa apenas os dados filtrados vindos do Dashboard
   const distributionData = useMemo(() => {
-    const grouped: { [key: string]: number } = {};
+    const grouped: Record<string, number> = {};
 
-    crimeData.forEach((crime) => {
+    data.forEach(crime => {
       const orientationKey = crime.reporterDetails.sexualOrientation.toLowerCase();
-      const displayName = SEXUAL_ORIENTATION_MAPPING[orientationKey] || crime.reporterDetails.sexualOrientation;
+      const displayName =
+        SEXUAL_ORIENTATION_MAPPING[orientationKey] ||
+        crime.reporterDetails.sexualOrientation;
 
       grouped[displayName] = (grouped[displayName] || 0) + 1;
     });
 
-    const total = crimeData.length;
+    const total = data.length || 1;
 
     return Object.entries(grouped)
       .map(([label, count], index) => ({
@@ -49,8 +48,8 @@ export default function GraficoDistribuicao({ data }: GraficoDistribuicaoProps) 
         percentage: Math.round((count / total) * 100),
         color: COLORS[index % COLORS.length],
       }))
-      .sort((a, b) => b.count - a.count) as DistributionData[];
-  }, [crimeData]);
+      .sort((a, b) => b.count - a.count);
+  }, [data]);
 
   return (
     <div className="w-full h-full flex flex-col gap-3 overflow-y-auto">
