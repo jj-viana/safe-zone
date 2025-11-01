@@ -41,10 +41,24 @@ export default function MapaDepoimentos({ hideMarkers = false, hideTitle = false
 
   const [selectedDepoimento, setSelectedDepoimento] = useState<Depoimento | null>(null)
 
+  /**
+   * Define a cor do marcador baseado no gênero do crime
+   * @param crimeGenre - Gênero do crime
+   * @returns Cor em formato hexadecimal
+   */
+  const getMarkerColor = (crimeGenre: string): string => {
+    if (crimeGenre === "Crime") {
+      return "#ef4444"
+    } else if (crimeGenre === "Sensação de insegurança") {
+      return "#3b82f6"
+    }
+    return "#22c55e"
+  }
+
   const depoimentos: Depoimento[] = [
     {
       id: "24daa097-76ba-4622-98a7-cc829841c3e1",
-      crimeGenre: "Violência contra a pessoa",
+      crimeGenre: "Crime",
       crimeType: "Assédio sexual",
       description: "Fui vítima de assédio em uma parada de ônibus no centro.",
       location: [-15.7801, -47.9292],
@@ -57,11 +71,10 @@ export default function MapaDepoimentos({ hideMarkers = false, hideTitle = false
       },
       createdDate: "2025-10-15T14:35:00Z",
       resolved: false,
-      cor: "#ef4444",
     },
     {
       id: "24daa097-76ba-4622-98a7-cc829841c3e2",
-      crimeGenre: "Crime contra o patrimônio",
+      crimeGenre: "Crime",
       crimeType: "Furto de veículo",
       description: "Tive meu carro arrombado em estacionamento público.",
       location: [-15.7101, -47.9502],
@@ -74,11 +87,10 @@ export default function MapaDepoimentos({ hideMarkers = false, hideTitle = false
       },
       createdDate: "2025-10-20T10:00:00Z",
       resolved: true,
-      cor: "#3b82f6",
     },
     {
       id: "24daa097-76ba-4622-98a7-cc829841c3e3",
-      crimeGenre: "Crime contra o patrimônio",
+      crimeGenre: "Crime",
       crimeType: "Roubo",
       description: "Fui assaltado à noite, mas recebi apoio rapidamente.",
       location: [-15.8601, -47.9002],
@@ -91,7 +103,6 @@ export default function MapaDepoimentos({ hideMarkers = false, hideTitle = false
       },
       createdDate: "2025-10-25T23:00:00Z",
       resolved: true,
-      cor: "#22c55e",
     },
     {
       id: "24daa097-76ba-4622-98a7-cc829841c3e4",
@@ -103,7 +114,17 @@ export default function MapaDepoimentos({ hideMarkers = false, hideTitle = false
       reporterDetails: null,
       createdDate: "2025-10-25T23:00:00Z",
       resolved: true,
-      cor: "#22c55e",
+    },
+    {
+      id: "24daa097-76ba-4622-98a7-cc829841c3e5",
+      crimeGenre: "Sensação de insegurança",
+      crimeType: "Iluminação precária",
+      description: "Postes desligados, a rua está um breu tem uma semana.",
+      location: [-15.7101, -47.9292],
+      crimeDate: "2025-11-25T22:46:00Z",
+      reporterDetails: null,
+      createdDate: "2025-11-25T23:00:00Z",
+      resolved: false,
     },
   ]
 
@@ -203,7 +224,7 @@ export default function MapaDepoimentos({ hideMarkers = false, hideTitle = false
 
         {!hideMarkers &&
           depoimentos.map((dep) => (
-            <Marker key={dep.id} position={dep.location} icon={createIcon(dep.cor || "#3b82f6")}>
+            <Marker key={dep.id} position={dep.location} icon={createIcon(dep.cor || getMarkerColor(dep.crimeGenre))}>
               <Popup>
                 <div className="text-gray-800 flex flex-col items-center">
                   <p className="font-medium mb-2 text-center">{dep.description}</p>
