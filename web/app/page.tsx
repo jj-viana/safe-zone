@@ -145,7 +145,7 @@ export default function Home() {
             Clique com o botão direito no mapa para criar uma denúncia no local desejado.
           </p>
         </div>
-        <div className="relative w-[90%] h-[500px]">
+        <div className="relative w-[90%] h-[800px]">
           <div className="h-full rounded-2xl overflow-hidden">
             <MapaDepoimentos hideTitle height="200%" onContextMenu={handleMapContextMenu} />
           </div>
