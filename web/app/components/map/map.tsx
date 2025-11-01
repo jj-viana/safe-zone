@@ -1,24 +1,24 @@
 'use client'
 
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet"
+import type { LeafletMouseEvent } from "leaflet"
 import L from "leaflet"
 import "leaflet/dist/leaflet.css"
 import { useEffect, useState } from "react"
 
 delete (L.Icon.Default.prototype as unknown as { _getIconUrl?: unknown })._getIconUrl
 L.Icon.Default.mergeOptions({
-  iconRetinaUrl: "/leaflet/marker-icon-2x.png",
   iconUrl: "/leaflet/marker-icon.png",
-  shadowUrl: "/leaflet/marker-shadow.png",
 })
 
 interface MapaDepoimentosProps {
   hideMarkers?: boolean
   hideTitle?: boolean
   height?: string // permite customizar altura
+  onContextMenu?: (event: LeafletMouseEvent) => void
 }
 
-export default function MapaDepoimentos({ hideMarkers = false, hideTitle = false, height = "100%" }: MapaDepoimentosProps) {
+export default function MapaDepoimentos({ hideMarkers = false, hideTitle = false, height = "100%", onContextMenu }: MapaDepoimentosProps) {
   type ReporterDetails = {
     ageGroup: string | null
     ethnicity: string | null
@@ -199,23 +199,53 @@ export default function MapaDepoimentos({ hideMarkers = false, hideTitle = false
     return null
   }
 
+  function ContextMenuHandler({ handler }: { handler?: (event: LeafletMouseEvent) => void }) {
+    const map = useMap()
+
+    useEffect(() => {
+      if (!handler) return
+
+      const handleContextMenu = (event: LeafletMouseEvent) => {
+        event.originalEvent.preventDefault()
+        if (event.originalEvent.stopPropagation) {
+          event.originalEvent.stopPropagation()
+        }
+        handler(event)
+      }
+
+      map.on("contextmenu", handleContextMenu)
+
+      return () => {
+        map.off("contextmenu", handleContextMenu)
+      }
+    }, [map, handler])
+
+    return null
+  }
+
   return (
     <div className="w-full" style={{ height }}>
       {!hideTitle && (
-        <h2 className="text-3xl font-semibold mb-4 text-center text-white">
-          Mapa de Depoimentos
-        </h2>
+        <div className="mb-4 text-center text-white">
+          <h2 className="text-3xl font-semibold">
+            Mapa de Depoimentos
+          </h2>
+          <p className="mt-2 text-sm text-gray-300">
+            Clique com o botão direito no mapa para criar uma denúncia no local desejado.
+          </p>
+        </div>
       )}
 
       <MapContainer
-        center={[-15.7801, -47.9292]}
-        zoom={10}
+        center={[-15.983774, -47.921338]}
+        zoom={11}
         scrollWheelZoom={false}
         doubleClickZoom={false}
         dragging={false}
         className="w-full h-full rounded-lg"
       >
         <EnableZoomOnHover />
+        <ContextMenuHandler handler={onContextMenu} />
 
         <TileLayer
           attribution='&copy; <a href="https://cartodb.com/">CartoDB</a> contributors'
