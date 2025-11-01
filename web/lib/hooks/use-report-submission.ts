@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { reportsClient, ApiResponseError } from '@/lib/api'
-import { convertToIsoDate } from '@/lib/utils/date-utils'
+import { convertToIsoDateTime } from '@/lib/utils/date-utils'
 import { mapFormDataToApiRequest } from '@/lib/utils/form-mappers'
 
 /**
@@ -12,6 +12,7 @@ export interface ReportFormData {
   crimeGenre: string | null
   crimeType: string | null
   crimeDate: string
+  crimeTime: string
   description: string
   resolved: string | null
   ageGroup: string | null
@@ -78,9 +79,9 @@ export function useReportSubmission() {
 
     try {
       // Valida data de ocorrência
-      const isoDate = convertToIsoDate(formData.crimeDate)
-      if (!isoDate) {
-        const errorMessage = 'Data de ocorrência inválida. Use o formato DD/MM/YYYY.'
+      const isoDateTime = convertToIsoDateTime(formData.crimeDate, formData.crimeTime)
+      if (!isoDateTime) {
+        const errorMessage = 'Data ou horário de ocorrência inválido. Use os formatos DD/MM/YYYY e HH:mm.'
         setSubmitError(errorMessage)
         setIsSubmitting(false)
         return { success: false, error: errorMessage }
@@ -90,7 +91,7 @@ export function useReportSubmission() {
       const requestData = mapFormDataToApiRequest({
         crimeGenre: formData.crimeGenre,
         crimeType: formData.crimeType,
-        crimeDate: isoDate,
+        crimeDate: isoDateTime,
         description: formData.description,
         resolved: formData.resolved,
         ageGroup: formData.ageGroup,
