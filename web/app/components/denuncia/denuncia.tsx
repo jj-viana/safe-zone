@@ -15,6 +15,8 @@ type PresetLocation = { lat: number; lng: number }
 
 const formatCoordinates = (lat: number, lng: number) => `${lat.toFixed(6)},${lng.toFixed(6)}`
 
+const DESCRIPTION_MAX_LENGTH = 2048
+
 interface DenunciaModalProps {
   show: boolean
   onCloseAction: () => void
@@ -42,7 +44,25 @@ export default function DenunciaModal({ show, onCloseAction, presetLocation = nu
   const isValidDate = (date: string): boolean => {
     if (!date || date.length !== 10) return false
     const regex = /^\d{2}\/\d{2}\/\d{4}$/
-    return regex.test(date)
+    if (!regex.test(date)) return false
+
+    const [dayStr, monthStr, yearStr] = date.split("/")
+    const day = Number(dayStr)
+    const month = Number(monthStr)
+    const year = Number(yearStr)
+
+    const parsed = new Date(year, month - 1, day)
+    const isSameDate =
+      parsed.getFullYear() === year &&
+      parsed.getMonth() === month - 1 &&
+      parsed.getDate() === day
+
+    if (!isSameDate) return false
+
+    const now = new Date()
+    const endOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999)
+
+    return parsed.getTime() <= endOfToday.getTime()
   }
 
   /**
@@ -117,11 +137,7 @@ export default function DenunciaModal({ show, onCloseAction, presetLocation = nu
     }
   }
 
-  
-   // Handler para capturar coordenadas selecionadas no mapa
-
-      // transforma as coordenadas em string "lat,lng"
-   
+  // Captura coordenadas selecionadas no mapa e aplica o formato
   const handleLocationSelect = (lat: number, lng: number) => {
     setLocation(formatCoordinates(lat, lng))
   }
@@ -131,7 +147,7 @@ export default function DenunciaModal({ show, onCloseAction, presetLocation = nu
     setCrimeGenre(null)
     setCrimeType(null)
     setCrimeDate("")
-  setCrimeTime("")
+    setCrimeTime("")
     setResolved(null)
     setAgeGroup(null)
     setGenderIdentity(null)
@@ -153,11 +169,23 @@ export default function DenunciaModal({ show, onCloseAction, presetLocation = nu
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
+    const submissionErrors: Record<string, boolean> = {}
+
+    if (!isValidDate(crimeDate)) submissionErrors.crimeDate = true
+    if (!isValidTime(crimeTime)) submissionErrors.crimeTime = true
+    if (!resolved) submissionErrors.resolved = true
+    if (!description || description.trim().length === 0) submissionErrors.description = true
+
+    if (Object.keys(submissionErrors).length > 0) {
+      setValidationErrors((prev) => ({ ...prev, ...submissionErrors }))
+      return
+    }
+
     const result = await submitReport({
       crimeGenre,
       crimeType,
-  crimeDate,
-  crimeTime,
+      crimeDate,
+      crimeTime,
       description,
       resolved,
       ageGroup,
@@ -405,8 +433,12 @@ export default function DenunciaModal({ show, onCloseAction, presetLocation = nu
                           } else if (input.length > 2) {
                             input = input.replace(/^(\d{2})(\d{0,2})/, "$1/$2")
                           }
+
                           setCrimeDate(input)
-                          setValidationErrors((prev) => ({ ...prev, crimeDate: false }))
+                          setValidationErrors((prev) => ({
+                            ...prev,
+                            crimeDate: input.length > 0 ? !isValidDate(input) : false,
+                          }))
                         }}
                         maxLength={10}
                         className={`bg-neutral-800 text-white p-2 rounded-md w-40 text-center focus:outline-none focus:ring-2 ${
@@ -415,7 +447,7 @@ export default function DenunciaModal({ show, onCloseAction, presetLocation = nu
                       />
                       {validationErrors.crimeDate && (
                         <p className="text-sm text-red-400 mt-2">
-                          Por favor, insira uma data válida no formato DD/MM/YYYY
+                          Por favor, insira uma data válida no formato DD/MM/YYYY que não seja futura
                         </p>
                       )}
                     </div>
@@ -428,8 +460,12 @@ export default function DenunciaModal({ show, onCloseAction, presetLocation = nu
                         type="time"
                         value={crimeTime}
                         onChange={(e) => {
-                          setCrimeTime(e.target.value)
-                          setValidationErrors((prev) => ({ ...prev, crimeTime: false }))
+                          const nextValue = e.target.value
+                          setCrimeTime(nextValue)
+                          setValidationErrors((prev) => ({
+                            ...prev,
+                            crimeTime: nextValue.length > 0 ? !isValidTime(nextValue) : false,
+                          }))
                         }}
                         className={`bg-neutral-800 text-white p-2 rounded-md w-32 text-center focus:outline-none focus:ring-2 ${
                           validationErrors.crimeTime ? 'ring-2 ring-red-400' : 'focus:ring-[#24BBE0]'
@@ -437,7 +473,7 @@ export default function DenunciaModal({ show, onCloseAction, presetLocation = nu
                       />
                       {validationErrors.crimeTime && (
                         <p className="text-sm text-red-400 mt-2">
-                          Por favor, selecione um horário válido no formato HH:mm
+                          Horário deve estar no formato HH:mm entre 00:00 e 23:59
                         </p>
                       )}
                     </div>
@@ -549,13 +585,20 @@ export default function DenunciaModal({ show, onCloseAction, presetLocation = nu
                       placeholder="Descreva aqui ..."
                       value={description}
                       onChange={(e) => {
-                        setDescription(e.target.value)
-                        setValidationErrors({ ...validationErrors, description: false })
+                        const inputValue = e.target.value.slice(0, DESCRIPTION_MAX_LENGTH)
+                        setDescription(inputValue)
+                        setValidationErrors((prev) => ({
+                          ...prev,
+                          description: inputValue.trim().length === 0,
+                        }))
                       }}
                       className={`w-full bg-neutral-800 text-white p-3 rounded-md h-40 resize-none focus:outline-none focus:ring-2 ${
                         validationErrors.description ? 'ring-2 ring-red-400' : 'focus:ring-[#24BBE0]'
                       }`}
                     ></textarea>
+                    <p className="text-xs text-gray-400 mt-1 text-right">
+                      {description.length}/{DESCRIPTION_MAX_LENGTH} caracteres
+                    </p>
                     {validationErrors.description && (
                       <p className="text-sm text-red-400 mt-2">
                         Por favor, descreva o que aconteceu
