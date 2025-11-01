@@ -70,36 +70,17 @@ export function isValidDateString(dateString: string): boolean {
  * @returns String no formato ISO 8601 ou null caso os valores sejam inválidos.
  */
 export function convertToIsoDateTime(dateString: string, timeString: string): string | null {
-  if (!dateString || !timeString) {
+  if (!timeString) {
     return null;
   }
 
-  const dateParts = dateString.split('/');
-  if (dateParts.length !== 3) {
+  // Valida a data usando a função existente
+  const isoDate = convertToIsoDate(dateString);
+  if (!isoDate) {
     return null;
   }
 
-  const [dayStr, monthStr, yearStr] = dateParts;
-  const day = parseInt(dayStr, 10);
-  const month = parseInt(monthStr, 10);
-  const year = parseInt(yearStr, 10);
-
-  if (isNaN(day) || isNaN(month) || isNaN(year)) {
-    return null;
-  }
-
-  if (month < 1 || month > 12) {
-    return null;
-  }
-
-  if (day < 1 || day > 31) {
-    return null;
-  }
-
-  if (year < 1900 || year > 2100) {
-    return null;
-  }
-
+  // Parse e valida a hora
   const timeParts = timeString.split(':');
   if (timeParts.length < 2) {
     return null;
@@ -121,8 +102,16 @@ export function convertToIsoDateTime(dateString: string, timeString: string): st
     return null;
   }
 
+  // Extrai os componentes da data validada
+  const dateParts = dateString.split('/');
+  const day = parseInt(dateParts[0], 10);
+  const month = parseInt(dateParts[1], 10);
+  const year = parseInt(dateParts[2], 10);
+
+  // Cria a data com hora
   const date = new Date(Date.UTC(year, month - 1, day, hours, minutes, 0, 0));
 
+  // Valida que a data com hora foi criada corretamente
   if (
     date.getUTCDate() !== day ||
     date.getUTCMonth() !== month - 1 ||
