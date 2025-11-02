@@ -376,7 +376,7 @@ export default function MapaDepoimentos({ hideMarkers = false, hideTitle = false
                     Data do Ocorrido
                   </h4>
                   <p className="text-white">
-                    {new Date(selectedDepoimento.crimeDate).toLocaleDateString('pt-BR')}
+                    {new Date(selectedDepoimento.crimeDate).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}
                   </p>
                 </div>
 
