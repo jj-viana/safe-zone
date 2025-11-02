@@ -226,18 +226,20 @@ export default function MapaDepoimentos({ hideMarkers = false, hideTitle = false
     return null
   }
 
-  function ResizeAndCenterHandler({ center: _center }: { center: [number, number] }) {
+  function ResizeAndCenterHandler({ center }: { center: [number, number] }) {
     const map = useMap()
 
     useEffect(() => {
-      const ensureSize = () => {
+      const ensureSizeAndCenter = () => {
         map.invalidateSize()
+        map.setView(center, map.getZoom(), { animate: false })
       }
 
-      const frame = requestAnimationFrame(ensureSize)
+      const frame = requestAnimationFrame(ensureSizeAndCenter)
 
       const handleResize = () => {
         map.invalidateSize()
+        map.setView(center, map.getZoom(), { animate: false })
       }
 
       window.addEventListener("resize", handleResize)
@@ -246,7 +248,7 @@ export default function MapaDepoimentos({ hideMarkers = false, hideTitle = false
         cancelAnimationFrame(frame)
         window.removeEventListener("resize", handleResize)
       }
-    }, [map])
+    }, [map, center])
 
     return null
   }
