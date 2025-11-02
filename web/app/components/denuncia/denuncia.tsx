@@ -90,6 +90,28 @@ export default function DenunciaModal({ show, onCloseAction, presetLocation = nu
   }
 
   /**
+   * Valida se a data e hora combinadas não estão no futuro
+   */
+  const isDateTimeNotInFuture = (date: string, time: string): boolean => {
+    if (!date || !time) return true // Se não tiver ambos, deixa outras validações tratarem
+    if (!isValidDate(date) || !isValidTime(time)) return true // Se formato inválido, deixa outras validações tratarem
+    
+    const [dayStr, monthStr, yearStr] = date.split("/")
+    const day = Number(dayStr)
+    const month = Number(monthStr)
+    const year = Number(yearStr)
+    
+    const [hourStr, minuteStr] = time.split(":")
+    const hour = Number(hourStr)
+    const minute = Number(minuteStr)
+    
+    const dateTime = new Date(year, month - 1, day, hour, minute)
+    const now = new Date()
+    
+    return dateTime.getTime() <= now.getTime()
+  }
+
+  /**
    * Valida os campos obrigatórios de cada step
    */
   const validateStep = (step: number): boolean => {
@@ -103,6 +125,7 @@ export default function DenunciaModal({ show, onCloseAction, presetLocation = nu
       case 2:
         if (!isValidDate(crimeDate)) errors.crimeDate = true
         if (!isValidTime(crimeTime)) errors.crimeTime = true
+        if (!isDateTimeNotInFuture(crimeDate, crimeTime)) errors.crimeDateTime = true
         break
       case 3:
         if (!resolved) errors.resolved = true
@@ -121,7 +144,7 @@ export default function DenunciaModal({ show, onCloseAction, presetLocation = nu
       case 1:
         return !!(crimeGenre && crimeType)
       case 2:
-        return isValidDate(crimeDate) && isValidTime(crimeTime)
+        return isValidDate(crimeDate) && isValidTime(crimeTime) && isDateTimeNotInFuture(crimeDate, crimeTime)
       case 3:
         return !!(resolved && description && description.trim().length > 0)
       default:
@@ -188,6 +211,7 @@ export default function DenunciaModal({ show, onCloseAction, presetLocation = nu
 
     if (!isValidDate(crimeDate)) submissionErrors.crimeDate = true
     if (!isValidTime(crimeTime)) submissionErrors.crimeTime = true
+    if (!isDateTimeNotInFuture(crimeDate, crimeTime)) submissionErrors.crimeDateTime = true
     if (!resolved) submissionErrors.resolved = true
     if (!description || description.trim().length === 0) submissionErrors.description = true
 
@@ -448,6 +472,7 @@ export default function DenunciaModal({ show, onCloseAction, presetLocation = nu
                           setValidationErrors((prev) => ({
                             ...prev,
                             crimeDate: false,
+                            crimeDateTime: false,
                           }))
                         }}
                         onBlur={() => {
@@ -455,6 +480,7 @@ export default function DenunciaModal({ show, onCloseAction, presetLocation = nu
                             setValidationErrors((prev) => ({
                               ...prev,
                               crimeDate: !isValidDate(crimeDate),
+                              crimeDateTime: !isDateTimeNotInFuture(crimeDate, crimeTime),
                             }))
                           }
                         }}
@@ -465,7 +491,7 @@ export default function DenunciaModal({ show, onCloseAction, presetLocation = nu
                       />
                       {validationErrors.crimeDate && (
                         <p className="text-sm text-red-400 mt-2">
-                          Por favor, insira uma data válida no formato DD/MM/YYYY que não seja futura
+                          Por favor, insira uma data válida no formato DD/MM/YYYY
                         </p>
                       )}
                     </div>
@@ -483,6 +509,7 @@ export default function DenunciaModal({ show, onCloseAction, presetLocation = nu
                           setValidationErrors((prev) => ({
                             ...prev,
                             crimeTime: false,
+                            crimeDateTime: false,
                           }))
                         }}
                         onBlur={() => {
@@ -490,6 +517,7 @@ export default function DenunciaModal({ show, onCloseAction, presetLocation = nu
                             setValidationErrors((prev) => ({
                               ...prev,
                               crimeTime: !isValidTime(crimeTime),
+                              crimeDateTime: !isDateTimeNotInFuture(crimeDate, crimeTime),
                             }))
                           }
                         }}
@@ -504,6 +532,12 @@ export default function DenunciaModal({ show, onCloseAction, presetLocation = nu
                       )}
                     </div>
                   </div>
+                  
+                  {validationErrors.crimeDateTime && (
+                    <p className="text-sm text-red-400 mt-2">
+                      A data e horário não podem estar no futuro
+                    </p>
+                  )}
 
                   <div>
                     <p className="font-semibold mb-2">Onde aconteceu?</p>
