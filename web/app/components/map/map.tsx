@@ -231,15 +231,19 @@ export default function MapaDepoimentos({ hideMarkers = false, hideTitle = false
 
     useEffect(() => {
       const ensureSizeAndCenter = () => {
+        const currentCenter = map.getCenter()
+        const currentZoom = map.getZoom()
         map.invalidateSize()
-        map.setView(center, map.getZoom(), { animate: false })
+        map.setView(currentCenter, currentZoom, { animate: false })
       }
 
       const frame = requestAnimationFrame(ensureSizeAndCenter)
 
       const handleResize = () => {
+        const currentCenter = map.getCenter()
+        const currentZoom = map.getZoom()
         map.invalidateSize()
-        map.setView(center, map.getZoom(), { animate: false })
+        map.setView(currentCenter, currentZoom, { animate: false })
       }
 
       window.addEventListener("resize", handleResize)

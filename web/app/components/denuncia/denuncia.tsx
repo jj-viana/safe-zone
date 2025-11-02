@@ -197,8 +197,14 @@ export default function DenunciaModal({ show, onCloseAction, presetLocation = nu
     clearError()
   }
 
-  const handleClose = () => {
+  const handleClose = (shouldReload = false) => {
     onCloseAction()
+
+    if (shouldReload) {
+      window.location.reload()
+      return
+    }
+
     setTimeout(() => {
       resetForm()
     }, 300)
@@ -263,7 +269,7 @@ export default function DenunciaModal({ show, onCloseAction, presetLocation = nu
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          onClick={handleClose}
+          onClick={() => handleClose()}
         >
           <motion.div
             className="bg-neutral-900 p-8 rounded-2xl w-[700px] text-white relative flex flex-col items-center border border-[#24BBE0]/30 shadow-lg"
@@ -950,7 +956,7 @@ export default function DenunciaModal({ show, onCloseAction, presetLocation = nu
                 </p>
 
                 <button
-                  onClick={handleClose}
+                  onClick={() => handleClose(true)}
                   className="mt-6 bg-[#24BBE0] hover:bg-blue-500 text-white px-8 py-2 rounded font-semibold"
                 >
                   Fechar
@@ -963,7 +969,7 @@ export default function DenunciaModal({ show, onCloseAction, presetLocation = nu
             {/* Botão de fechar */}
             <button
               className="absolute top-2 right-2 hover:text-white text-gray-400"
-              onClick={handleClose}
+              onClick={() => handleClose()}
             >
               ✕
             </button>
