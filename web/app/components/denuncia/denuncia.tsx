@@ -321,18 +321,12 @@ export default function DenunciaModal({ show, onCloseAction, presetLocation = nu
                                 const isSameSelection = crimeGenre === item.label
                                 const nextGenre = isSameSelection ? null : item.label
                                 setCrimeGenre(nextGenre)
+                                setCrimeType(null)
                                 setValidationErrors((prev) => ({
                                   ...prev,
                                   crimeGenre: false,
                                   crimeType: false,
                                 }))
-                                if (!nextGenre) {
-                                  setCrimeType(null)
-                                  return
-                                }
-                                if (!crimeTypeOptions[nextGenre]?.some((option) => option.label === crimeType)) {
-                                  setCrimeType(null)
-                                }
                               }}
                               className={`px-4 py-2 rounded-full border text-sm font-medium transition-all flex items-center gap-2 ${
                                 selected
