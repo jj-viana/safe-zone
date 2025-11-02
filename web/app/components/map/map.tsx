@@ -5,11 +5,32 @@ import type { LeafletMouseEvent } from "leaflet"
 import L from "leaflet"
 import "leaflet/dist/leaflet.css"
 import { useEffect, useState } from "react"
+import { reportsClient } from "@/lib/api/reports-client"
+import type { ReportResponse, ReporterDetailsResponse } from "@/lib/api/types"
+
+const parseLocation = (location: ReportResponse['location']): [number, number] | null => {
+  if (!location) return null
+
+  const matches = location.match(/-?\d+(?:\.\d+)?/g)
+  if (!matches || matches.length < 2) return null
+
+  const lat = Number.parseFloat(matches[0])
+  const lng = Number.parseFloat(matches[1])
+
+  const isValidLatitude = Number.isFinite(lat) && lat >= -90 && lat <= 90
+  const isValidLongitude = Number.isFinite(lng) && lng >= -180 && lng <= 180
+
+  if (!isValidLatitude || !isValidLongitude) return null
+
+  return [lat, lng]
+}
 
 delete (L.Icon.Default.prototype as unknown as { _getIconUrl?: unknown })._getIconUrl
 L.Icon.Default.mergeOptions({
   iconUrl: "/leaflet/marker-icon.png",
 })
+
+const DEFAULT_CENTER: [number, number] = [-15.824162,-47.929301]
 
 interface MapaDepoimentosProps {
   hideMarkers?: boolean
@@ -19,13 +40,6 @@ interface MapaDepoimentosProps {
 }
 
 export default function MapaDepoimentos({ hideMarkers = false, hideTitle = false, height = "100%", onContextMenu }: MapaDepoimentosProps) {
-  type ReporterDetails = {
-    ageGroup: string | null
-    ethnicity: string | null
-    genderIdentity: string | null
-    sexualOrientation: string | null
-  }
-
   type Depoimento = {
     id: string
     crimeGenre: string
@@ -33,13 +47,71 @@ export default function MapaDepoimentos({ hideMarkers = false, hideTitle = false
     description: string
     location: [number, number]
     crimeDate: string
-    reporterDetails: ReporterDetails | null
+    reporterDetails: ReporterDetailsResponse | null
     createdDate: string
     resolved: boolean
-    cor?: string // opcional para definir a cor do marcador
+    cor?: string
   }
 
   const [selectedDepoimento, setSelectedDepoimento] = useState<Depoimento | null>(null)
+  const [reports, setReports] = useState<Depoimento[]>([])
+  const [isLoading, setIsLoading] = useState(false)
+  const [fetchError, setFetchError] = useState<string | null>(null)
+
+  useEffect(() => {
+    let isMounted = true
+
+    const loadReports = async () => {
+      setIsLoading(true)
+      try {
+        const data = await reportsClient.getAllReports()
+        if (!isMounted) return
+
+        const mapped = data.reduce<Depoimento[]>((acc, report) => {
+          const coords = parseLocation(report.location)
+          if (!coords) {
+            console.warn("MapaDepoimentos: localização inválida para denúncia", report.id, report.location)
+            return acc
+          }
+
+          acc.push({
+            id: report.id,
+            crimeGenre: report.crimeGenre,
+            crimeType: report.crimeType,
+            description: report.description,
+            location: coords,
+            crimeDate: report.crimeDate,
+            reporterDetails: report.reporterDetails ?? null,
+            createdDate: report.createdDate,
+            resolved: report.resolved,
+          })
+
+          return acc
+        }, [])
+
+        setReports(mapped)
+        setFetchError(null)
+        setSelectedDepoimento((current) => {
+          if (!current) return null
+          return mapped.find((item) => item.id === current.id) ?? null
+        })
+      } catch (error) {
+        if (!isMounted) return
+        const message = error instanceof Error ? error.message : "Erro ao carregar denúncias"
+        setFetchError(message)
+      } finally {
+        if (isMounted) {
+          setIsLoading(false)
+        }
+      }
+    }
+
+    loadReports()
+
+    return () => {
+      isMounted = false
+    }
+  }, [])
 
   /**
    * Define a cor do marcador baseado no gênero do crime
@@ -54,79 +126,6 @@ export default function MapaDepoimentos({ hideMarkers = false, hideTitle = false
     }
     return "#22c55e"
   }
-
-  const depoimentos: Depoimento[] = [
-    {
-      id: "24daa097-76ba-4622-98a7-cc829841c3e1",
-      crimeGenre: "Crime",
-      crimeType: "Assédio sexual",
-      description: "Fui vítima de assédio em uma parada de ônibus no centro.",
-      location: [-15.7801, -47.9292],
-      crimeDate: "2025-10-15T14:30:00Z",
-      reporterDetails: {
-        ageGroup: "18 - 29",
-        ethnicity: "Parda",
-        genderIdentity: "Mulher Cisgênero",
-        sexualOrientation: "Heterossexual",
-      },
-      createdDate: "2025-10-15T14:35:00Z",
-      resolved: false,
-    },
-    {
-      id: "24daa097-76ba-4622-98a7-cc829841c3e2",
-      crimeGenre: "Crime",
-      crimeType: "Furto de veículo",
-      description: "Tive meu carro arrombado em estacionamento público.",
-      location: [-15.7101, -47.9502],
-      crimeDate: "2025-10-20T09:15:00Z",
-      reporterDetails: {
-        ageGroup: "30 - 44",
-        ethnicity: "Branca",
-        genderIdentity: "Homem Cisgênero",
-        sexualOrientation: "Heterossexual",
-      },
-      createdDate: "2025-10-20T10:00:00Z",
-      resolved: true,
-    },
-    {
-      id: "24daa097-76ba-4622-98a7-cc829841c3e3",
-      crimeGenre: "Crime",
-      crimeType: "Roubo",
-      description: "Fui assaltado à noite, mas recebi apoio rapidamente.",
-      location: [-15.8601, -47.9002],
-      crimeDate: "2025-10-25T22:45:00Z",
-      reporterDetails: {
-        ageGroup: "45 - 59",
-        ethnicity: "Negra",
-        genderIdentity: "Homem Cisgênero",
-        sexualOrientation: null
-      },
-      createdDate: "2025-10-25T23:00:00Z",
-      resolved: true,
-    },
-    {
-      id: "24daa097-76ba-4622-98a7-cc829841c3e4",
-      crimeGenre: "Crime",
-      crimeType: "Tentativa de assassinato",
-      description: "Minha prima foi esfaqueada na minha frente.",
-      location: [-15.7101, -47.9002],
-      crimeDate: "2025-10-25T22:45:00Z",
-      reporterDetails: null,
-      createdDate: "2025-10-25T23:00:00Z",
-      resolved: true,
-    },
-    {
-      id: "24daa097-76ba-4622-98a7-cc829841c3e5",
-      crimeGenre: "Sensação de insegurança",
-      crimeType: "Iluminação precária",
-      description: "Postes desligados, a rua está um breu tem uma semana.",
-      location: [-15.7101, -47.9292],
-      crimeDate: "2025-11-25T22:46:00Z",
-      reporterDetails: null,
-      createdDate: "2025-11-25T23:00:00Z",
-      resolved: false,
-    },
-  ]
 
   const createIcon = (color: string) =>
     L.divIcon({
@@ -188,7 +187,11 @@ export default function MapaDepoimentos({ hideMarkers = false, hideTitle = false
       container.addEventListener("mouseenter", handleEnter)
       container.addEventListener("mouseleave", handleLeave)
 
-      handleLeave()
+      if (container.matches(":hover")) {
+        handleEnter()
+      } else {
+        handleLeave()
+      }
 
       return () => {
         container.removeEventListener("mouseenter", handleEnter)
@@ -223,8 +226,33 @@ export default function MapaDepoimentos({ hideMarkers = false, hideTitle = false
     return null
   }
 
+  function ResizeAndCenterHandler({ center: _center }: { center: [number, number] }) {
+    const map = useMap()
+
+    useEffect(() => {
+      const ensureSize = () => {
+        map.invalidateSize()
+      }
+
+      const frame = requestAnimationFrame(ensureSize)
+
+      const handleResize = () => {
+        map.invalidateSize()
+      }
+
+      window.addEventListener("resize", handleResize)
+
+      return () => {
+        cancelAnimationFrame(frame)
+        window.removeEventListener("resize", handleResize)
+      }
+    }, [map])
+
+    return null
+  }
+
   return (
-    <div className="w-full" style={{ height }}>
+    <div className="relative w-full" style={{ height }}>
       {!hideTitle && (
         <div className="mb-4 text-center text-white">
           <h2 className="text-3xl font-semibold">
@@ -237,15 +265,13 @@ export default function MapaDepoimentos({ hideMarkers = false, hideTitle = false
       )}
 
       <MapContainer
-        center={[-15.983774, -47.921338]}
+        center={DEFAULT_CENTER}
         zoom={11}
-        scrollWheelZoom={false}
-        doubleClickZoom={false}
-        dragging={false}
         className="w-full h-full rounded-lg"
       >
         <EnableZoomOnHover />
         <ContextMenuHandler handler={onContextMenu} />
+        <ResizeAndCenterHandler center={DEFAULT_CENTER} />
 
         <TileLayer
           attribution='&copy; <a href="https://cartodb.com/">CartoDB</a> contributors'
@@ -253,7 +279,7 @@ export default function MapaDepoimentos({ hideMarkers = false, hideTitle = false
         />
 
         {!hideMarkers &&
-          depoimentos.map((dep) => (
+          reports.map((dep) => (
             <Marker key={dep.id} position={dep.location} icon={createIcon(dep.cor || getMarkerColor(dep.crimeGenre))}>
               <Popup>
                 <div className="text-gray-800 flex flex-col items-center">
@@ -270,6 +296,30 @@ export default function MapaDepoimentos({ hideMarkers = false, hideTitle = false
             </Marker>
           ))}
       </MapContainer>
+
+      {isLoading && (
+        <div className="absolute inset-0 z-[1100] flex flex-col items-center justify-center gap-4 bg-black/40">
+          <span className="sr-only">Carregando denúncias...</span>
+          <div className="h-12 w-12 rounded-full border-4 border-white/20 border-t-[#24BBE0] animate-spin" />
+          <p className="text-sm font-medium text-white/80">Carregando denúncias...</p>
+        </div>
+      )}
+
+      {!hideMarkers && fetchError && (
+        <div className="pointer-events-none absolute left-1/2 top-4 z-[1000] flex -translate-x-1/2 justify-center">
+          <span className="rounded bg-red-600/80 px-4 py-2 text-sm text-white shadow-lg">
+            Não foi possível carregar as denúncias.
+          </span>
+        </div>
+      )}
+
+      {!hideMarkers && !fetchError && !isLoading && reports.length === 0 && (
+        <div className="pointer-events-none absolute left-1/2 top-4 z-[1000] flex -translate-x-1/2 justify-center">
+          <span className="rounded bg-black/60 px-4 py-2 text-sm text-white shadow-lg">
+            Nenhuma denúncia encontrada.
+          </span>
+        </div>
+      )}
 
       {/* Modal de Detalhes */}
       {selectedDepoimento && (

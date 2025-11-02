@@ -147,7 +147,7 @@ export default function Home() {
         </div>
         <div className="relative w-[90%] h-[800px]">
           <div className="h-full rounded-2xl overflow-hidden">
-            <MapaDepoimentos hideTitle height="200%" onContextMenu={handleMapContextMenu} />
+            <MapaDepoimentos hideTitle onContextMenu={handleMapContextMenu} />
           </div>
           {contextMenu && (
             <div

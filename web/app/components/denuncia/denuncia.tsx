@@ -41,6 +41,21 @@ export default function DenunciaModal({ show, onCloseAction, presetLocation = nu
   
   const { submitReport, isSubmitting, submitError, clearError } = useReportSubmission()
 
+  const crimeTypeOptions: Record<string, { id: string; label: string }[]> = {
+    "Crime": [
+      { id: "A", label: "Assalto ou tentativa de assalto" },
+      { id: "B", label: "Violência Verbal" },
+      { id: "C", label: "Violência Física" },
+      { id: "D", label: "Furto" },
+      { id: "E", label: "Vandalismo" },
+      { id: "F", label: "Assédio" },
+    ],
+    "Sensação de insegurança": [
+      { id: "G", label: "Iluminação Precária" },
+      { id: "H", label: "Abandono de local público" },
+    ],
+  }
+
   const isValidDate = (date: string): boolean => {
     if (!date || date.length !== 10) return false
     const regex = /^\d{2}\/\d{2}\/\d{4}$/
@@ -200,20 +215,6 @@ export default function DenunciaModal({ show, onCloseAction, presetLocation = nu
     }
   }
 
-  const crimeTypeOptions: Record<string, { id: string; label: string }[]> = {
-    "Crime": [
-      { id: "A", label: "Assalto ou tentativa de assalto" },
-      { id: "B", label: "Violência Verbal" },
-      { id: "C", label: "Violência Física" },
-      { id: "D", label: "Furto" },
-      { id: "E", label: "Vandalismo" },
-      { id: "F", label: "Assédio" },
-    ],
-    "Sensação de insegurança": [
-      { id: "G", label: "Iluminação Precária" },
-      { id: "H", label: "Abandono de local público" },
-    ],
-  };
   // Preenche a localização quando o modal é aberto a partir do mapa
   useEffect(() => {
     if (!show || !presetLocation) return
@@ -317,8 +318,21 @@ export default function DenunciaModal({ show, onCloseAction, presetLocation = nu
                               type="button"
                               key={item.label}
                               onClick={() => {
-                                handleSelect(item.label, crimeGenre, setCrimeGenre)
-                                setValidationErrors({ ...validationErrors, crimeGenre: false })
+                                const isSameSelection = crimeGenre === item.label
+                                const nextGenre = isSameSelection ? null : item.label
+                                setCrimeGenre(nextGenre)
+                                setValidationErrors((prev) => ({
+                                  ...prev,
+                                  crimeGenre: false,
+                                  crimeType: false,
+                                }))
+                                if (!nextGenre) {
+                                  setCrimeType(null)
+                                  return
+                                }
+                                if (!crimeTypeOptions[nextGenre]?.some((option) => option.label === crimeType)) {
+                                  setCrimeType(null)
+                                }
                               }}
                               className={`px-4 py-2 rounded-full border text-sm font-medium transition-all flex items-center gap-2 ${
                                 selected
@@ -347,47 +361,49 @@ export default function DenunciaModal({ show, onCloseAction, presetLocation = nu
                       )}
                     </div>
 
-                    <div>
-                      <p className="font-semibold mb-3">
-                        Qual é a natureza da ocorrência? <span className="text-red-400">*</span>
-                      </p>
-                      <div className="flex flex-wrap gap-3">
-                          {(crimeTypeOptions[crimeGenre ?? ""] || []).map((item) => {
-                          const selected = crimeType === item.label;
-                          return (
-                            <button
-                              type="button"
-                              key={item.label}
-                              onClick={() => {
-                                handleSelect(item.label, crimeType, setCrimeType)
-                                setValidationErrors({ ...validationErrors, crimeType: false })
-                              }}
-                              className={`px-4 py-2 rounded-full border text-sm font-medium transition-all flex items-center gap-2 ${
-                                selected
-                                  ? "border-[#FF7A00] text-white"
-                                  : "border-neutral-600 bg-neutral-800 text-gray-200 hover:bg-neutral-700"
-                              }`}
-                            >
-                              <span
-                                className={`w-6 h-6 flex items-center justify-center rounded-full text-xs font-bold ${
+                    {crimeGenre && (
+                      <div>
+                        <p className="font-semibold mb-3">
+                          Qual é a natureza da ocorrência? <span className="text-red-400">*</span>
+                        </p>
+                        <div className="flex flex-wrap gap-3">
+                          {(crimeTypeOptions[crimeGenre] || []).map((item) => {
+                            const selected = crimeType === item.label
+                            return (
+                              <button
+                                type="button"
+                                key={item.label}
+                                onClick={() => {
+                                  handleSelect(item.label, crimeType, setCrimeType)
+                                  setValidationErrors((prev) => ({ ...prev, crimeType: false }))
+                                }}
+                                className={`px-4 py-2 rounded-full border text-sm font-medium transition-all flex items-center gap-2 ${
                                   selected
-                                    ? "bg-[#FF7A00] text-black"
-                                    : "bg-neutral-600 text-white"
+                                    ? "border-[#FF7A00] text-white"
+                                    : "border-neutral-600 bg-neutral-800 text-gray-200 hover:bg-neutral-700"
                                 }`}
                               >
-                                {item.id}
-                              </span>
-                              {item.label}
-                            </button>
-                          );
-                        })}
+                                <span
+                                  className={`w-6 h-6 flex items-center justify-center rounded-full text-xs font-bold ${
+                                    selected
+                                      ? "bg-[#FF7A00] text-black"
+                                      : "bg-neutral-600 text-white"
+                                  }`}
+                                >
+                                  {item.id}
+                                </span>
+                                {item.label}
+                              </button>
+                            )
+                          })}
+                        </div>
+                        {validationErrors.crimeType && (
+                          <p className="text-sm text-red-400 mt-2">
+                            Por favor, selecione uma opção
+                          </p>
+                        )}
                       </div>
-                      {validationErrors.crimeType && (
-                        <p className="text-sm text-red-400 mt-2">
-                          Por favor, selecione uma opção
-                        </p>
-                      )}
-                    </div>
+                    )}
 
                     <button
                       type="submit"
