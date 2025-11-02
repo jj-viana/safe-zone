@@ -3,11 +3,20 @@
  */
 
 /**
- * Converte uma data no formato DD/MM/YYYY para ISO 8601 (YYYY-MM-DDTHH:mm:ss.sssZ).
- * @param dateString - String de data no formato DD/MM/YYYY.
- * @returns String no formato ISO 8601 ou null se a data for inválida.
+ * Componentes de data validados.
  */
-export function convertToIsoDate(dateString: string): string | null {
+interface DateComponents {
+  day: number;
+  month: number;
+  year: number;
+}
+
+/**
+ * Parseia e valida uma data no formato DD/MM/YYYY.
+ * @param dateString - String de data no formato DD/MM/YYYY.
+ * @returns Componentes de data validados ou null se a data for inválida.
+ */
+function parseDateComponents(dateString: string): DateComponents | null {
   if (!dateString || dateString.length < 10) {
     return null;
   }
@@ -51,6 +60,21 @@ export function convertToIsoDate(dateString: string): string | null {
     return null;
   }
 
+  return { day, month, year };
+}
+
+/**
+ * Converte uma data no formato DD/MM/YYYY para ISO 8601 (YYYY-MM-DDTHH:mm:ss.sssZ).
+ * @param dateString - String de data no formato DD/MM/YYYY.
+ * @returns String no formato ISO 8601 ou null se a data for inválida.
+ */
+export function convertToIsoDate(dateString: string): string | null {
+  const components = parseDateComponents(dateString);
+  if (!components) {
+    return null;
+  }
+
+  const date = new Date(Date.UTC(components.year, components.month - 1, components.day, 0, 0, 0, 0));
   return date.toISOString();
 }
 
@@ -74,9 +98,9 @@ export function convertToIsoDateTime(dateString: string, timeString: string): st
     return null;
   }
 
-  // Valida a data usando a função existente
-  const isoDate = convertToIsoDate(dateString);
-  if (!isoDate) {
+  // Valida e extrai os componentes da data
+  const dateComponents = parseDateComponents(dateString);
+  if (!dateComponents) {
     return null;
   }
 
@@ -102,20 +126,14 @@ export function convertToIsoDateTime(dateString: string, timeString: string): st
     return null;
   }
 
-  // Extrai os componentes da data validada
-  const dateParts = dateString.split('/');
-  const day = parseInt(dateParts[0], 10);
-  const month = parseInt(dateParts[1], 10);
-  const year = parseInt(dateParts[2], 10);
-
-  // Cria a data com hora
-  const date = new Date(Date.UTC(year, month - 1, day, hours, minutes, 0, 0));
+  // Cria a data com hora usando os componentes validados
+  const date = new Date(Date.UTC(dateComponents.year, dateComponents.month - 1, dateComponents.day, hours, minutes, 0, 0));
 
   // Valida que a data com hora foi criada corretamente
   if (
-    date.getUTCDate() !== day ||
-    date.getUTCMonth() !== month - 1 ||
-    date.getUTCFullYear() !== year ||
+    date.getUTCDate() !== dateComponents.day ||
+    date.getUTCMonth() !== dateComponents.month - 1 ||
+    date.getUTCFullYear() !== dateComponents.year ||
     date.getUTCHours() !== hours ||
     date.getUTCMinutes() !== minutes
   ) {
