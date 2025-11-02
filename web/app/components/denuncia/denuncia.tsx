@@ -447,8 +447,16 @@ export default function DenunciaModal({ show, onCloseAction, presetLocation = nu
                           setCrimeDate(input)
                           setValidationErrors((prev) => ({
                             ...prev,
-                            crimeDate: input.length > 0 ? !isValidDate(input) : false,
+                            crimeDate: false,
                           }))
+                        }}
+                        onBlur={() => {
+                          if (crimeDate.length > 0) {
+                            setValidationErrors((prev) => ({
+                              ...prev,
+                              crimeDate: !isValidDate(crimeDate),
+                            }))
+                          }
                         }}
                         maxLength={10}
                         className={`bg-neutral-800 text-white p-2 rounded-md w-40 text-center focus:outline-none focus:ring-2 ${
@@ -474,8 +482,16 @@ export default function DenunciaModal({ show, onCloseAction, presetLocation = nu
                           setCrimeTime(nextValue)
                           setValidationErrors((prev) => ({
                             ...prev,
-                            crimeTime: nextValue.length > 0 ? !isValidTime(nextValue) : false,
+                            crimeTime: false,
                           }))
+                        }}
+                        onBlur={() => {
+                          if (crimeTime.length > 0) {
+                            setValidationErrors((prev) => ({
+                              ...prev,
+                              crimeTime: !isValidTime(crimeTime),
+                            }))
+                          }
                         }}
                         className={`bg-neutral-800 text-white p-2 rounded-md w-32 text-center focus:outline-none focus:ring-2 ${
                           validationErrors.crimeTime ? 'ring-2 ring-red-400' : 'focus:ring-[#24BBE0]'
@@ -599,8 +615,16 @@ export default function DenunciaModal({ show, onCloseAction, presetLocation = nu
                         setDescription(inputValue)
                         setValidationErrors((prev) => ({
                           ...prev,
-                          description: inputValue.trim().length === 0,
+                          description: false,
                         }))
+                      }}
+                      onBlur={() => {
+                        if (description.length > 0) {
+                          setValidationErrors((prev) => ({
+                            ...prev,
+                            description: description.trim().length === 0,
+                          }))
+                        }
                       }}
                       className={`w-full bg-neutral-800 text-white p-3 rounded-md h-40 resize-none focus:outline-none focus:ring-2 ${
                         validationErrors.description ? 'ring-2 ring-red-400' : 'focus:ring-[#24BBE0]'
