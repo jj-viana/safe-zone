@@ -3,38 +3,112 @@
 import { motion, AnimatePresence } from "framer-motion"
 import dynamic from "next/dynamic"
 import Image from "next/image"
-import { useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { FaArrowRight, FaArrowLeft } from "react-icons/fa"
 import { useReportSubmission } from "@/lib/hooks/use-report-submission"
 
-const MapaDepoimentos = dynamic(() => import("../map/map"), {
+const MapSelector = dynamic(() => import("../map/map-selector"), {
   ssr: false,
 })
 
-export default function DenunciaModal({ show, onCloseAction }: { show: boolean, onCloseAction: () => void }) {
+type PresetLocation = { lat: number; lng: number }
+
+const formatCoordinates = (lat: number, lng: number) => `${lat.toFixed(6)},${lng.toFixed(6)}`
+
+const DESCRIPTION_MAX_LENGTH = 2048
+
+interface DenunciaModalProps {
+  show: boolean
+  onCloseAction: () => void
+  presetLocation?: PresetLocation | null
+}
+
+export default function DenunciaModal({ show, onCloseAction, presetLocation = null }: DenunciaModalProps) {
   const [formStep, setFormStep] = useState(0)
   const [crimeGenre, setCrimeGenre] = useState<string | null>(null)
   const [crimeType, setCrimeType] = useState<string | null>(null)
   const [crimeDate, setCrimeDate] = useState("")
+  const [crimeTime, setCrimeTime] = useState("")
   const [resolved, setResolved] = useState<string | null>(null)
   const [ageGroup, setAgeGroup] = useState<string | null>(null)
   const [genderIdentity, setGenderIdentity] = useState<string | null>(null)
   const [sexualOrientation, setSexualOrientation] = useState<string | null>(null)
   const [ethnicity, setEthnicity] = useState<string | null>(null)
   const [description, setDescription] = useState("")
-  const [location, setLocation] = useState("Brasília, DF") // TODO: Integrar com mapa
+
+  const [location, setLocation] = useState("")
   const [validationErrors, setValidationErrors] = useState<Record<string, boolean>>({})
   
-  // Hook customizado para gerenciar a submissão do relatório
   const { submitReport, isSubmitting, submitError, clearError } = useReportSubmission()
 
-  /**
-   * Valida se a data está no formato correto DD/MM/YYYY
-   */
+  const crimeTypeOptions: Record<string, { id: string; label: string }[]> = {
+    "Crime": [
+      { id: "A", label: "Assalto ou tentativa de assalto" },
+      { id: "B", label: "Violência Verbal" },
+      { id: "C", label: "Violência Física" },
+      { id: "D", label: "Furto" },
+      { id: "E", label: "Vandalismo" },
+      { id: "F", label: "Assédio" },
+    ],
+    "Sensação de insegurança": [
+      { id: "G", label: "Iluminação Precária" },
+      { id: "H", label: "Abandono de local público" },
+    ],
+  }
+
   const isValidDate = (date: string): boolean => {
     if (!date || date.length !== 10) return false
     const regex = /^\d{2}\/\d{2}\/\d{4}$/
-    return regex.test(date)
+    if (!regex.test(date)) return false
+
+    const [dayStr, monthStr, yearStr] = date.split("/")
+    const day = Number(dayStr)
+    const month = Number(monthStr)
+    const year = Number(yearStr)
+
+    const parsed = new Date(year, month - 1, day)
+    const isSameDate =
+      parsed.getFullYear() === year &&
+      parsed.getMonth() === month - 1 &&
+      parsed.getDate() === day
+
+    if (!isSameDate) return false
+
+    const now = new Date()
+    const endOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999)
+
+    return parsed.getTime() <= endOfToday.getTime()
+  }
+
+  /**
+   * Valida se o horário está no formato correto HH:mm
+   */
+  const isValidTime = (time: string): boolean => {
+    if (!time) return false
+    const regex = /^([01]\d|2[0-3]):([0-5]\d)$/
+    return regex.test(time)
+  }
+
+  /**
+   * Valida se a data e hora combinadas não estão no futuro
+   */
+  const isDateTimeNotInFuture = (date: string, time: string): boolean => {
+    if (!date || !time) return true // Se não tiver ambos, deixa outras validações tratarem
+    if (!isValidDate(date) || !isValidTime(time)) return true // Se formato inválido, deixa outras validações tratarem
+    
+    const [dayStr, monthStr, yearStr] = date.split("/")
+    const day = Number(dayStr)
+    const month = Number(monthStr)
+    const year = Number(yearStr)
+    
+    const [hourStr, minuteStr] = time.split(":")
+    const hour = Number(hourStr)
+    const minute = Number(minuteStr)
+    
+    const dateTime = new Date(year, month - 1, day, hour, minute)
+    const now = new Date()
+    
+    return dateTime.getTime() <= now.getTime()
   }
 
   /**
@@ -50,6 +124,8 @@ export default function DenunciaModal({ show, onCloseAction }: { show: boolean, 
         break
       case 2:
         if (!isValidDate(crimeDate)) errors.crimeDate = true
+        if (!isValidTime(crimeTime)) errors.crimeTime = true
+        if (!isDateTimeNotInFuture(crimeDate, crimeTime)) errors.crimeDateTime = true
         break
       case 3:
         if (!resolved) errors.resolved = true
@@ -63,15 +139,12 @@ export default function DenunciaModal({ show, onCloseAction }: { show: boolean, 
     return Object.keys(errors).length === 0
   }
 
-  /**
-   * Verifica se pode avançar para o próximo step
-   */
   const canProceed = (step: number): boolean => {
     switch (step) {
       case 1:
         return !!(crimeGenre && crimeType)
       case 2:
-        return isValidDate(crimeDate)
+        return isValidDate(crimeDate) && isValidTime(crimeTime) && isDateTimeNotInFuture(crimeDate, crimeTime)
       case 3:
         return !!(resolved && description && description.trim().length > 0)
       default:
@@ -82,7 +155,6 @@ export default function DenunciaModal({ show, onCloseAction }: { show: boolean, 
   const nextStep = (e: React.FormEvent) => {
     e.preventDefault()
     
-    // Valida o step atual antes de avançar
     if (validateStep(formStep)) {
       setValidationErrors({})
       setFormStep((prev) => prev + 1)
@@ -95,15 +167,17 @@ export default function DenunciaModal({ show, onCloseAction }: { show: boolean, 
 
   const goToHome = () => setFormStep(0)
 
-  /**
-   * Permite selecionar e desmarcar uma opção clicando novamente
-   */
   const handleSelect = (value: string, currentValue: string | null, setter: (val: string | null) => void) => {
     if (currentValue === value) {
-      setter(null) // Desmarca se clicar novamente
+      setter(null)
     } else {
-      setter(value) // Marca a nova opção
+      setter(value) 
     }
+  }
+
+  // Captura coordenadas selecionadas no mapa e aplica o formato
+  const handleLocationSelect = (lat: number, lng: number) => {
+    setLocation(formatCoordinates(lat, lng))
   }
 
   const resetForm = () => {
@@ -111,20 +185,26 @@ export default function DenunciaModal({ show, onCloseAction }: { show: boolean, 
     setCrimeGenre(null)
     setCrimeType(null)
     setCrimeDate("")
+    setCrimeTime("")
     setResolved(null)
     setAgeGroup(null)
     setGenderIdentity(null)
     setSexualOrientation(null)
     setEthnicity(null)
     setDescription("")
-    setLocation("Brasília, DF")
+    setLocation("")
     setValidationErrors({})
     clearError()
   }
 
-  const handleClose = () => {
+  const handleClose = (shouldReload = false) => {
     onCloseAction()
-    // Aguarda um momento antes de resetar para permitir animação de saída
+
+    if (shouldReload) {
+      window.location.reload()
+      return
+    }
+
     setTimeout(() => {
       resetForm()
     }, 300)
@@ -133,11 +213,24 @@ export default function DenunciaModal({ show, onCloseAction }: { show: boolean, 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    // Submete o relatório usando o hook customizado
+    const submissionErrors: Record<string, boolean> = {}
+
+    if (!isValidDate(crimeDate)) submissionErrors.crimeDate = true
+    if (!isValidTime(crimeTime)) submissionErrors.crimeTime = true
+    if (!isDateTimeNotInFuture(crimeDate, crimeTime)) submissionErrors.crimeDateTime = true
+    if (!resolved) submissionErrors.resolved = true
+    if (!description || description.trim().length === 0) submissionErrors.description = true
+
+    if (Object.keys(submissionErrors).length > 0) {
+      setValidationErrors((prev) => ({ ...prev, ...submissionErrors }))
+      return
+    }
+
     const result = await submitReport({
       crimeGenre,
       crimeType,
       crimeDate,
+      crimeTime,
       description,
       resolved,
       ageGroup,
@@ -147,11 +240,26 @@ export default function DenunciaModal({ show, onCloseAction }: { show: boolean, 
       location,
     })
 
-    // Se sucesso, avança para a tela de confirmação
     if (result.success) {
       setFormStep(6)
     }
   }
+
+  // Preenche a localização quando o modal é aberto a partir do mapa
+  useEffect(() => {
+    if (!show || !presetLocation) return
+    const formatted = formatCoordinates(presetLocation.lat, presetLocation.lng)
+    setLocation(formatted)
+  }, [presetLocation, show])
+
+  const parsedLocation = useMemo(() => {
+    if (!location) return null
+    const [latStr, lngStr] = location.split(",")
+    const lat = parseFloat(latStr)
+    const lng = parseFloat(lngStr)
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null
+    return [lat, lng] as [number, number]
+  }, [location])
 
   return (
     <AnimatePresence>
@@ -161,7 +269,7 @@ export default function DenunciaModal({ show, onCloseAction }: { show: boolean, 
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          onClick={handleClose}
+          onClick={() => handleClose()}
         >
           <motion.div
             className="bg-neutral-900 p-8 rounded-2xl w-[700px] text-white relative flex flex-col items-center border border-[#24BBE0]/30 shadow-lg"
@@ -240,8 +348,15 @@ export default function DenunciaModal({ show, onCloseAction }: { show: boolean, 
                               type="button"
                               key={item.label}
                               onClick={() => {
-                                handleSelect(item.label, crimeGenre, setCrimeGenre)
-                                setValidationErrors({ ...validationErrors, crimeGenre: false })
+                                const isSameSelection = crimeGenre === item.label
+                                const nextGenre = isSameSelection ? null : item.label
+                                setCrimeGenre(nextGenre)
+                                setCrimeType(null)
+                                setValidationErrors((prev) => ({
+                                  ...prev,
+                                  crimeGenre: false,
+                                  crimeType: false,
+                                }))
                               }}
                               className={`px-4 py-2 rounded-full border text-sm font-medium transition-all flex items-center gap-2 ${
                                 selected
@@ -270,56 +385,49 @@ export default function DenunciaModal({ show, onCloseAction }: { show: boolean, 
                       )}
                     </div>
 
-                    <div>
-                      <p className="font-semibold mb-3">
-                        Qual é a natureza da ocorrência? <span className="text-red-400">*</span>
-                      </p>
-                      <div className="flex flex-wrap gap-3">
-                        {[
-                          { id: "A", label: "Assalto ou tentativa de assalto" },
-                          { id: "B", label: "Violência Verbal" },
-                          { id: "C", label: "Violência Física" },
-                          { id: "D", label: "Furto" },
-                          { id: "E", label: "Vandalismo" },
-                          { id: "F", label: "Assédio" },
-                          { id: "G", label: "Iluminação Precária" },
-                          { id: "H", label: "Abandono de local público" },
-                        ].map((item) => {
-                          const selected = crimeType === item.label
-                          return (
-                            <button
-                              type="button"
-                              key={item.label}
-                              onClick={() => {
-                                handleSelect(item.label, crimeType, setCrimeType)
-                                setValidationErrors({ ...validationErrors, crimeType: false })
-                              }}
-                              className={`px-4 py-2 rounded-full border text-sm font-medium transition-all flex items-center gap-2 ${
-                                selected
-                                  ? "border-[#FF7A00] text-white"
-                                  : "border-neutral-600 bg-neutral-800 text-gray-200 hover:bg-neutral-700"
-                              }`}
-                            >
-                              <span
-                                className={`w-6 h-6 flex items-center justify-center rounded-full text-xs font-bold ${
+                    {crimeGenre && (
+                      <div>
+                        <p className="font-semibold mb-3">
+                          Qual é a natureza da ocorrência? <span className="text-red-400">*</span>
+                        </p>
+                        <div className="flex flex-wrap gap-3">
+                          {(crimeTypeOptions[crimeGenre] || []).map((item) => {
+                            const selected = crimeType === item.label
+                            return (
+                              <button
+                                type="button"
+                                key={item.label}
+                                onClick={() => {
+                                  handleSelect(item.label, crimeType, setCrimeType)
+                                  setValidationErrors((prev) => ({ ...prev, crimeType: false }))
+                                }}
+                                className={`px-4 py-2 rounded-full border text-sm font-medium transition-all flex items-center gap-2 ${
                                   selected
-                                    ? "bg-[#FF7A00] text-black"
-                                    : "bg-neutral-600 text-white"
+                                    ? "border-[#FF7A00] text-white"
+                                    : "border-neutral-600 bg-neutral-800 text-gray-200 hover:bg-neutral-700"
                                 }`}
                               >
-                                {item.id}
-                              </span>
-                              {item.label}
-                            </button>
-                          )
-                        })}
+                                <span
+                                  className={`w-6 h-6 flex items-center justify-center rounded-full text-xs font-bold ${
+                                    selected
+                                      ? "bg-[#FF7A00] text-black"
+                                      : "bg-neutral-600 text-white"
+                                  }`}
+                                >
+                                  {item.id}
+                                </span>
+                                {item.label}
+                              </button>
+                            )
+                          })}
+                        </div>
+                        {validationErrors.crimeType && (
+                          <p className="text-sm text-red-400 mt-2">
+                            Por favor, selecione uma opção
+                          </p>
+                        )}
                       </div>
-                      {validationErrors.crimeType && (
-                        <p className="text-sm text-red-400 mt-2">
-                          Por favor, selecione uma opção
-                        </p>
-                      )}
-                    </div>
+                    )}
 
                     <button
                       type="submit"
@@ -346,47 +454,110 @@ export default function DenunciaModal({ show, onCloseAction }: { show: boolean, 
                 <h2 className="text-3xl font-bold mb-6 text-center">Informações básicas</h2>
 
                 <form className="flex flex-col gap-6" onSubmit={nextStep}>
-                  <div>
-                    <p className="font-semibold mb-2">
-                      Quando aconteceu? <span className="text-red-400">*</span>
-                    </p>
-                    <input
-                      type="text"
-                      placeholder="DD / MM / YYYY"
-                      value={crimeDate}
-                      onChange={(e) => {
-                        let input = e.target.value.replace(/\D/g, "")
-                        if (input.length > 8) input = input.slice(0, 8)
-                        if (input.length >= 7) {
-                          // Format as DD/MM/YYYY when 7 or 8 digits are present
-                          input = input.replace(/^(\d{2})(\d{2})(\d{3,4}).*/, "$1/$2/$3")
-                        } else if (input.length > 4) {
-                          // Format as DD/MM/YY or DD/MM/Y
-                          input = input.replace(/^(\d{2})(\d{2})(\d{1,2})/, "$1/$2/$3")
-                        } else if (input.length > 2) {
-                          // Format as DD/MM
-                          input = input.replace(/^(\d{2})(\d{0,2})/, "$1/$2")
-                        }
-                        setCrimeDate(input)
-                        setValidationErrors({ ...validationErrors, crimeDate: false })
-                      }}
-                      maxLength={10}
-                      className={`bg-neutral-800 text-white p-2 rounded-md w-40 text-center focus:outline-none focus:ring-2 ${
-                        validationErrors.crimeDate ? 'ring-2 ring-red-400' : 'focus:ring-[#24BBE0]'
-                      }`}
-                    />
-                    {validationErrors.crimeDate && (
-                      <p className="text-sm text-red-400 mt-2">
-                        Por favor, insira uma data válida no formato DD/MM/YYYY
+                  <div className="flex flex-wrap gap-6">
+                    <div>
+                      <p className="font-semibold mb-2">
+                        Quando aconteceu? <span className="text-red-400">*</span>
                       </p>
-                    )}
+                      <input
+                        type="text"
+                        placeholder="DD / MM / YYYY"
+                        value={crimeDate}
+                        onChange={(e) => {
+                          let input = e.target.value.replace(/\D/g, "")
+                          if (input.length > 8) input = input.slice(0, 8)
+                          if (input.length >= 7) {
+                            input = input.replace(/^(\d{2})(\d{2})(\d{3,4}).*/, "$1/$2/$3")
+                          } else if (input.length > 4) {
+                            input = input.replace(/^(\d{2})(\d{2})(\d{1,2})/, "$1/$2/$3")
+                          } else if (input.length > 2) {
+                            input = input.replace(/^(\d{2})(\d{0,2})/, "$1/$2")
+                          }
+
+                          setCrimeDate(input)
+                          setValidationErrors((prev) => ({
+                            ...prev,
+                            crimeDate: false,
+                            crimeDateTime: false,
+                          }))
+                        }}
+                        onBlur={() => {
+                          if (crimeDate.length > 0) {
+                            setValidationErrors((prev) => ({
+                              ...prev,
+                              crimeDate: !isValidDate(crimeDate),
+                              crimeDateTime: !isDateTimeNotInFuture(crimeDate, crimeTime),
+                            }))
+                          }
+                        }}
+                        maxLength={10}
+                        className={`bg-neutral-800 text-white p-2 rounded-md w-40 text-center focus:outline-none focus:ring-2 ${
+                          validationErrors.crimeDate ? 'ring-2 ring-red-400' : 'focus:ring-[#24BBE0]'
+                        }`}
+                      />
+                      {validationErrors.crimeDate && (
+                        <p className="text-sm text-red-400 mt-2">
+                          Por favor, insira uma data válida no formato DD/MM/YYYY
+                        </p>
+                      )}
+                    </div>
+
+                    <div>
+                      <p className="font-semibold mb-2">
+                        Em qual horário? <span className="text-red-400">*</span>
+                      </p>
+                      <input
+                        type="time"
+                        value={crimeTime}
+                        onChange={(e) => {
+                          const nextValue = e.target.value
+                          setCrimeTime(nextValue)
+                          setValidationErrors((prev) => ({
+                            ...prev,
+                            crimeTime: false,
+                            crimeDateTime: false,
+                          }))
+                        }}
+                        onBlur={() => {
+                          if (crimeTime.length > 0) {
+                            setValidationErrors((prev) => ({
+                              ...prev,
+                              crimeTime: !isValidTime(crimeTime),
+                              crimeDateTime: !isDateTimeNotInFuture(crimeDate, crimeTime),
+                            }))
+                          }
+                        }}
+                        className={`bg-neutral-800 text-white p-2 rounded-md w-32 text-center focus:outline-none focus:ring-2 ${
+                          validationErrors.crimeTime ? 'ring-2 ring-red-400' : 'focus:ring-[#24BBE0]'
+                        }`}
+                      />
+                      {validationErrors.crimeTime && (
+                        <p className="text-sm text-red-400 mt-2">
+                          Horário deve estar no formato HH:mm entre 00:00 e 23:59
+                        </p>
+                      )}
+                    </div>
                   </div>
+                  
+                  {validationErrors.crimeDateTime && (
+                    <p className="text-sm text-red-400 mt-2">
+                      A data e horário não podem estar no futuro
+                    </p>
+                  )}
 
                   <div>
                     <p className="font-semibold mb-2">Onde aconteceu?</p>
                     <div className="w-full h-[250px] rounded-lg overflow-hidden">
-                      <MapaDepoimentos hideMarkers={true} hideTitle={true} />
+                      <MapSelector
+                        onLocationSelect={handleLocationSelect}
+                        selectedPosition={parsedLocation}
+                      />
                     </div>
+                    {location && (
+                      <p className="text-xs text-gray-400 mt-2">
+                        Coordenadas selecionadas: {location}
+                      </p>
+                    )}
                   </div>
 
                   <div className="flex justify-between mt-6">
@@ -480,13 +651,28 @@ export default function DenunciaModal({ show, onCloseAction }: { show: boolean, 
                       placeholder="Descreva aqui ..."
                       value={description}
                       onChange={(e) => {
-                        setDescription(e.target.value)
-                        setValidationErrors({ ...validationErrors, description: false })
+                        const inputValue = e.target.value.slice(0, DESCRIPTION_MAX_LENGTH)
+                        setDescription(inputValue)
+                        setValidationErrors((prev) => ({
+                          ...prev,
+                          description: false,
+                        }))
+                      }}
+                      onBlur={() => {
+                        if (description.length > 0) {
+                          setValidationErrors((prev) => ({
+                            ...prev,
+                            description: description.trim().length === 0,
+                          }))
+                        }
                       }}
                       className={`w-full bg-neutral-800 text-white p-3 rounded-md h-40 resize-none focus:outline-none focus:ring-2 ${
                         validationErrors.description ? 'ring-2 ring-red-400' : 'focus:ring-[#24BBE0]'
                       }`}
                     ></textarea>
+                    <p className="text-xs text-gray-400 mt-1 text-right">
+                      {description.length}/{DESCRIPTION_MAX_LENGTH} caracteres
+                    </p>
                     {validationErrors.description && (
                       <p className="text-sm text-red-400 mt-2">
                         Por favor, descreva o que aconteceu
@@ -770,7 +956,7 @@ export default function DenunciaModal({ show, onCloseAction }: { show: boolean, 
                 </p>
 
                 <button
-                  onClick={handleClose}
+                  onClick={() => handleClose(true)}
                   className="mt-6 bg-[#24BBE0] hover:bg-blue-500 text-white px-8 py-2 rounded font-semibold"
                 >
                   Fechar
@@ -783,7 +969,7 @@ export default function DenunciaModal({ show, onCloseAction }: { show: boolean, 
             {/* Botão de fechar */}
             <button
               className="absolute top-2 right-2 hover:text-white text-gray-400"
-              onClick={handleClose}
+              onClick={() => handleClose()}
             >
               ✕
             </button>
