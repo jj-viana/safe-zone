@@ -5,6 +5,7 @@ import { Merriweather } from "next/font/google";
 import { useState, useMemo, useEffect } from "react";
 import GraficodeBarras from "../components/graficoBarras/graficoBarras";
 import GraficoPizza from "../components/graficoPizza/graficoPizza";
+import GraficoPizzaGenero from '../components/graficoPizza/graficoPizzaGenero';
 import GraficoDistribuicao from "../components/graficoDistribuicao/GraficoDistribuicao";
 import GraficoDeLinha from "../components/graficoLinha/graficolinha";
 import GraficoNatureza from "../components/graficoNatureza.tsx/graficoNatureza";
@@ -117,7 +118,14 @@ export default function DashboardPage() {
 
   const crimeOptions = ["crime", "sensacao_inseguranca"];
   const anoOptions = [...new Set(MOCK_CRIME_DATA.map(i => new Date(i.crimeDate).getFullYear()))];
-  const regiaoOptions = ["Plano Piloto", "Taguatinga", "Águas Claras", "Guará", "Ceilândia"];
+  const regiaoOptions = [
+  "Plano Piloto", "Taguatinga", "Águas Claras", "Guará", "Ceilândia",
+  "Samambaia", "Sobradinho", "Sobradinho II", "Gama", "Santa Maria",
+  "Riacho Fundo I", "Riacho Fundo II", "Cruzeiro", "Brazlândia",
+  "Núcleo Bandeirante", "Recanto das Emas", "Lago Norte", "Lago Sul",
+  "Paranoá", "Itapoã", "Varjão", "Vicente Pires", "Park Way",
+  "Candangolândia", "SIA", "SCIA/Estrutural", "Fercal"
+];
 
   const [selectedFilters, setSelectedFilters] = useState({
     crime: "crime",
@@ -164,7 +172,8 @@ export default function DashboardPage() {
       const crimeMatch = item.crimeGenre === selectedFilters.crime;
       const naturezaMatch = selectedFilters.natureza.includes(item.crimeType);
       const anoMatch = selectedFilters.ano.includes(year);
-      return crimeMatch && naturezaMatch && anoMatch;
+      const regiaoMatch = selectedFilters.regiao.includes(item.location);
+      return crimeMatch && naturezaMatch && anoMatch && regiaoMatch;
     });
   }, [selectedFilters]);
 
@@ -245,16 +254,16 @@ export default function DashboardPage() {
                 <div className="flex-1 grid grid-cols-2 gap-4">
                   <div className="bg-[#1F1F1F] shadow-xl shadow-black/50 rounded-lg p-6 flex flex-col">
                     <p className="text-white">Distribuição por Identidade de Gênero</p>
-                    {/* <div className="flex-1 w-full h-full">
+                    <div className="flex-1 w-full h-full">
                       <GraficoPizzaGenero data={filteredData}/>
-                    </div> */}
+                    </div> 
                   </div>
                   <div className="bg-[#1F1F1F] shadow-xl shadow-black/50 rounded-lg p-6">
                     <p>Distribuição por Orientação Sexual</p>
                     <GraficoDistribuicao data={filteredData} />
                   </div>
                 </div>
-              </div>
+              </div> 
 
               {/* Subcoluna Direita */}
               <div className="w-1/3 flex flex-col gap-4">

@@ -24,7 +24,8 @@ export default function AreaGraficoLinha({ data, colors, crimeTypes }: AreaGrafi
         margin={{ top: 5, right: 30, left: 0, bottom: 20 }}
       >
         <XAxis dataKey="name" stroke="#fff" style={{ fontSize: '13px' }} />
-        <YAxis stroke="#fff" style={{ fontSize: '16px' }}/>
+        <YAxis stroke="#fff" style={{ fontSize: '16px' }} allowDecimals={false} domain={[0, 'dataMax + 1']}/>
+        
         <Tooltip 
           contentStyle={{
               backgroundColor: '#1F2937',

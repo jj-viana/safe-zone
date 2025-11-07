@@ -11,31 +11,29 @@ interface ChartData {
 
 const COLORS = ['#EC4899', '#F97316', '#06B6D4', '#FBBF24', '#EF4444'];
 
-const CRIME_TYPE_MAPPING: Record<string, string> = {
-  homicidios: 'Homicídios e Tentativas',
-  trafico: 'Tráfico de Drogas',
-  crimes_sem_violencia: 'Crimes sem Violência',
-  violencia_domestica: 'Violência Doméstica',
-  crimes_patrimonio: 'Crimes Contra o Patrimônio',
-};
-
-interface GraficoDeLinhaProps {
-  data: CrimeData[]; // agora obrigatorio
-}
-
 const monthNames = [
   'Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun',
   'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'
 ];
 
-const crimeTypes = Object.values(CRIME_TYPE_MAPPING);
+interface GraficoDeLinhaProps {
+  data: CrimeData[];
+}
 
 export default function GraficoDeLinha({ data }: GraficoDeLinhaProps) {
-  // ✅ agora usa apenas os dados filtrados recebidos do Dashboard
+  console.log('filteredData', data.map(d => ({
+    id: d.id,
+    crimeType: d.crimeType,
+    crimeDate: d.crimeDate
+  })));
+
+  const crimeTypes = useMemo(() => {
+    const uniqueTypes = Array.from(new Set(data.map(d => d.crimeType)));
+    return uniqueTypes.length ? uniqueTypes : ['Sem dados'];
+  }, [data]);
+
   const chartData = useMemo(() => {
     const baseData: Record<number, Record<string, number | string>> = {};
-
-    // Inicializa meses e tipos de crime
     monthNames.forEach((monthName, index) => {
       baseData[index] = { name: monthName };
       crimeTypes.forEach(type => {
@@ -43,19 +41,21 @@ export default function GraficoDeLinha({ data }: GraficoDeLinhaProps) {
       });
     });
 
-    // Conta crimes por mês e tipo
     data.forEach(crime => {
       const date = new Date(crime.crimeDate);
+      if (Number.isNaN(date.getTime())) return;
       const monthIndex = date.getMonth();
-      const crimeTypeName = CRIME_TYPE_MAPPING[crime.crimeType.toLowerCase()];
-
-      if (crimeTypeName) {
-        (baseData[monthIndex][crimeTypeName] as number)++;
+      const typeLabel = crime.crimeType || 'Não informado';
+      if (!(typeLabel in baseData[monthIndex])) {
+        baseData[monthIndex][typeLabel] = 0;
       }
+      (baseData[monthIndex][typeLabel] as number)++;
     });
 
-    return Object.values(baseData) as ChartData[];
-  }, [data]);
+    const result = Object.values(baseData) as ChartData[];
+    console.log('chartData', result);
+    return result;
+  }, [data, crimeTypes]);
 
   return (
     <section className="w-full h-full">
