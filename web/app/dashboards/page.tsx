@@ -10,6 +10,7 @@ import GraficoDistribuicao from "../components/graficoDistribuicao/GraficoDistri
 import GraficoDeLinha from "../components/graficoLinha/graficolinha";
 import GraficoNatureza from "../components/graficoNatureza.tsx/graficoNatureza";
 import { MOCK_CRIME_DATA } from "./data/mockData";
+import { REGIAO_OPTIONS } from "@/lib/constants/regions";
 
 const merriweather = Merriweather({
   subsets: ["latin"],
@@ -56,19 +57,11 @@ const naturezaPorCrime: Record<CrimeCategory, string[]> = {
 
 const CRIME_OPTIONS: CrimeCategory[] = ["crime", "sensacao_inseguranca"];
 
-const REGIAO_OPTIONS = [
-  "Plano Piloto", "Taguatinga", "Águas Claras", "Guará", "Ceilândia",
-  "Samambaia", "Sobradinho", "Sobradinho II", "Gama", "Santa Maria",
-  "Riacho Fundo I", "Riacho Fundo II", "Cruzeiro", "Brazlândia",
-  "Núcleo Bandeirante", "Recanto das Emas", "Lago Norte", "Lago Sul",
-  "Paranoá", "Itapoã", "Varjão", "Vicente Pires", "Park Way",
-  "Candangolândia", "SIA", "SCIA/Estrutural", "Fercal",
-];
 
 // COMPONENTE DE FILTRO 
 interface FiltroDropdownProps<T> {
   label: string;
-  options: T[];
+  options: ReadonlyArray<T>;
   selected: T | T[];
   multi?: boolean;
   open: boolean;

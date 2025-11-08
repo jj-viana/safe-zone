@@ -57,6 +57,7 @@ namespace ReportsApi.Tests.IntegrationTests
                     CrimeType = "Assault",
                     Description = "Initial description",
                     Location = "Central Park",
+                    Region = "Taguatinga",
                     CrimeDate = DateTime.UtcNow,
                     Resolved = false
                 };
@@ -116,6 +117,7 @@ namespace ReportsApi.Tests.IntegrationTests
                     CrimeType = "Assault",
                     Description = "Initial description",
                     Location = "Central Park",
+                    Region = "Taguatinga",
                     CrimeDate = DateTime.UtcNow,
                     Resolved = false
                 };
@@ -154,6 +156,7 @@ namespace ReportsApi.Tests.IntegrationTests
                     CrimeType = "Assault",
                     Description = "Initial description",
                     Location = "Central Park",
+                    Region = "Taguatinga",
                     CrimeDate = DateTime.UtcNow,
                     Resolved = false
                 };
@@ -198,6 +201,7 @@ namespace ReportsApi.Tests.IntegrationTests
                     CrimeType = "Assault",
                     Description = "Initial description",
                     Location = "Central Park",
+                    Region = "Taguatinga",
                     CrimeDate = DateTime.UtcNow,
                     Resolved = false
                 };

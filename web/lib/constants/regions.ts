@@ -1,0 +1,32 @@
+export const REGIAO_OPTIONS = [
+  "Plano Piloto",
+  "Taguatinga",
+  "Águas Claras",
+  "Guará",
+  "Ceilândia",
+  "Samambaia",
+  "Sobradinho",
+  "Sobradinho II",
+  "Gama",
+  "Santa Maria",
+  "Riacho Fundo I",
+  "Riacho Fundo II",
+  "Cruzeiro",
+  "Brazlândia",
+  "Núcleo Bandeirante",
+  "Recanto das Emas",
+  "Lago Norte",
+  "Lago Sul",
+  "Paranoá",
+  "Itapoã",
+  "Varjão",
+  "Vicente Pires",
+  "Park Way",
+  "Candangolândia",
+  "SIA",
+  "SCIA/Estrutural",
+  "Fercal",
+] as const;
+
+type RegiaoOptionTuple = typeof REGIAO_OPTIONS;
+export type RegiaoOption = RegiaoOptionTuple[number];

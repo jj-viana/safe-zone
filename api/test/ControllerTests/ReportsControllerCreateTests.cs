@@ -28,6 +28,7 @@ public class ReportsControllerCreateTests
         CrimeType = "Assault",
         Description = "Incident description",
         Location = "Central Park",
+        Region = "Taguatinga",
         CrimeDate = DateTime.UtcNow,
         Resolved = false
     };
@@ -75,6 +76,7 @@ public class ReportsControllerCreateTests
             CrimeType = "Assault",
             Description = "Incident description",
             Location = "Central Park",
+            Region = "Taguatinga",
             CrimeDate = now,
             Resolved = false
         };
@@ -86,6 +88,7 @@ public class ReportsControllerCreateTests
             CrimeType = "Assault",
             Description = "Incident description",
             Location = "Central Park",
+            Region = "Taguatinga",
             CrimeDate = now,
             Resolved = false
         };
@@ -96,6 +99,7 @@ public class ReportsControllerCreateTests
             createdReport.CrimeType,
             createdReport.Description,
             createdReport.Location,
+            createdReport.Region,
             createdReport.CrimeDate,
             null,
             now,

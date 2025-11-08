@@ -33,6 +33,7 @@ public class ReportsApiIntegrationTests : IClassFixture<CustomWebApplicationFact
             CrimeType = "Burglary",
             Description = "Stolen laptop",
             Location = "My house",
+            Region = "Taguatinga",
             CrimeDate = DateTime.UtcNow,
             Resolved = false
         };
@@ -47,6 +48,7 @@ public class ReportsApiIntegrationTests : IClassFixture<CustomWebApplicationFact
         Assert.NotNull(createdReport);
         Assert.Equal(request.CrimeGenre, createdReport.CrimeGenre);
         Assert.Equal(request.CrimeType, createdReport.CrimeType);
+    Assert.Equal(request.Region, createdReport.Region);
 
         // Cleanup
         if (createdReport != null)
@@ -63,6 +65,7 @@ public class ReportsApiIntegrationTests : IClassFixture<CustomWebApplicationFact
             ""CrimeType"": ""Burglary"",
             ""Description"": ""Stolen laptop"",
             ""Location"": ""My house"",
+            ""Region"": ""Taguatinga"",
             ""CrimeDate"": ""not-a-date"",      // string inválida para DateTime
             ""Resolved"": ""notabool""          // string em vez de boolean
         }";
@@ -110,6 +113,7 @@ public class ReportsApiIntegrationTests : IClassFixture<CustomWebApplicationFact
             CrimeType = "Burglary",
             Description = "Stolen laptop",
             Location = "My house",
+            Region = "Taguatinga",
             CrimeDate = DateTime.UtcNow,
             Resolved = false
         };
@@ -171,6 +175,7 @@ public class ReportsApiIntegrationTests : IClassFixture<CustomWebApplicationFact
             "  \"CrimeType\": \"Burglary\",\n" +
             $"  \"Description\": \"{new string('x', 2050)}\",\n" +
             "  \"Location\": \"My house\",\n" +
+            "  \"Region\": \"Taguatinga\",\n" +
             $"  \"CrimeDate\": \"{DateTime.UtcNow:o}\",\n" +
             "  \"Resolved\": false\n" +
             "}";

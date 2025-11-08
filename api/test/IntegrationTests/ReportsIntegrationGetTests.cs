@@ -54,6 +54,7 @@ public class ReportsApiIntegrationTests : IClassFixture<CustomWebApplicationFact
             CrimeType = "Integration Test Crime",
             Description = "Test report for integration testing",
             Location = "Test Location",
+            Region = "Taguatinga",
             CrimeDate = DateTime.UtcNow,
             Resolved = false
         };
@@ -140,6 +141,7 @@ public class ReportsApiIntegrationTests : IClassFixture<CustomWebApplicationFact
             CrimeType = TestCrimeType,
             Description = "Test report for crime type integration testing",
             Location = "Test Location",
+            Region = "Taguatinga",
             CrimeDate = DateTime.UtcNow,
             Resolved = false
         };
@@ -226,6 +228,7 @@ public class ReportsApiIntegrationTests : IClassFixture<CustomWebApplicationFact
             CrimeType = "Test Crime Type",
             Description = "Test report for GetById integration testing",
             Location = "Test Location",
+            Region = "Taguatinga",
             CrimeDate = DateTime.UtcNow,
             Resolved = false
         };

@@ -46,6 +46,7 @@ export default function MapaDepoimentos({ hideMarkers = false, hideTitle = false
     crimeType: string
     description: string
     location: [number, number]
+    region: string
     crimeDate: string
     reporterDetails: ReporterDetailsResponse | null
     createdDate: string
@@ -80,6 +81,7 @@ export default function MapaDepoimentos({ hideMarkers = false, hideTitle = false
             crimeType: report.crimeType,
             description: report.description,
             location: coords,
+            region: report.region,
             crimeDate: report.crimeDate,
             reporterDetails: report.reporterDetails ?? null,
             createdDate: report.createdDate,
@@ -377,6 +379,13 @@ export default function MapaDepoimentos({ hideMarkers = false, hideTitle = false
 
                 <div>
                   <h4 className="text-sm font-semibold text-[#24BBE0] uppercase mb-2">
+                    Região
+                  </h4>
+                  <p className="text-white">{selectedDepoimento.region}</p>
+                </div>
+
+                <div>
+                  <h4 className="text-sm font-semibold text-[#24BBE0] uppercase mb-2">
                     Data do Ocorrido
                   </h4>
                   <p className="text-white">
@@ -384,7 +393,7 @@ export default function MapaDepoimentos({ hideMarkers = false, hideTitle = false
                   </p>
                 </div>
 
-                <div>
+                <div className="md:col-span-2">
                   <h4 className="text-sm font-semibold text-[#24BBE0] uppercase mb-2">
                     Status
                   </h4>

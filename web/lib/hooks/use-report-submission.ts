@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { reportsClient, ApiResponseError } from '@/lib/api'
+import type { RegiaoOption } from '@/lib/constants/regions'
 import { convertToIsoDateTime } from '@/lib/utils/date-utils'
 import { mapFormDataToApiRequest } from '@/lib/utils/form-mappers'
 
@@ -20,6 +21,7 @@ export interface ReportFormData {
   sexualOrientation: string | null
   ethnicity: string | null
   location: string
+  region: RegiaoOption | null
 }
 
 /**
@@ -87,6 +89,13 @@ export function useReportSubmission() {
         return { success: false, error: errorMessage }
       }
 
+      if (!formData.region) {
+        const errorMessage = 'Selecione uma região válida.'
+        setSubmitError(errorMessage)
+        setIsSubmitting(false)
+        return { success: false, error: errorMessage }
+      }
+
       // Monta o payload da API
       const requestData = mapFormDataToApiRequest({
         crimeGenre: formData.crimeGenre,
@@ -99,6 +108,7 @@ export function useReportSubmission() {
         sexualOrientation: formData.sexualOrientation,
         ethnicity: formData.ethnicity,
         location: formData.location,
+        region: formData.region,
       })
 
       console.log('📤 Enviando para API:', requestData)
