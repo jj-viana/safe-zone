@@ -1,13 +1,8 @@
 'use client';
 
 import { useMemo } from 'react';
-import AreaPizza from './areaPizza';
+import AreaPizza, { type ChartData } from './areaPizza';
 import { MOCK_CRIME_DATA, CrimeData } from '../../dashboards/data/mockData';
-
-interface ChartData {
-  name: string;
-  value: number;
-}
 
 const COLORS = ['#EC4899', '#F97316', '#06B6D4', '#FBBF24', '#EF4444', '#22C55E', '#8B5CF6'];
 
@@ -28,7 +23,7 @@ interface GraficoPizzaGeneroProps {
 export default function GraficoPizzaGenero({ data }: GraficoPizzaGeneroProps) {
   const crimeData = data || MOCK_CRIME_DATA;
 
-  const chartData = useMemo(() => {
+  const chartData = useMemo<ChartData[]>(() => {
     const grouped: Record<string, number> = {};
 
     crimeData.forEach((crime) => {
@@ -40,7 +35,7 @@ export default function GraficoPizzaGenero({ data }: GraficoPizzaGeneroProps) {
 
     return Object.entries(grouped)
       .map(([name, value]) => ({ name, value }))
-      .sort((a, b) => b.value - a.value) as ChartData[];
+      .sort((a, b) => b.value - a.value);
   }, [crimeData]);
 
   return (

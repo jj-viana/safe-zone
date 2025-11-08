@@ -25,7 +25,7 @@ interface GraficoNaturezaProps {
 
 export default function GraficoNatureza({ data }: GraficoNaturezaProps) {
   // usa apenas os dados filtrados recebidos do Dashboard
-  const chartData = useMemo(() => {
+  const chartData = useMemo<ChartData[]>(() => {
     const grouped: Record<string, number> = {};
 
     data.forEach(crime => {

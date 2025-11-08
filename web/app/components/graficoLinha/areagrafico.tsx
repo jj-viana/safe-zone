@@ -1,7 +1,7 @@
 'use client';
 
 import { 
-  LineChart, Line, XAxis, YAxis, CartesianGrid, 
+  LineChart, Line, XAxis, YAxis, 
   Tooltip, Legend, ResponsiveContainer 
 } from 'recharts';
 

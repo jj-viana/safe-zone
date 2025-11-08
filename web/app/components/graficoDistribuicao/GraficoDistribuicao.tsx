@@ -27,7 +27,7 @@ interface GraficoDistribuicaoProps {
 
 export default function GraficoDistribuicao({ data }: GraficoDistribuicaoProps) {
   // ✅ usa apenas os dados filtrados vindos do Dashboard
-  const distributionData = useMemo(() => {
+  const distributionData = useMemo<DistributionData[]>(() => {
     const grouped: Record<string, number> = {};
 
     data.forEach(crime => {

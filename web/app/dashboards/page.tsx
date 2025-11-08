@@ -2,7 +2,7 @@
 
 import Navbar from "../components/navbar/navbar";
 import { Merriweather } from "next/font/google";
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo } from "react";
 import GraficodeBarras from "../components/graficoBarras/graficoBarras";
 import GraficoPizza from "../components/graficoPizza/graficoPizza";
 import GraficoPizzaGenero from '../components/graficoPizza/graficoPizzaGenero';
@@ -27,6 +27,43 @@ function formatLabel(text: string): string {
     .replace(/\p{L}/u, c => c.toLocaleUpperCase("pt-BR")) // Primeira letra da string
     .replace(/(\s+)(\p{L})/gu, (_, space, c) => space + c.toLocaleUpperCase("pt-BR")); // Primeira letra após cada espaço
 }
+
+type CrimeCategory = "crime" | "sensacao_inseguranca";
+
+type SelectedFilters = {
+  crime: CrimeCategory;
+  natureza: string[];
+  ano: number[];
+  regiao: string[];
+};
+
+type MultiFilterKey = Extract<keyof SelectedFilters, "natureza" | "ano" | "regiao">;
+
+const naturezaPorCrime: Record<CrimeCategory, string[]> = {
+  crime: [
+    "Assalto",
+    "Violência Verbal",
+    "Violência Física",
+    "Furto",
+    "Vandalismo",
+    "Assédio",
+  ],
+  sensacao_inseguranca: [
+    "Iluminação precária",
+    "Abandono de local público",
+  ],
+};
+
+const CRIME_OPTIONS: CrimeCategory[] = ["crime", "sensacao_inseguranca"];
+
+const REGIAO_OPTIONS = [
+  "Plano Piloto", "Taguatinga", "Águas Claras", "Guará", "Ceilândia",
+  "Samambaia", "Sobradinho", "Sobradinho II", "Gama", "Santa Maria",
+  "Riacho Fundo I", "Riacho Fundo II", "Cruzeiro", "Brazlândia",
+  "Núcleo Bandeirante", "Recanto das Emas", "Lago Norte", "Lago Sul",
+  "Paranoá", "Itapoã", "Varjão", "Vicente Pires", "Park Way",
+  "Candangolândia", "SIA", "SCIA/Estrutural", "Fercal",
+];
 
 // COMPONENTE DE FILTRO 
 interface FiltroDropdownProps<T> {
@@ -100,70 +137,54 @@ function FiltroDropdown<T extends string | number>({
 export default function DashboardPage() {
   const [openFilter, setOpenFilter] = useState<string | null>(null);
 
-  // opções fixas
-  const naturezaPorCrime: Record<string, string[]> = {
-    crime: [
-      "Assalto",
-      "Violência Verbal",
-      "Violência Física",
-      "Furto",
-      "Vandalismo",
-      "Assédio",
-    ],
-    sensacao_inseguranca: [
-      "Iluminação precária",
-      "Abandono de local público",
-    ],
-  };
+  const anoOptions = useMemo(
+    () => [...new Set(MOCK_CRIME_DATA.map(item => new Date(item.crimeDate).getFullYear()))],
+    [],
+  );
 
-  const crimeOptions = ["crime", "sensacao_inseguranca"];
-  const anoOptions = [...new Set(MOCK_CRIME_DATA.map(i => new Date(i.crimeDate).getFullYear()))];
-  const regiaoOptions = [
-  "Plano Piloto", "Taguatinga", "Águas Claras", "Guará", "Ceilândia",
-  "Samambaia", "Sobradinho", "Sobradinho II", "Gama", "Santa Maria",
-  "Riacho Fundo I", "Riacho Fundo II", "Cruzeiro", "Brazlândia",
-  "Núcleo Bandeirante", "Recanto das Emas", "Lago Norte", "Lago Sul",
-  "Paranoá", "Itapoã", "Varjão", "Vicente Pires", "Park Way",
-  "Candangolândia", "SIA", "SCIA/Estrutural", "Fercal"
-];
-
-  const [selectedFilters, setSelectedFilters] = useState({
+  const [selectedFilters, setSelectedFilters] = useState<SelectedFilters>({
     crime: "crime",
-    natureza: naturezaPorCrime["crime"],
-    ano: anoOptions,
-    regiao: regiaoOptions,
+    natureza: [...naturezaPorCrime.crime],
+    ano: [...anoOptions],
+    regiao: [...REGIAO_OPTIONS],
   });
 
-  // Atualiza naturezas automaticamente quando muda "crime"
-  useEffect(() => {
-    setSelectedFilters(prev => ({
-      ...prev,
-      natureza: naturezaPorCrime[prev.crime],
-    }));
-  }, [selectedFilters.crime]);
+  const toggleSelection = <T,>(list: T[], option: T): T[] =>
+    list.includes(option) ? list.filter(item => item !== option) : [...list, option];
 
   const toggleFilter = (name: string) => {
     setOpenFilter(openFilter === name ? null : name);
   };
 
-  const handleSingleSelect = (filterName: string, option: string) => {
+  const handleCrimeSelect = (option: CrimeCategory) => {
     setSelectedFilters(prev => ({
       ...prev,
-      [filterName]: option,
+      crime: option,
+      natureza: [...naturezaPorCrime[option]],
     }));
     setOpenFilter(null);
   };
 
-  const handleMultiSelect = (
-    filterName: keyof Omit<typeof selectedFilters, "crime">,
-    option: string | number
-  ) => {
-    const current = selectedFilters[filterName];
-    const newSelection = (current as any).includes(option)
-      ? (current as any).filter((i: any) => i !== option)
-      : [...(current as any), option];
-    setSelectedFilters({ ...selectedFilters, [filterName]: newSelection });
-  };
+  function handleMultiSelect(filterName: MultiFilterKey, option: string | number) {
+    setSelectedFilters(prev => {
+      switch (filterName) {
+        case "natureza": {
+          const updated = toggleSelection(prev.natureza, option as string);
+          return { ...prev, natureza: updated };
+        }
+        case "regiao": {
+          const updated = toggleSelection(prev.regiao, option as string);
+          return { ...prev, regiao: updated };
+        }
+        case "ano": {
+          const updated = toggleSelection(prev.ano, option as number);
+          return { ...prev, ano: updated };
+        }
+        default:
+          return prev;
+      }
+    });
+  }
 
   //  filtragem 
   const filteredData = useMemo(() => {
@@ -180,7 +201,7 @@ export default function DashboardPage() {
   const totalDenuncias = filteredData.length;
 
   return (
-    <div className="h-screen flex flex-col bg-neutral-900">
+    <div className={`${merriweather.className} h-screen flex flex-col bg-neutral-900`}>
       <Navbar />
       <main className="flex-1 text-white text-2xl pt-4 px-6 pb-6 overflow-hidden">
         <div className="w-full h-full">
@@ -209,11 +230,11 @@ export default function DashboardPage() {
                 <div className="grid grid-cols-4 gap-4">
                   <FiltroDropdown
                     label="Tipo"
-                    options={crimeOptions}
+                    options={CRIME_OPTIONS}
                     selected={selectedFilters.crime}
                     open={openFilter === "crime"}
                     onToggle={() => toggleFilter("crime")}
-                    onSelect={option => handleSingleSelect("crime", option)}
+                    onSelect={handleCrimeSelect}
                   />
                   <FiltroDropdown
                     label="Natureza"
@@ -226,7 +247,7 @@ export default function DashboardPage() {
                   />
                   <FiltroDropdown
                     label="Região"
-                    options={regiaoOptions}
+                    options={REGIAO_OPTIONS}
                     selected={selectedFilters.regiao}
                     multi
                     open={openFilter === "regiao"}

@@ -9,10 +9,10 @@ import {
   Legend,
 } from 'recharts';
 
-interface ChartData {
+export interface ChartData {
   name: string;
   value: number;
-  [key: string]: any;
+  [key: string]: number | string;
 }
 
 interface GraficoAreaProps {
@@ -34,7 +34,7 @@ export default function AreaPizza({ data, colors = COLORS }: GraficoAreaProps) {
             color: '#F3F4F6',
           }}
           itemStyle={{ color: '#fff' }}
-          formatter={(value: any, name: string) => [value, name]}
+          formatter={(value: number | string, name: string) => [value, name]}
         />
         <Legend wrapperStyle={{ fontSize: '11px' }}/>
         <Pie
