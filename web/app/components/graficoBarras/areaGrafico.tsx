@@ -35,7 +35,8 @@ export default function AreaGrafico({ data, colors = COLORS }: GraficoAreaProps)
           angle={0}
           height={45}
           stroke="#9CA3AF"
-          style={{ fontSize: '12px' }}
+          style={{ fontSize: '11px' }}
+          interval={0}
         />
           <Tooltip
             contentStyle={{

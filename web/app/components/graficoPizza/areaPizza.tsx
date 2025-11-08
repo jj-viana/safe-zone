@@ -36,14 +36,14 @@ export default function AreaPizza({ data, colors = COLORS }: GraficoAreaProps) {
           itemStyle={{ color: '#fff' }}
           formatter={(value: any, name: string) => [value, name]}
         />
-        <Legend wrapperStyle={{ fontSize: '13px' }}/>
+        <Legend wrapperStyle={{ fontSize: '11px' }}/>
         <Pie
           data={data}
           dataKey="value"
           nameKey="name"
           cx="50%"
-          cy="45%"
-          outerRadius={75}
+          cy="47%"
+          outerRadius={65}
           labelLine={false}
         >
           {data.map((entry, index) => (

@@ -12,12 +12,12 @@ interface ChartData {
 const COLORS = ['#EC4899', '#F97316', '#06B6D4', '#FBBF24', '#EF4444', '#22C55E', '#8B5CF6'];
 
 const ETHNICITY_MAPPING: Record<string, string> = {
-  branco: 'Branco',
-  negro: 'Negro',
-  pardo: 'Pardo',
-  asiatico: 'Asiático',
-  indigena: 'Indígena',
-  outro: 'Outro',
+  'branca': 'Branca', // mockData tem 'Branca'
+  'negra': 'Negra',   // mockData tem 'Negra'
+  'parda': 'Parda',   // mockData tem 'Parda'
+  'amarela': 'Amarela', // mockData tem 'Amarela'
+  'indígena': 'Indígena', // mockData tem 'Indígena' (com acento)
+  'prefiro não informar': 'Não Inform', // mockData tem 'Prefiro não informar' (com espaço)
 };
 
 interface GraficodeBarrasProps {
