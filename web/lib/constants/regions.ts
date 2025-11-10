@@ -1,4 +1,4 @@
-export const REGIAO_OPTIONS = [
+export const REGION_OPTIONS = [
   "Plano Piloto",
   "Taguatinga",
   "Águas Claras",
@@ -28,5 +28,5 @@ export const REGIAO_OPTIONS = [
   "Fercal",
 ] as const;
 
-type RegiaoOptionTuple = typeof REGIAO_OPTIONS;
-export type RegiaoOption = RegiaoOptionTuple[number];
+type RegionOptionTuple = typeof REGION_OPTIONS;
+export type RegionOption = RegionOptionTuple[number];

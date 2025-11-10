@@ -6,7 +6,7 @@ import Image from "next/image"
 import { useEffect, useMemo, useState } from "react"
 import { FaArrowRight, FaArrowLeft } from "react-icons/fa"
 import { useReportSubmission } from "@/lib/hooks/use-report-submission"
-import { REGIAO_OPTIONS, type RegiaoOption } from "@/lib/constants/regions"
+import { REGION_OPTIONS, type RegionOption } from "@/lib/constants/regions"
 
 const MapSelector = dynamic(() => import("../map/map-selector"), {
   ssr: false,
@@ -18,13 +18,13 @@ const formatCoordinates = (lat: number, lng: number) => `${lat.toFixed(6)},${lng
 
 const DESCRIPTION_MAX_LENGTH = 2048
 
-interface DenunciaModalProps {
+interface ReportModalProps {
   show: boolean
   onCloseAction: () => void
   presetLocation?: PresetLocation | null
 }
 
-export default function DenunciaModal({ show, onCloseAction, presetLocation = null }: DenunciaModalProps) {
+export default function ReportModal({ show, onCloseAction, presetLocation = null }: ReportModalProps) {
   const [formStep, setFormStep] = useState(0)
   const [crimeGenre, setCrimeGenre] = useState<string | null>(null)
   const [crimeType, setCrimeType] = useState<string | null>(null)
@@ -37,7 +37,7 @@ export default function DenunciaModal({ show, onCloseAction, presetLocation = nu
   const [ethnicity, setEthnicity] = useState<string | null>(null)
   const [description, setDescription] = useState("")
 
-  const [region, setRegion] = useState<RegiaoOption | null>(null)
+  const [region, setRegion] = useState<RegionOption | null>(null)
   const [location, setLocation] = useState("")
   const [validationErrors, setValidationErrors] = useState<Record<string, boolean>>({})
   
@@ -574,7 +574,7 @@ export default function DenunciaModal({ show, onCloseAction, presetLocation = nu
                       value={region ?? ""}
                       onChange={(event) => {
                         const { value } = event.target
-                        setRegion(value ? (value as RegiaoOption) : null)
+                      setRegion(value ? (value as RegionOption) : null)
                         setValidationErrors((prev) => ({
                           ...prev,
                           region: false,
@@ -587,7 +587,7 @@ export default function DenunciaModal({ show, onCloseAction, presetLocation = nu
                       <option value="" disabled>
                         Selecione uma região
                       </option>
-                      {REGIAO_OPTIONS.map((option) => (
+                      {REGION_OPTIONS.map(option => (
                         <option key={option} value={option}>
                           {option}
                         </option>

@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { reportsClient, ApiResponseError } from '@/lib/api'
-import type { RegiaoOption } from '@/lib/constants/regions'
+import type { RegionOption } from '@/lib/constants/regions'
 import { convertToIsoDateTime } from '@/lib/utils/date-utils'
 import { mapFormDataToApiRequest } from '@/lib/utils/form-mappers'
 
@@ -21,7 +21,7 @@ export interface ReportFormData {
   sexualOrientation: string | null
   ethnicity: string | null
   location: string
-  region: RegiaoOption | null
+  region: RegionOption | null
 }
 
 /**

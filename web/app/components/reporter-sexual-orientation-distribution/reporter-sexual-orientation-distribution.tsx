@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import { CrimeData } from '../../dashboards/data/mockData';
+import type { ReportResponse } from '@/lib/api';
 
 interface DistributionData {
   label: string;
@@ -18,28 +18,36 @@ const SEXUAL_ORIENTATION_MAPPING: Record<string, string> = {
   bissexual: 'Bissexual',
   assexual: 'Assexual',
   outro: 'Outro',
-  prefiro_nao_informar: 'Prefiro Não Informar',
+  'prefiro não informar': 'Prefiro não informar',
+  prefiro_nao_informar: 'Prefiro não informar',
+  'não informado': 'Não informado',
+  'nao informado': 'Não informado',
+  nao_informado: 'Não informado',
 };
 
-interface GraficoDistribuicaoProps {
-  data: CrimeData[]; // ✅ agora obrigatório
+const UNKNOWN_LABEL = 'Não informado';
+
+interface ReporterSexualOrientationDistributionProps {
+  data: ReportResponse[];
 }
 
-export default function GraficoDistribuicao({ data }: GraficoDistribuicaoProps) {
-  // ✅ usa apenas os dados filtrados vindos do Dashboard
+export default function ReporterSexualOrientationDistribution({ data }: ReporterSexualOrientationDistributionProps) {
+  // Uses the filtered dataset provided by the dashboard
   const distributionData = useMemo<DistributionData[]>(() => {
     const grouped: Record<string, number> = {};
 
-    data.forEach(crime => {
-      const orientationKey = crime.reporterDetails.sexualOrientation.toLowerCase();
+    data.forEach(report => {
+      const orientation = report.reporterDetails?.sexualOrientation?.trim();
+      const key = orientation?.toLowerCase() ?? UNKNOWN_LABEL.toLowerCase();
       const displayName =
-        SEXUAL_ORIENTATION_MAPPING[orientationKey] ||
-        crime.reporterDetails.sexualOrientation;
+        SEXUAL_ORIENTATION_MAPPING[key] ||
+        orientation ||
+        UNKNOWN_LABEL;
 
       grouped[displayName] = (grouped[displayName] || 0) + 1;
     });
 
-    const total = data.length || 1;
+    const total = Object.values(grouped).reduce((sum, count) => sum + count, 0) || 1;
 
     return Object.entries(grouped)
       .map(([label, count], index) => ({

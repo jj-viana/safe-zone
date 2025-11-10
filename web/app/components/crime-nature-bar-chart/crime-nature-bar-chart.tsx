@@ -1,8 +1,8 @@
 'use client';
 
 import { useMemo } from 'react';
-import AreaGraficoNatureza from './AreaGraficoNatureza';
-import { CrimeData } from '../../dashboards/data/mockData';
+import CrimeNatureBarChartSurface from './crime-nature-bar-chart-surface';
+import type { ReportResponse } from '@/lib/api';
 
 interface ChartData {
   name: string;
@@ -17,20 +17,31 @@ const CRIME_TYPE_MAPPING: Record<string, string> = {
   crimes_sem_violencia: 'Crimes sem Violência',
   violencia_domestica: 'Violência Doméstica',
   crimes_patrimonio: 'Crimes Contra o Patrimônio',
+  nao_informado: 'Não informado',
 };
 
-interface GraficoNaturezaProps {
-  data: CrimeData[]; // obrigatorio
+const UNKNOWN_LABEL = 'Não informado';
+
+const normalizeKey = (value: string) =>
+  value
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/\p{Diacritic}/gu, '')
+    .replace(/\s+/g, '_');
+
+interface CrimeNatureBarChartProps {
+  data: ReportResponse[];
 }
 
-export default function GraficoNatureza({ data }: GraficoNaturezaProps) {
-  // usa apenas os dados filtrados recebidos do Dashboard
+export default function CrimeNatureBarChart({ data }: CrimeNatureBarChartProps) {
   const chartData = useMemo<ChartData[]>(() => {
     const grouped: Record<string, number> = {};
 
-    data.forEach(crime => {
-      const crimeTypeKey = crime.crimeType.toLowerCase();
-      const displayName = CRIME_TYPE_MAPPING[crimeTypeKey] || crime.crimeType;
+    data.forEach(report => {
+      const rawType = report.crimeType?.trim();
+      const key = rawType ? normalizeKey(rawType) : 'nao_informado';
+      const displayName = CRIME_TYPE_MAPPING[key] || rawType || UNKNOWN_LABEL;
       grouped[displayName] = (grouped[displayName] || 0) + 1;
     });
 
@@ -41,7 +52,7 @@ export default function GraficoNatureza({ data }: GraficoNaturezaProps) {
 
   return (
     <section className="w-full h-full">
-      <AreaGraficoNatureza data={chartData} colors={COLORS} />
+      <CrimeNatureBarChartSurface data={chartData} colors={COLORS} />
     </section>
   );
 }

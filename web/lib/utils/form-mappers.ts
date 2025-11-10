@@ -4,7 +4,7 @@
  */
 
 import type { CreateReportRequest, ReporterDetailsRequest } from '../api/types';
-import type { RegiaoOption } from '../constants/regions';
+import type { RegionOption } from '../constants/regions';
 
 /**
  * Mapa de resolução (UI) para resolved (API).
@@ -33,7 +33,7 @@ export function mapFormDataToApiRequest(formData: {
   sexualOrientation: string | null;
   ethnicity: string | null;
   location: string; // Coordenadas ou endereço
-  region: RegiaoOption;
+  region: RegionOption;
 }): CreateReportRequest {
   // Monta os detalhes do denunciante (opcional)
   // Valores são mantidos em português como fornecidos pelo usuário
