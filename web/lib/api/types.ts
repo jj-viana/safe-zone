@@ -15,6 +15,7 @@ export interface CreateReportRequest {
   crimeType: string;
   description: string;
   location: string;
+  region: string;
   crimeDate: string; // ISO 8601 format
   reporterDetails?: ReporterDetailsRequest | null;
   resolved: boolean;
@@ -33,6 +34,7 @@ export interface ReportResponse {
   crimeType: string;
   description: string;
   location: string;
+  region: string;
   crimeDate: string;
   reporterDetails?: ReporterDetailsResponse | null;
   createdDate: string;

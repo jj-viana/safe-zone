@@ -26,6 +26,7 @@ public class ReportsControllerGetTests
         CrimeType = "Assault",
         Description = "Incident description",
         Location = "Central Park",
+        Region = "Taguatinga",
         CrimeDate = DateTime.UtcNow,
         Resolved = false
     };
@@ -67,7 +68,7 @@ public class ReportsControllerGetTests
     {
         string testId = "12345";
 
-        var expectedReport = new ReportResponse(testId, "Hate Crime", "Assault", "Incident description", "Central Park", DateTime.UtcNow, null, DateTime.UtcNow, false);
+        var expectedReport = new ReportResponse(testId, "Hate Crime", "Assault", "Incident description", "Central Park", "Taguatinga", DateTime.UtcNow, null, DateTime.UtcNow, false);
         
         _serviceMock
             .Setup(s => s.GetByIdAsync(testId, It.IsAny<CancellationToken>()))
@@ -145,8 +146,8 @@ public class ReportsControllerGetTests
             "Burglary",
             new List<ReportResponse>
             {
-                new ReportResponse("114234", "Crime", "Burglary", "Home invasion", "Kansas", DateTime.UtcNow, null, DateTime.UtcNow, true),
-                new ReportResponse("52355", "Crime", "Burglary", "School theft", "Acre", DateTime.UtcNow.AddDays(-1), null, DateTime.UtcNow, true)
+                new ReportResponse("114234", "Crime", "Burglary", "Home invasion", "Kansas", "Plano Piloto", DateTime.UtcNow, null, DateTime.UtcNow, true),
+                new ReportResponse("52355", "Crime", "Burglary", "School theft", "Acre", "Águas Claras", DateTime.UtcNow.AddDays(-1), null, DateTime.UtcNow, true)
             }
         };
 
@@ -156,7 +157,7 @@ public class ReportsControllerGetTests
             "Assault",
             new List<ReportResponse>
             {
-                new ReportResponse("98765", "Hate Crime", "Assault", "Physical attack", "New York", DateTime.UtcNow.AddDays(-5), null, DateTime.UtcNow, false)
+                new ReportResponse("98765", "Hate Crime", "Assault", "Physical attack", "New York", "Guará", DateTime.UtcNow.AddDays(-5), null, DateTime.UtcNow, false)
             }
         };
 
@@ -166,9 +167,9 @@ public class ReportsControllerGetTests
             "Theft",
             new List<ReportResponse>
             {
-                new ReportResponse("11111", "Crime", "Theft", "Car theft", "California", DateTime.UtcNow.AddDays(-2), null, DateTime.UtcNow, false),
-                new ReportResponse("22222", "Crime", "Theft", "Bike stolen", "Texas", DateTime.UtcNow.AddDays(-3), null, DateTime.UtcNow, true),
-                new ReportResponse("33333", "Crime", "Theft", "Wallet missing", "Florida", DateTime.UtcNow.AddDays(-4), null, DateTime.UtcNow, false)
+                new ReportResponse("11111", "Crime", "Theft", "Car theft", "California", "Ceilândia", DateTime.UtcNow.AddDays(-2), null, DateTime.UtcNow, false),
+                new ReportResponse("22222", "Crime", "Theft", "Bike stolen", "Texas", "Samambaia", DateTime.UtcNow.AddDays(-3), null, DateTime.UtcNow, true),
+                new ReportResponse("33333", "Crime", "Theft", "Wallet missing", "Florida", "Sobradinho", DateTime.UtcNow.AddDays(-4), null, DateTime.UtcNow, false)
             }
         };
 

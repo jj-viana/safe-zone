@@ -4,13 +4,13 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react"
 import Image from "next/image";
-import DenunciaModal from "../denuncia/denuncia"
+import ReportModal from "../report-modal/report-modal"
 
 interface NavbarProps {
-  onOpenDenuncia?: () => void;
+  onOpenReportModal?: () => void;
 }
 
-export default function Navbar({ onOpenDenuncia }: NavbarProps) {
+export default function Navbar({ onOpenReportModal }: NavbarProps) {
   const pathname = usePathname();
   const [showModal, setShowModal] = useState(false)
 
@@ -53,7 +53,7 @@ export default function Navbar({ onOpenDenuncia }: NavbarProps) {
 
           <button
             onClick={() => {
-              onOpenDenuncia?.()
+              onOpenReportModal?.()
               setShowModal(true)
             }}
             className="text-sm md:text-base pb-1 border-b-2 border-transparent text-gray-300 hover:text-white hover:border-cyan-400 transition-all duration-200 cursor-pointer"
@@ -63,7 +63,7 @@ export default function Navbar({ onOpenDenuncia }: NavbarProps) {
         </div>
       </div>
 
-      <DenunciaModal show={showModal} onCloseAction={() => setShowModal(false)} />
+      <ReportModal show={showModal} onCloseAction={() => setShowModal(false)} />
     </nav>
   );
 }

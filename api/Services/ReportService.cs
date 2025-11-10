@@ -114,6 +114,7 @@ public class ReportService : IReportService
         var crimeType = request.CrimeType ?? throw new ArgumentException("The crimeType field is required.", nameof(request.CrimeType));
         var description = request.Description ?? throw new ArgumentException("The description field is required.", nameof(request.Description));
         var location = request.Location ?? throw new ArgumentException("The location field is required.", nameof(request.Location));
+        var region = request.Region ?? throw new ArgumentException("The region field is required.", nameof(request.Region));
         var crimeDate = request.CrimeDate ?? throw new ArgumentException("The crimeDate field is required.", nameof(request.CrimeDate));
         var resolved = request.Resolved ?? throw new ArgumentException("The resolved field is required.", nameof(request.Resolved));
 
@@ -137,6 +138,7 @@ public class ReportService : IReportService
             CrimeType = crimeType.Trim(),
             Description = description.Trim(),
             Location = location.Trim(),
+            Region = region.Trim(),
             CrimeDate = NormalizeDateTime(crimeDate),
             ReporterDetails = reporterDetails,
             CreatedDate = DateTime.UtcNow,
@@ -559,6 +561,17 @@ public class ReportService : IReportService
             }
         }
 
+        string? updatedRegion = null;
+        if (!string.IsNullOrWhiteSpace(request.Region))
+        {
+            var normalized = request.Region.Trim();
+            if (!string.Equals(existing.Region, normalized, StringComparison.Ordinal))
+            {
+                operations.Add(PatchOperation.Set("/region", normalized));
+                updatedRegion = normalized;
+            }
+        }
+
         DateTime? updatedCrimeDate = null;
         if (request.CrimeDate.HasValue)
         {
@@ -662,6 +675,11 @@ public class ReportService : IReportService
                 if (updatedLocation is not null)
                 {
                     existing.Location = updatedLocation;
+                }
+
+                if (updatedRegion is not null)
+                {
+                    existing.Region = updatedRegion;
                 }
 
                 if (updatedCrimeDate.HasValue)
