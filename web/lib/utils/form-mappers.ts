@@ -55,7 +55,7 @@ export function mapFormDataToApiRequest(formData: {
     crimeType: formData.crimeType || 'Não especificado',
     description: formData.description || '',
     location: formData.location || 'Não especificado',
-    region: formData.region.trim(),
+    region: (formData.region || 'Não especificado').trim(),
     crimeDate: formData.crimeDate,
     reporterDetails: reporterDetails,
     resolved: formData.resolved
