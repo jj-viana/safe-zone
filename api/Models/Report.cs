@@ -20,6 +20,9 @@ public class Report
     [JsonPropertyName("location")]
     public string Location { get; set; } = null!;
 
+    [JsonPropertyName("region")]
+    public string Region { get; set; } = null!;
+
     [JsonPropertyName("crimeDate")]
     public DateTime CrimeDate { get; set; }
         = DateTime.UtcNow;
@@ -105,6 +108,11 @@ public class CreateReportRequest
     public string Location { get; set; } = null!;
 
     [Required]
+    [StringLength(128)]
+    [JsonPropertyName("region")]
+    public string Region { get; set; } = null!;
+
+    [Required]
     [JsonPropertyName("crimeDate")]
     public DateTime? CrimeDate { get; set; }
         = null;
@@ -139,6 +147,11 @@ public class UpdateReportRequest
     [StringLength(512)]
     [JsonPropertyName("location")]
     public string? Location { get; set; }
+        = null;
+
+    [StringLength(128)]
+    [JsonPropertyName("region")]
+    public string? Region { get; set; }
         = null;
 
     [JsonPropertyName("crimeDate")]
@@ -176,6 +189,7 @@ public record ReportResponse(
     [property: JsonPropertyName("crimeType")] string CrimeType,
     [property: JsonPropertyName("description")] string Description,
     [property: JsonPropertyName("location")] string Location,
+    [property: JsonPropertyName("region")] string Region,
     [property: JsonPropertyName("crimeDate")] DateTime CrimeDate,
     [property: JsonPropertyName("reporterDetails")] ReporterDetailsResponse? ReporterDetails,
     [property: JsonPropertyName("createdDate")] DateTime CreatedDate,
@@ -188,6 +202,7 @@ public record ReportResponse(
             report.CrimeType,
             report.Description,
             report.Location,
+            report.Region,
             report.CrimeDate,
             ReporterDetailsResponse.FromModel(report.ReporterDetails),
             report.CreatedDate,

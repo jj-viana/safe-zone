@@ -56,6 +56,7 @@ namespace ReportsApi.Tests.IntegrationTests
 					CrimeType = "Assault",
 					Description = "To be deleted",
 					Location = "Central Park",
+					Region = "Taguatinga",
 					CrimeDate = DateTime.UtcNow,
 					Resolved = false
 				};

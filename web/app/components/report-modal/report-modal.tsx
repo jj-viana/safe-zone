@@ -6,6 +6,7 @@ import Image from "next/image"
 import { useEffect, useMemo, useState } from "react"
 import { FaArrowRight, FaArrowLeft } from "react-icons/fa"
 import { useReportSubmission } from "@/lib/hooks/use-report-submission"
+import { REGION_OPTIONS, type RegionOption } from "@/lib/constants/regions"
 
 const MapSelector = dynamic(() => import("../map/map-selector"), {
   ssr: false,
@@ -17,13 +18,13 @@ const formatCoordinates = (lat: number, lng: number) => `${lat.toFixed(6)},${lng
 
 const DESCRIPTION_MAX_LENGTH = 2048
 
-interface DenunciaModalProps {
+interface ReportModalProps {
   show: boolean
   onCloseAction: () => void
   presetLocation?: PresetLocation | null
 }
 
-export default function DenunciaModal({ show, onCloseAction, presetLocation = null }: DenunciaModalProps) {
+export default function ReportModal({ show, onCloseAction, presetLocation = null }: ReportModalProps) {
   const [formStep, setFormStep] = useState(0)
   const [crimeGenre, setCrimeGenre] = useState<string | null>(null)
   const [crimeType, setCrimeType] = useState<string | null>(null)
@@ -36,6 +37,7 @@ export default function DenunciaModal({ show, onCloseAction, presetLocation = nu
   const [ethnicity, setEthnicity] = useState<string | null>(null)
   const [description, setDescription] = useState("")
 
+  const [region, setRegion] = useState<RegionOption | null>(null)
   const [location, setLocation] = useState("")
   const [validationErrors, setValidationErrors] = useState<Record<string, boolean>>({})
   
@@ -126,6 +128,7 @@ export default function DenunciaModal({ show, onCloseAction, presetLocation = nu
         if (!isValidDate(crimeDate)) errors.crimeDate = true
         if (!isValidTime(crimeTime)) errors.crimeTime = true
         if (!isDateTimeNotInFuture(crimeDate, crimeTime)) errors.crimeDateTime = true
+        if (!region) errors.region = true
         break
       case 3:
         if (!resolved) errors.resolved = true
@@ -144,7 +147,7 @@ export default function DenunciaModal({ show, onCloseAction, presetLocation = nu
       case 1:
         return !!(crimeGenre && crimeType)
       case 2:
-        return isValidDate(crimeDate) && isValidTime(crimeTime) && isDateTimeNotInFuture(crimeDate, crimeTime)
+        return isValidDate(crimeDate) && isValidTime(crimeTime) && isDateTimeNotInFuture(crimeDate, crimeTime) && !!region
       case 3:
         return !!(resolved && description && description.trim().length > 0)
       default:
@@ -192,6 +195,7 @@ export default function DenunciaModal({ show, onCloseAction, presetLocation = nu
     setSexualOrientation(null)
     setEthnicity(null)
     setDescription("")
+  setRegion(null)
     setLocation("")
     setValidationErrors({})
     clearError()
@@ -220,6 +224,7 @@ export default function DenunciaModal({ show, onCloseAction, presetLocation = nu
     if (!isDateTimeNotInFuture(crimeDate, crimeTime)) submissionErrors.crimeDateTime = true
     if (!resolved) submissionErrors.resolved = true
     if (!description || description.trim().length === 0) submissionErrors.description = true
+  if (!region) submissionErrors.region = true
 
     if (Object.keys(submissionErrors).length > 0) {
       setValidationErrors((prev) => ({ ...prev, ...submissionErrors }))
@@ -237,6 +242,7 @@ export default function DenunciaModal({ show, onCloseAction, presetLocation = nu
       genderIdentity,
       sexualOrientation,
       ethnicity,
+      region,
       location,
     })
 
@@ -556,6 +562,40 @@ export default function DenunciaModal({ show, onCloseAction, presetLocation = nu
                     {location && (
                       <p className="text-xs text-gray-400 mt-2">
                         Coordenadas selecionadas: {location}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="flex flex-col">
+                    <p className="font-semibold mb-2">
+                      Em qual região? <span className="text-red-400">*</span>
+                    </p>
+                    <select
+                      value={region ?? ""}
+                      onChange={(event) => {
+                        const { value } = event.target
+                      setRegion(value ? (value as RegionOption) : null)
+                        setValidationErrors((prev) => ({
+                          ...prev,
+                          region: false,
+                        }))
+                      }}
+                      className={`bg-neutral-800 text-white p-2 rounded-md w-full focus:outline-none focus:ring-2 ${
+                        validationErrors.region ? 'ring-2 ring-red-400' : 'focus:ring-[#24BBE0]'
+                      }`}
+                    >
+                      <option value="" disabled>
+                        Selecione uma região
+                      </option>
+                      {REGION_OPTIONS.map(option => (
+                        <option key={option} value={option}>
+                          {option}
+                        </option>
+                      ))}
+                    </select>
+                    {validationErrors.region && (
+                      <p className="text-sm text-red-400 mt-2">
+                        Por favor, selecione uma região
                       </p>
                     )}
                   </div>
