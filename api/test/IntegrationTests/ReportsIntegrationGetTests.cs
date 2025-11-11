@@ -56,6 +56,7 @@ public class ReportsApiIntegrationTests : IClassFixture<CustomWebApplicationFact
             Location = "Test Location",
             Region = "Taguatinga",
             CrimeDate = DateTime.UtcNow,
+            Status = "Draft",
             Resolved = false
         };
         var createdReport = await CreateReportAndGetIdAsync(createRequest);
@@ -143,6 +144,7 @@ public class ReportsApiIntegrationTests : IClassFixture<CustomWebApplicationFact
             Location = "Test Location",
             Region = "Taguatinga",
             CrimeDate = DateTime.UtcNow,
+            Status = "Draft",
             Resolved = false
         };
         var createdReport = await CreateReportAndGetIdAsync(createRequest);
@@ -230,6 +232,7 @@ public class ReportsApiIntegrationTests : IClassFixture<CustomWebApplicationFact
             Location = "Test Location",
             Region = "Taguatinga",
             CrimeDate = DateTime.UtcNow,
+            Status = "Draft",
             Resolved = false
         };
         var createdReport = await CreateReportAndGetIdAsync(createRequest);
@@ -295,5 +298,61 @@ public class ReportsApiIntegrationTests : IClassFixture<CustomWebApplicationFact
     }
 
     // ---
+
+    [Fact]
+    public async Task GetAllAsync_WithStatusFilter_ReturnsOnlyMatchingReports()
+    {
+        string? approvedId = null;
+        string? draftId = null;
+
+        try
+        {
+            var baseRegion = "IntegrationStatusRegion";
+            var approvedRequest = new CreateReportRequest
+            {
+                CrimeGenre = "Status Test Genre",
+                CrimeType = "Status Test Crime",
+                Description = "Approved report",
+                Location = "Status Location",
+                Region = baseRegion,
+                CrimeDate = DateTime.UtcNow,
+                Status = "Approved",
+                Resolved = false
+            };
+
+            var approvedReport = await CreateReportAndGetIdAsync(approvedRequest);
+            approvedId = approvedReport.Id;
+
+            var draftRequest = new CreateReportRequest
+            {
+                CrimeGenre = "Status Test Genre",
+                CrimeType = "Status Test Crime",
+                Description = "Draft report",
+                Location = "Status Location",
+                Region = baseRegion,
+                CrimeDate = DateTime.UtcNow,
+                Status = "Draft",
+                Resolved = false
+            };
+
+            var draftReport = await CreateReportAndGetIdAsync(draftRequest);
+            draftId = draftReport.Id;
+
+            var response = await _client.GetAsync("/api/reports?status=Approved");
+            response.EnsureSuccessStatusCode();
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+            var reports = await response.Content.ReadFromJsonAsync<List<ReportResponse>>();
+            Assert.NotNull(reports);
+            Assert.All(reports!, r => Assert.Equal("Approved", r.Status));
+            Assert.Contains(reports!, r => r.Id == approvedId);
+            Assert.DoesNotContain(reports!, r => r.Id == draftId);
+        }
+        finally
+        {
+            await CleanupReportAsync(approvedId);
+            await CleanupReportAsync(draftId);
+        }
+    }
 
 }

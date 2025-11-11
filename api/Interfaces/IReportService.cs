@@ -6,7 +6,7 @@ public interface IReportService
 {
     Task<ReportResponse> CreateAsync(CreateReportRequest request, CancellationToken cancellationToken);
 
-    Task<IReadOnlyCollection<ReportResponse>> GetAllAsync(CancellationToken cancellationToken);
+    Task<IReadOnlyCollection<ReportResponse>> GetAllAsync(string? status, CancellationToken cancellationToken);
 
     Task<IReadOnlyCollection<ReportResponse>> GetByCrimeGenreAsync(string crimeGenre, CancellationToken cancellationToken);
 

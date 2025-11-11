@@ -58,6 +58,7 @@ namespace ReportsApi.Tests.IntegrationTests
 					Location = "Central Park",
 					Region = "Taguatinga",
 					CrimeDate = DateTime.UtcNow,
+					Status = "Draft",
 					Resolved = false
 				};
 				var createdReport = await CreateReportAndGetIdAsync(createRequest);

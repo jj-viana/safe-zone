@@ -51,6 +51,7 @@ export default function MapaDepoimentos({ hideMarkers = false, hideTitle = false
     reporterDetails: ReporterDetailsResponse | null
     createdDate: string
     resolved: boolean
+    status: string
     cor?: string
   }
 
@@ -65,7 +66,7 @@ export default function MapaDepoimentos({ hideMarkers = false, hideTitle = false
     const loadReports = async () => {
       setIsLoading(true)
       try {
-        const data = await reportsClient.getAllReports()
+        const data = await reportsClient.getAllReports('Approved')
         if (!isMounted) return
 
         const mapped = data.reduce<Depoimento[]>((acc, report) => {
@@ -85,6 +86,7 @@ export default function MapaDepoimentos({ hideMarkers = false, hideTitle = false
             crimeDate: report.crimeDate,
             reporterDetails: report.reporterDetails ?? null,
             createdDate: report.createdDate,
+            status: report.status,
             resolved: report.resolved,
           })
 
@@ -146,6 +148,23 @@ export default function MapaDepoimentos({ hideMarkers = false, hideTitle = false
         </div>
       `,
     })
+
+  const getStatusBadgeClass = (status: string): string => {
+    const normalized = status.trim().toLowerCase()
+    if (normalized === "approved") {
+      return "bg-green-500/20 text-green-400 border border-green-500/50"
+    }
+
+    if (normalized === "draft") {
+      return "bg-yellow-500/20 text-yellow-400 border border-yellow-500/50"
+    }
+
+    if (normalized === "rejected") {
+      return "bg-red-500/20 text-red-400 border border-red-500/50"
+    }
+
+    return "bg-blue-500/20 text-blue-400 border border-blue-500/50"
+  }
 
   useEffect(() => {
     const style = document.createElement("style")
@@ -397,7 +416,12 @@ export default function MapaDepoimentos({ hideMarkers = false, hideTitle = false
                   <h4 className="text-sm font-semibold text-[#24BBE0] uppercase mb-2">
                     Status
                   </h4>
-                  <p className="text-white">
+                  <div className="flex flex-wrap gap-2 text-white">
+                    <span
+                      className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusBadgeClass(selectedDepoimento.status)}`}
+                    >
+                      {selectedDepoimento.status}
+                    </span>
                     <span
                       className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
                         selectedDepoimento.resolved
@@ -407,7 +431,7 @@ export default function MapaDepoimentos({ hideMarkers = false, hideTitle = false
                     >
                       {selectedDepoimento.resolved ? 'Resolvido' : 'Não resolvido'}
                     </span>
-                  </p>
+                  </div>
                 </div>
               </div>
 

@@ -77,13 +77,19 @@ export class ReportsClient {
   }
 
   /**
-   * Lista todas as denúncias.
+   * Lista denúncias, permitindo filtrar por status.
+   * @param status - Status opcional para filtrar (ex: "Approved").
    * @returns Promise com array de denúncias.
    * @throws {ApiResponseError} Quando a requisição falha.
    */
-  async getAllReports(): Promise<ReportResponse[]> {
+  async getAllReports(status?: string): Promise<ReportResponse[]> {
     try {
-      const response = await fetch(`${this.baseUrl}/api/reports`, {
+      const url = new URL('/api/reports', this.baseUrl);
+      if (status && status.trim().length > 0) {
+        url.searchParams.set('status', status.trim());
+      }
+
+      const response = await fetch(url.toString(), {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
