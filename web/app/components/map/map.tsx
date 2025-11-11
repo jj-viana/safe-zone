@@ -120,13 +120,23 @@ export default function MapaDepoimentos({ hideMarkers = false, hideTitle = false
    * @param crimeGenre - Gênero do crime
    * @returns Cor em formato hexadecimal
    */
+  // Color mapping for crime genres
+  const CRIME_GENRE_COLORS: Record<string, string> = {
+    "Crime": "#ef4444",
+    "Sensação de insegurança": "#3b82f6",
+  }
+
+  /**
+   * Returns the color for a given crime genre.
+   * Logs a warning if the genre is unknown.
+   */
   const getMarkerColor = (crimeGenre: string): string => {
-    if (crimeGenre === "Crime") {
-      return "#ef4444"
-    } else if (crimeGenre === "Sensação de insegurança") {
-      return "#3b82f6"
+    if (crimeGenre in CRIME_GENRE_COLORS) {
+      return CRIME_GENRE_COLORS[crimeGenre]
+    } else {
+      console.warn(`[MapaDepoimentos] Unknown crime genre: "${crimeGenre}". Using fallback color.`)
+      return "#9ca3af" // gray-400 as a neutral fallback
     }
-    return "#22c55e"
   }
 
   const createIcon = (color: string) =>
