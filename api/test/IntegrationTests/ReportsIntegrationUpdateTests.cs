@@ -236,7 +236,7 @@ namespace ReportsApi.Tests.IntegrationTests
         public static Task<HttpResponseMessage> PatchAsJsonAsync<TValue>(this HttpClient client, string requestUri, TValue value)
         {
             var content = JsonContent.Create(value);
-            var request = new HttpRequestMessage(new HttpMethod("PATCH"), requestUri) { Content = content };
+            using var request = new HttpRequestMessage(new HttpMethod("PATCH"), requestUri) { Content = content };
             return client.SendAsync(request);
         }
     }
