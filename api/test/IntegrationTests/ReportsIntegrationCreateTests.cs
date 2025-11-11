@@ -46,14 +46,14 @@ public class ReportsApiIntegrationTests : IClassFixture<CustomWebApplicationFact
 
         var createdReport = await response.Content.ReadFromJsonAsync<ReportResponse>();
         Assert.NotNull(createdReport);
-        Assert.Equal(request.CrimeGenre, createdReport.CrimeGenre);
-        Assert.Equal(request.CrimeType, createdReport.CrimeType);
-    Assert.Equal(request.Region, createdReport.Region);
+        Assert.Equal(request.CrimeGenre, createdReport!.CrimeGenre);
+        Assert.Equal(request.CrimeType, createdReport!.CrimeType);
+    Assert.Equal(request.Region, createdReport!.Region);
 
         // Cleanup
         if (createdReport != null)
         {
-            await _client.DeleteAsync($"/api/reports/{createdReport.Id}");
+            await _client.DeleteAsync($"/api/reports/{createdReport!.Id}");
         }
     }
     [Fact]
