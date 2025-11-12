@@ -17,7 +17,7 @@ export default function Navbar({ onOpenReportModal }: NavbarProps) {
   const links = [
     { href: "/", label: "Início" },
     { href: "/sobre", label: "Sobre" },
-    { href: "/dashboards", label: "Dashboards" },
+  { href: "/dashboards", label: "Dashboards" },
   ];
 
   return (

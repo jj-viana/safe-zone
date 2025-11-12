@@ -7,6 +7,7 @@ import "leaflet/dist/leaflet.css"
 import { useEffect, useState } from "react"
 import { reportsClient } from "@/lib/api/reports-client"
 import type { ReportResponse, ReporterDetailsResponse } from "@/lib/api/types"
+import { getStatusLabel } from "@/lib/utils/status-utils"
 
 const parseLocation = (location: ReportResponse['location']): [number, number] | null => {
   if (!location) return null
@@ -420,7 +421,7 @@ export default function MapaDepoimentos({ hideMarkers = false, hideTitle = false
                     <span
                       className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusBadgeClass(selectedDepoimento.status)}`}
                     >
-                      {selectedDepoimento.status}
+                      {getStatusLabel(selectedDepoimento.status)}
                     </span>
                     <span
                       className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
