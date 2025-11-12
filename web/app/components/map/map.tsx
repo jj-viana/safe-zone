@@ -8,6 +8,7 @@ import { useEffect, useState } from "react"
 import { reportsClient } from "@/lib/api/reports-client"
 import type { ReportResponse, ReporterDetailsResponse } from "@/lib/api/types"
 import { getStatusLabel } from "@/lib/utils/status-utils"
+import { formatUtcDateTimeInSaoPaulo } from "@/lib/utils/date-utils"
 
 const parseLocation = (location: ReportResponse['location']): [number, number] | null => {
   if (!location) return null
@@ -419,7 +420,7 @@ export default function MapaDepoimentos({ hideMarkers = false, hideTitle = false
                     Data do Ocorrido
                   </h4>
                   <p className="text-white">
-                    {new Date(selectedDepoimento.crimeDate).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}
+                    {formatUtcDateTimeInSaoPaulo(selectedDepoimento.crimeDate)}
                   </p>
                 </div>
 

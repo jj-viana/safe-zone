@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import Navbar from '../components/navbar/navbar';
 import { reportsClient, type ReportResponse } from '@/lib/api';
 import { getStatusLabel, normalizeStatusValue } from '@/lib/utils/status-utils';
+import { formatUtcDateInSaoPaulo } from '@/lib/utils/date-utils';
 
 const STATUS_TABS = [
   { value: 'Draft', label: getStatusLabel('Draft', { plural: true }) },
@@ -72,22 +73,7 @@ const getCrimeTypesForGenre = (
   return mapping[key] ?? fallback;
 };
 
-const formatDate = (value: string) => {
-  if (!value) {
-    return 'Data indisponível';
-  }
-
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) {
-    return 'Data indisponível';
-  }
-
-  return date.toLocaleDateString('pt-BR', {
-    day: '2-digit',
-    month: 'long',
-    year: 'numeric',
-  });
-};
+const formatDate = (value: string) => formatUtcDateInSaoPaulo(value);
 
 const pillClass = (active: boolean) =>
   `rounded-full border px-4 py-2 text-sm transition-colors ${

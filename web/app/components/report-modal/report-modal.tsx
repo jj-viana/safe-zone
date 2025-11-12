@@ -7,6 +7,7 @@ import { useEffect, useMemo, useState } from "react"
 import { FaArrowRight, FaArrowLeft } from "react-icons/fa"
 import { useReportSubmission } from "@/lib/hooks/use-report-submission"
 import { REGION_OPTIONS, type RegionOption } from "@/lib/constants/regions"
+import { convertToIsoDateTime } from "@/lib/utils/date-utils"
 
 const MapSelector = dynamic(() => import("../map/map-selector"), {
   ssr: false,
@@ -95,22 +96,13 @@ export default function ReportModal({ show, onCloseAction, presetLocation = null
    * Valida se a data e hora combinadas não estão no futuro
    */
   const isDateTimeNotInFuture = (date: string, time: string): boolean => {
-    if (!date || !time) return true // Se não tiver ambos, deixa outras validações tratarem
-    if (!isValidDate(date) || !isValidTime(time)) return true // Se formato inválido, deixa outras validações tratarem
-    
-    const [dayStr, monthStr, yearStr] = date.split("/")
-    const day = Number(dayStr)
-    const month = Number(monthStr)
-    const year = Number(yearStr)
-    
-    const [hourStr, minuteStr] = time.split(":")
-    const hour = Number(hourStr)
-    const minute = Number(minuteStr)
-    
-    const dateTime = new Date(year, month - 1, day, hour, minute)
-    const now = new Date()
-    
-    return dateTime.getTime() <= now.getTime()
+    if (!date || !time) return true
+    if (!isValidDate(date) || !isValidTime(time)) return true
+
+    const isoDateTime = convertToIsoDateTime(date, time)
+    if (!isoDateTime) return true
+
+    return new Date(isoDateTime).getTime() <= Date.now()
   }
 
   /**
