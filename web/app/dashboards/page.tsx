@@ -29,18 +29,25 @@ function formatLabel(text: string): string {
     .replace(/(\s+)(\p{L})/gu, (_, space, c) => space + c.toLocaleUpperCase("pt-BR"));
 }
 
-const normalizeText = (value: string | null | undefined) => {
-  if (!value) {
-    return "";
-  }
-
-  return value
-    .trim()
-    .normalize('NFD')
-    .replace(/\p{Diacritic}/gu, '')
-    .toLocaleLowerCase('pt-BR');
-};
-
+// Memoization wrapper for normalizeText
+const normalizeText = (() => {
+  const cache = new Map<string, string>();
+  return (value: string | null | undefined) => {
+    if (!value) {
+      return "";
+    }
+    if (cache.has(value)) {
+      return cache.get(value)!;
+    }
+    const normalized = value
+      .trim()
+      .normalize('NFD')
+      .replace(/\p{Diacritic}/gu, '')
+      .toLocaleLowerCase('pt-BR');
+    cache.set(value, normalized);
+    return normalized;
+  };
+})();
 const arraysEqual = <T,>(a: readonly T[], b: readonly T[]) =>
   a.length === b.length && a.every((value, index) => value === b[index]);
 

@@ -55,7 +55,7 @@ public class ReportsApiIntegrationTests : IClassFixture<CustomWebApplicationFact
         // Cleanup
         if (createdReport != null)
         {
-            await _client.DeleteAsync($"/api/reports/{createdReport.Id}");
+            await _client.DeleteAsync($"/api/reports/{createdReport!.Id}");
         }
     }
     [Fact]

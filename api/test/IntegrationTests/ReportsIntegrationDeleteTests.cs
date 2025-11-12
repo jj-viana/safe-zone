@@ -36,9 +36,9 @@ namespace ReportsApi.Tests.IntegrationTests
 				{
 					await _client.DeleteAsync($"/api/reports/{reportId}");
 				}
-				catch
+				catch (Exception ex)
 				{
-				
+					Console.WriteLine($"Exception during cleanup: {ex}");
 				}
 			}
 		}
