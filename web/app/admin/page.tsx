@@ -534,7 +534,7 @@ export default function AdminPage() {
 
   return (
     <div className="min-h-screen bg-neutral-950 text-white">
-      <Navbar />
+      <Navbar onOpenReportModal={() => {}} />
       <main className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-6 py-10 md:px-12">
         <header className="flex flex-col gap-4">
           <div>
