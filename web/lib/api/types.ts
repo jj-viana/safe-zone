@@ -20,6 +20,7 @@ export interface CreateReportRequest {
   reporterDetails?: ReporterDetailsRequest | null;
   status: string;
   resolved: boolean;
+  recaptchaToken?: string | null;
 }
 
 export interface ReporterDetailsResponse {

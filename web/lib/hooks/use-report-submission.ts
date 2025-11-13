@@ -22,6 +22,7 @@ export interface ReportFormData {
   ethnicity: string | null
   location: string
   region: RegionOption | null
+  recaptchaToken: string | null
 }
 
 /**
@@ -109,6 +110,7 @@ export function useReportSubmission() {
         ethnicity: formData.ethnicity,
         location: formData.location,
         region: formData.region,
+        recaptchaToken: formData.recaptchaToken,
       })
 
       console.log('📤 Enviando para API:', requestData)
