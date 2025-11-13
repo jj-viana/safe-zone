@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { ChangeEvent, useEffect, useMemo, useState } from 'react';
 import Navbar from '../components/navbar/navbar';
 import { reportsClient, type ReportResponse } from '@/lib/api';
 import { getStatusLabel, normalizeStatusValue } from '@/lib/utils/status-utils';
@@ -21,6 +21,7 @@ type SelectedFilters = {
   crimeTypes: string[];
   regions: string[];
   years: number[];
+  searchTerm: string;
 };
 
 type ActionFeedback = {
@@ -33,6 +34,7 @@ const createInitialFilters = (): SelectedFilters => ({
   crimeTypes: [],
   regions: [],
   years: [],
+  searchTerm: '',
 });
 
 const normalizeText = (value: string) =>
@@ -138,6 +140,11 @@ export default function AdminPage() {
   const normalizedStatusFilter = useMemo(
     () => normalizeStatus(statusFilter),
     [statusFilter],
+  );
+
+  const normalizedSearchTerm = useMemo(
+    () => (filters.searchTerm ? normalizeText(filters.searchTerm) : ''),
+    [filters.searchTerm],
   );
 
   const reportsByStatus = useMemo(
@@ -296,6 +303,7 @@ export default function AdminPage() {
         crimeTypes: nextCrimeTypes,
         regions: nextRegions,
         years: nextYears,
+        searchTerm: prev.searchTerm,
       };
     });
   }, [crimeGenreOptions, crimeTypesByGenre, allCrimeTypes, regionOptions, yearOptions]);
@@ -304,7 +312,8 @@ export default function AdminPage() {
     if (!filters.crimeGenre &&
       filters.crimeTypes.length === 0 &&
       filters.regions.length === 0 &&
-      filters.years.length === 0
+      filters.years.length === 0 &&
+      !normalizedSearchTerm
     ) {
       return reportsByStatus;
     }
@@ -343,9 +352,16 @@ export default function AdminPage() {
         }
       }
 
+      if (normalizedSearchTerm) {
+        const descriptionText = normalizeText(report.description ?? '');
+        if (!descriptionText.includes(normalizedSearchTerm)) {
+          return false;
+        }
+      }
+
       return true;
     });
-  }, [reportsByStatus, filters]);
+  }, [reportsByStatus, filters, normalizedSearchTerm]);
 
   const visibleReports = useMemo(
     () => filteredReports.slice(0, visibleCount),
@@ -432,6 +448,12 @@ export default function AdminPage() {
 
   const clearFilters = () => {
     setFilters(createInitialFilters());
+    setVisibleCount(REPORTS_PAGE_SIZE);
+  };
+
+  const handleSearchTermChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const { value } = event.target;
+    setFilters(prev => ({ ...prev, searchTerm: value }));
     setVisibleCount(REPORTS_PAGE_SIZE);
   };
 
@@ -562,6 +584,23 @@ export default function AdminPage() {
           </div>
 
           <div className="grid gap-6 lg:grid-cols-2">
+            <div className="lg:col-span-2 space-y-3">
+              <label
+                htmlFor="description-search"
+                className="text-sm font-semibold uppercase tracking-wide text-neutral-400"
+              >
+                Buscar por descrição
+              </label>
+              <input
+                id="description-search"
+                type="text"
+                value={filters.searchTerm}
+                onChange={handleSearchTermChange}
+                placeholder="Digite termos que estejam na descrição"
+                className="w-full rounded-xl border border-neutral-800 bg-neutral-950 px-4 py-3 text-sm text-neutral-100 placeholder:text-neutral-500 focus:border-[#24BBE0] focus:outline-none focus:ring-2 focus:ring-[#24BBE0]/40"
+              />
+            </div>
+
             <div className="space-y-3">
               <span className="text-sm font-semibold uppercase tracking-wide text-neutral-400">
                 Gênero do crime
