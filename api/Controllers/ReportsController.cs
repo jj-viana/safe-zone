@@ -56,13 +56,14 @@ public class ReportsController : ControllerBase
     /// </summary>
     [HttpGet]
     [ProducesResponseType(typeof(IEnumerable<ReportResponse>), StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetAllAsync(CancellationToken cancellationToken)
+    public async Task<IActionResult> GetAllAsync([FromQuery] string? status, CancellationToken cancellationToken)
     {
         try
         {
-            _logger.LogInformation("Listing all reports");
-            var reports = await _service.GetAllAsync(cancellationToken);
-            _logger.LogInformation("Returned {Count} reports", reports.Count);
+            var normalizedStatus = string.IsNullOrWhiteSpace(status) ? null : status.Trim();
+            _logger.LogInformation("Listing reports with status filter {StatusFilter}", normalizedStatus ?? "Any");
+            var reports = await _service.GetAllAsync(normalizedStatus, cancellationToken);
+            _logger.LogInformation("Returned {Count} reports for status filter {StatusFilter}", reports.Count, normalizedStatus ?? "Any");
             return Ok(reports);
         }
         catch (Exception ex)

@@ -28,6 +28,7 @@ public class ReportsControllerGetTests
         Location = "Central Park",
         Region = "Taguatinga",
         CrimeDate = DateTime.UtcNow,
+        Status = "Draft",
         Resolved = false
     };
 
@@ -68,7 +69,7 @@ public class ReportsControllerGetTests
     {
         string testId = "12345";
 
-        var expectedReport = new ReportResponse(testId, "Hate Crime", "Assault", "Incident description", "Central Park", "Taguatinga", DateTime.UtcNow, null, DateTime.UtcNow, false);
+        var expectedReport = new ReportResponse(testId, "Hate Crime", "Assault", "Incident description", "Central Park", "Taguatinga", DateTime.UtcNow, null, "Draft", DateTime.UtcNow, false);
         
         _serviceMock
             .Setup(s => s.GetByIdAsync(testId, It.IsAny<CancellationToken>()))
@@ -146,8 +147,8 @@ public class ReportsControllerGetTests
             "Burglary",
             new List<ReportResponse>
             {
-                new ReportResponse("114234", "Crime", "Burglary", "Home invasion", "Kansas", "Plano Piloto", DateTime.UtcNow, null, DateTime.UtcNow, true),
-                new ReportResponse("52355", "Crime", "Burglary", "School theft", "Acre", "Águas Claras", DateTime.UtcNow.AddDays(-1), null, DateTime.UtcNow, true)
+                new ReportResponse("114234", "Crime", "Burglary", "Home invasion", "Kansas", "Plano Piloto", DateTime.UtcNow, null, "Draft", DateTime.UtcNow, true),
+                new ReportResponse("52355", "Crime", "Burglary", "School theft", "Acre", "Águas Claras", DateTime.UtcNow.AddDays(-1), null, "Draft", DateTime.UtcNow, true)
             }
         };
 
@@ -157,7 +158,7 @@ public class ReportsControllerGetTests
             "Assault",
             new List<ReportResponse>
             {
-                new ReportResponse("98765", "Hate Crime", "Assault", "Physical attack", "New York", "Guará", DateTime.UtcNow.AddDays(-5), null, DateTime.UtcNow, false)
+                new ReportResponse("98765", "Hate Crime", "Assault", "Physical attack", "New York", "Guará", DateTime.UtcNow.AddDays(-5), null, "Draft", DateTime.UtcNow, false)
             }
         };
 
@@ -167,9 +168,9 @@ public class ReportsControllerGetTests
             "Theft",
             new List<ReportResponse>
             {
-                new ReportResponse("11111", "Crime", "Theft", "Car theft", "California", "Ceilândia", DateTime.UtcNow.AddDays(-2), null, DateTime.UtcNow, false),
-                new ReportResponse("22222", "Crime", "Theft", "Bike stolen", "Texas", "Samambaia", DateTime.UtcNow.AddDays(-3), null, DateTime.UtcNow, true),
-                new ReportResponse("33333", "Crime", "Theft", "Wallet missing", "Florida", "Sobradinho", DateTime.UtcNow.AddDays(-4), null, DateTime.UtcNow, false)
+                new ReportResponse("11111", "Crime", "Theft", "Car theft", "California", "Ceilândia", DateTime.UtcNow.AddDays(-2), null, "Draft", DateTime.UtcNow, false),
+                new ReportResponse("22222", "Crime", "Theft", "Bike stolen", "Texas", "Samambaia", DateTime.UtcNow.AddDays(-3), null, "Draft", DateTime.UtcNow, true),
+                new ReportResponse("33333", "Crime", "Theft", "Wallet missing", "Florida", "Sobradinho", DateTime.UtcNow.AddDays(-4), null, "Draft", DateTime.UtcNow, false)
             }
         };
 
@@ -242,10 +243,10 @@ public class ReportsControllerGetTests
     public async Task GetAllAsync_WhenServiceThrowsException_ReturnsProblem()
     {
         _serviceMock
-            .Setup(s => s.GetAllAsync(It.IsAny<CancellationToken>()))
+            .Setup(s => s.GetAllAsync(It.IsAny<string?>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new ArgumentException("Invalid payload"));
 
-        var result = await _controller.GetAllAsync(CancellationToken.None);
+        var result = await _controller.GetAllAsync(null, CancellationToken.None);
 
         var problem = Assert.IsType<ObjectResult>(result);
         Assert.Equal(StatusCodes.Status500InternalServerError, problem.StatusCode);
@@ -257,14 +258,29 @@ public class ReportsControllerGetTests
     public async Task GetAllAsync_WhenServiceReturnsValidReport_ReturnsOk()
     {
         _serviceMock
-            .Setup(s => s.GetAllAsync(It.IsAny<CancellationToken>()))
+            .Setup(s => s.GetAllAsync(It.IsAny<string?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<ReportResponse>());
 
-        var result = await _controller.GetAllAsync(CancellationToken.None);
+        var result = await _controller.GetAllAsync(null, CancellationToken.None);
 
         var okResult = Assert.IsType<OkObjectResult>(result);
         Assert.Equal(StatusCodes.Status200OK, okResult.StatusCode);
 
+    }
+
+    [Fact]
+    public async Task GetAllAsync_WhenStatusProvided_PassesFilterToService()
+    {
+        var expected = new List<ReportResponse>();
+        _serviceMock
+            .Setup(s => s.GetAllAsync("Approved", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(expected);
+
+        var result = await _controller.GetAllAsync("Approved", CancellationToken.None);
+
+        var okResult = Assert.IsType<OkObjectResult>(result);
+        Assert.Equal(expected, okResult.Value);
+        _serviceMock.Verify(s => s.GetAllAsync("Approved", It.IsAny<CancellationToken>()), Times.Once);
     }
 
    

@@ -35,6 +35,7 @@ public class ReportsApiIntegrationTests : IClassFixture<CustomWebApplicationFact
             Location = "My house",
             Region = "Taguatinga",
             CrimeDate = DateTime.UtcNow,
+            Status = "Draft",
             Resolved = false
         };
 
@@ -46,9 +47,10 @@ public class ReportsApiIntegrationTests : IClassFixture<CustomWebApplicationFact
 
         var createdReport = await response.Content.ReadFromJsonAsync<ReportResponse>();
         Assert.NotNull(createdReport);
-        Assert.Equal(request.CrimeGenre, createdReport!.CrimeGenre);
-        Assert.Equal(request.CrimeType, createdReport!.CrimeType);
-    Assert.Equal(request.Region, createdReport!.Region);
+        Assert.Equal(request.CrimeGenre, createdReport.CrimeGenre);
+        Assert.Equal(request.CrimeType, createdReport.CrimeType);
+        Assert.Equal(request.Status, createdReport.Status);
+        Assert.Equal(request.Region, createdReport.Region);
 
         // Cleanup
         if (createdReport != null)
@@ -67,6 +69,7 @@ public class ReportsApiIntegrationTests : IClassFixture<CustomWebApplicationFact
             ""Location"": ""My house"",
             ""Region"": ""Taguatinga"",
             ""CrimeDate"": ""not-a-date"",      // string inválida para DateTime
+            ""Status"": 456,                    // número em vez de string
             ""Resolved"": ""notabool""          // string em vez de boolean
         }";
 
@@ -115,6 +118,7 @@ public class ReportsApiIntegrationTests : IClassFixture<CustomWebApplicationFact
             Location = "My house",
             Region = "Taguatinga",
             CrimeDate = DateTime.UtcNow,
+            Status = "Draft",
             Resolved = false
         };
 
@@ -177,6 +181,7 @@ public class ReportsApiIntegrationTests : IClassFixture<CustomWebApplicationFact
             "  \"Location\": \"My house\",\n" +
             "  \"Region\": \"Taguatinga\",\n" +
             $"  \"CrimeDate\": \"{DateTime.UtcNow:o}\",\n" +
+            "  \"Status\": \"Draft\",\n" +
             "  \"Resolved\": false\n" +
             "}";
 

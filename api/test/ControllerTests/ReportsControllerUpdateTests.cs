@@ -31,7 +31,8 @@ namespace ReportsApi.Tests.ControllerTests
             Location = "Central Park",
             Region = "Taguatinga",
             CrimeDate = DateTime.UtcNow,
-            Resolved = true
+            Resolved = true,
+            Status = "Submitted"
         };
 
         [Fact]
@@ -122,6 +123,7 @@ namespace ReportsApi.Tests.ControllerTests
                 "Taguatinga",
                 DateTime.UtcNow,
                 null,
+                "Approved",
                 DateTime.UtcNow,
                 true);
 

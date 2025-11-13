@@ -7,10 +7,18 @@ import { useEffect, useMemo, useState } from "react"
 import { FaArrowRight, FaArrowLeft } from "react-icons/fa"
 import { useReportSubmission } from "@/lib/hooks/use-report-submission"
 import { REGION_OPTIONS, type RegionOption } from "@/lib/constants/regions"
+import { convertToIsoDateTime } from "@/lib/utils/date-utils"
 
 const MapSelector = dynamic(() => import("../map/map-selector"), {
   ssr: false,
 })
+
+const ReCAPTCHA = dynamic(() => import("react-google-recaptcha"), {
+  ssr: false,
+})
+
+const RECAPTCHA_SITE_KEY = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY ?? ""
+const RECAPTCHA_ENABLED = Boolean(RECAPTCHA_SITE_KEY)
 
 type PresetLocation = { lat: number; lng: number }
 
@@ -40,6 +48,8 @@ export default function ReportModal({ show, onCloseAction, presetLocation = null
   const [region, setRegion] = useState<RegionOption | null>(null)
   const [location, setLocation] = useState("")
   const [validationErrors, setValidationErrors] = useState<Record<string, boolean>>({})
+  const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null)
+  const [recaptchaError, setRecaptchaError] = useState(false)
   
   const { submitReport, isSubmitting, submitError, clearError } = useReportSubmission()
 
@@ -95,22 +105,13 @@ export default function ReportModal({ show, onCloseAction, presetLocation = null
    * Valida se a data e hora combinadas não estão no futuro
    */
   const isDateTimeNotInFuture = (date: string, time: string): boolean => {
-    if (!date || !time) return true // Se não tiver ambos, deixa outras validações tratarem
-    if (!isValidDate(date) || !isValidTime(time)) return true // Se formato inválido, deixa outras validações tratarem
-    
-    const [dayStr, monthStr, yearStr] = date.split("/")
-    const day = Number(dayStr)
-    const month = Number(monthStr)
-    const year = Number(yearStr)
-    
-    const [hourStr, minuteStr] = time.split(":")
-    const hour = Number(hourStr)
-    const minute = Number(minuteStr)
-    
-    const dateTime = new Date(year, month - 1, day, hour, minute)
-    const now = new Date()
-    
-    return dateTime.getTime() <= now.getTime()
+    if (!date || !time) return true
+    if (!isValidDate(date) || !isValidTime(time)) return true
+
+    const isoDateTime = convertToIsoDateTime(date, time)
+    if (!isoDateTime) return true
+
+    return new Date(isoDateTime).getTime() <= Date.now()
   }
 
   /**
@@ -195,9 +196,11 @@ export default function ReportModal({ show, onCloseAction, presetLocation = null
     setSexualOrientation(null)
     setEthnicity(null)
     setDescription("")
-  setRegion(null)
+    setRegion(null)
     setLocation("")
     setValidationErrors({})
+    setRecaptchaToken(null)
+    setRecaptchaError(false)
     clearError()
   }
 
@@ -224,10 +227,15 @@ export default function ReportModal({ show, onCloseAction, presetLocation = null
     if (!isDateTimeNotInFuture(crimeDate, crimeTime)) submissionErrors.crimeDateTime = true
     if (!resolved) submissionErrors.resolved = true
     if (!description || description.trim().length === 0) submissionErrors.description = true
-  if (!region) submissionErrors.region = true
+    if (!region) submissionErrors.region = true
 
     if (Object.keys(submissionErrors).length > 0) {
       setValidationErrors((prev) => ({ ...prev, ...submissionErrors }))
+      return
+    }
+
+    if (RECAPTCHA_ENABLED && !recaptchaToken) {
+      setRecaptchaError(true)
       return
     }
 
@@ -244,6 +252,7 @@ export default function ReportModal({ show, onCloseAction, presetLocation = null
       ethnicity,
       region,
       location,
+      recaptchaToken: RECAPTCHA_ENABLED ? recaptchaToken : null,
     })
 
     if (result.success) {
@@ -955,6 +964,33 @@ export default function ReportModal({ show, onCloseAction, presetLocation = null
                     </div>
                   </div>
 
+                  {RECAPTCHA_ENABLED ? (
+                    <div>
+                      <ReCAPTCHA
+                        sitekey={RECAPTCHA_SITE_KEY}
+                        theme="dark"
+                        onChange={(token) => {
+                          setRecaptchaToken(token)
+                          setRecaptchaError(false)
+                        }}
+                        onExpired={() => {
+                          setRecaptchaToken(null)
+                          setRecaptchaError(true)
+                        }}
+                        onErrored={() => setRecaptchaError(true)}
+                      />
+                      {recaptchaError && (
+                        <p className="text-sm text-red-400 mt-2">
+                          Confirme que você não é um robô.
+                        </p>
+                      )}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-amber-300">
+                      Configure a variável NEXT_PUBLIC_RECAPTCHA_SITE_KEY para ativar a verificação reCAPTCHA.
+                    </p>
+                  )}
+
                   {/* Botões */}
                   <div className="flex justify-between mt-6">
                     <button
@@ -967,7 +1003,7 @@ export default function ReportModal({ show, onCloseAction, presetLocation = null
 
                     <button
                       type="submit"
-                      disabled={isSubmitting}
+                      disabled={isSubmitting || (RECAPTCHA_ENABLED && !recaptchaToken)}
                       className="bg-[#FF7A00] hover:bg-[#c36003] disabled:bg-gray-600 disabled:cursor-not-allowed text-white px-6 py-2 rounded font-semibold flex items-center gap-2"
                     >
                       {isSubmitting ? "Enviando..." : "Enviar"} <FaArrowRight />

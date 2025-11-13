@@ -31,6 +31,10 @@ public class Report
     public ReporterDetails? ReporterDetails { get; set; }
         = null;
 
+    [JsonPropertyName("status")]
+    public string Status { get; set; }
+        = "Draft";
+
     [JsonPropertyName("createdDate")]
     public DateTime CreatedDate { get; set; }
         = DateTime.UtcNow;
@@ -122,6 +126,12 @@ public class CreateReportRequest
         = null;
 
     [Required]
+    [StringLength(64)]
+    [JsonPropertyName("status")]
+    public string Status { get; set; }
+        = null!;
+
+    [Required]
     [JsonPropertyName("resolved")]
     public bool? Resolved { get; set; }
         = null;
@@ -165,6 +175,11 @@ public class UpdateReportRequest
     [JsonPropertyName("resolved")]
     public bool? Resolved { get; set; }
         = null;
+
+    [StringLength(64)]
+    [JsonPropertyName("status")]
+    public string? Status { get; set; }
+        = null;
 }
 
 public record ReporterDetailsResponse(
@@ -192,6 +207,7 @@ public record ReportResponse(
     [property: JsonPropertyName("region")] string Region,
     [property: JsonPropertyName("crimeDate")] DateTime CrimeDate,
     [property: JsonPropertyName("reporterDetails")] ReporterDetailsResponse? ReporterDetails,
+    [property: JsonPropertyName("status")] string Status,
     [property: JsonPropertyName("createdDate")] DateTime CreatedDate,
     [property: JsonPropertyName("resolved")] bool Resolved)
 {
@@ -205,6 +221,7 @@ public record ReportResponse(
             report.Region,
             report.CrimeDate,
             ReporterDetailsResponse.FromModel(report.ReporterDetails),
+            report.Status,
             report.CreatedDate,
             report.Resolved);
 }

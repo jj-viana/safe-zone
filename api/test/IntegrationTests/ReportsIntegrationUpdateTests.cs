@@ -59,6 +59,7 @@ namespace ReportsApi.Tests.IntegrationTests
                     Location = "Central Park",
                     Region = "Taguatinga",
                     CrimeDate = DateTime.UtcNow,
+                    Status = "Draft",
                     Resolved = false
                 };
 
@@ -82,6 +83,7 @@ namespace ReportsApi.Tests.IntegrationTests
                 Assert.NotNull(updatedReport);
                 Assert.Equal(updateRequest.Description, updatedReport.Description);
                 Assert.Equal(updateRequest.Resolved, updatedReport.Resolved);
+                Assert.Equal("Draft", updatedReport.Status);
             }
             finally
             {
@@ -119,6 +121,7 @@ namespace ReportsApi.Tests.IntegrationTests
                     Location = "Central Park",
                     Region = "Taguatinga",
                     CrimeDate = DateTime.UtcNow,
+                    Status = "Draft",
                     Resolved = false
                 };
 
@@ -158,6 +161,7 @@ namespace ReportsApi.Tests.IntegrationTests
                     Location = "Central Park",
                     Region = "Taguatinga",
                     CrimeDate = DateTime.UtcNow,
+                    Status = "Draft",
                     Resolved = false
                 };
 
@@ -180,6 +184,7 @@ namespace ReportsApi.Tests.IntegrationTests
                 Assert.NotNull(updatedReport);
                 Assert.Equal("Initial description", updatedReport.Description);
                 Assert.True(updatedReport.Resolved);
+                Assert.Equal("Draft", updatedReport.Status);
             }
             finally
             {
@@ -203,6 +208,7 @@ namespace ReportsApi.Tests.IntegrationTests
                     Location = "Central Park",
                     Region = "Taguatinga",
                     CrimeDate = DateTime.UtcNow,
+                    Status = "Draft",
                     Resolved = false
                 };
 

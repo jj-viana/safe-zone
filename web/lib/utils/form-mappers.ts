@@ -33,7 +33,8 @@ export function mapFormDataToApiRequest(formData: {
   sexualOrientation: string | null;
   ethnicity: string | null;
   location: string; // Coordenadas ou endereço
-  region: RegionOption;
+  region: RegionOption | null;
+  recaptchaToken?: string | null;
 }): CreateReportRequest {
   // Monta os detalhes do denunciante (opcional)
   // Valores são mantidos em português como fornecidos pelo usuário
@@ -57,11 +58,16 @@ export function mapFormDataToApiRequest(formData: {
     location: formData.location || 'Não especificado',
     region: (formData.region || 'Não especificado').trim(),
     crimeDate: formData.crimeDate,
-    reporterDetails: reporterDetails,
+    reporterDetails,
+    status: 'Draft',
     resolved: formData.resolved
       ? RESOLVED_MAP[formData.resolved] ?? false
       : false,
   };
+
+  if (formData.recaptchaToken) {
+    request.recaptchaToken = formData.recaptchaToken;
+  }
 
   return request;
 }

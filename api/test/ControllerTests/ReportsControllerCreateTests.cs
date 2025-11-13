@@ -30,6 +30,7 @@ public class ReportsControllerCreateTests
         Location = "Central Park",
         Region = "Taguatinga",
         CrimeDate = DateTime.UtcNow,
+        Status = "Draft",
         Resolved = false
     };
 
@@ -78,6 +79,7 @@ public class ReportsControllerCreateTests
             Location = "Central Park",
             Region = "Taguatinga",
             CrimeDate = now,
+            Status = "Draft",
             Resolved = false
         };
 
@@ -90,6 +92,7 @@ public class ReportsControllerCreateTests
             Location = "Central Park",
             Region = "Taguatinga",
             CrimeDate = now,
+            Status = "Draft",
             Resolved = false
         };
 
@@ -102,6 +105,7 @@ public class ReportsControllerCreateTests
             createdReport.Region,
             createdReport.CrimeDate,
             null,
+            createdReport.Status,
             now,
             createdReport.Resolved
         );

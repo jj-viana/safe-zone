@@ -195,7 +195,7 @@ export default function DashboardPage() {
     const loadReports = async () => {
       setIsLoading(true);
       try {
-        const data = await reportsClient.getAllReports();
+        const data = await reportsClient.getAllReports('Approved');
         if (!isMounted) {
           return;
         }

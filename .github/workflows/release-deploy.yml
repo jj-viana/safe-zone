@@ -42,12 +42,15 @@ jobs:
         working-directory: web
         run: npm ci
 
-      - name: Inject web environment variables
-        working-directory: web
-        run: echo "NEXT_PUBLIC_API_BASE_URL=${{ secrets.NEXT_PUBLIC_API_BASE_URL }}" >> $GITHUB_ENV
-
       - name: Build web application
         working-directory: web
+        env:
+          NEXT_PUBLIC_API_BASE_URL: ${{ secrets['NEXT_PUBLIC_API_BASE_URL'] }}
+          NEXT_PUBLIC_AZURE_TENANT_ID: ${{ secrets['NEXT_PUBLIC_AZURE_TENANT_ID'] }}
+          NEXT_PUBLIC_AZURE_CLIENT_ID: ${{ secrets['NEXT_PUBLIC_AZURE_CLIENT_ID'] }}
+          NEXT_PUBLIC_AZURE_REDIRECT_URI: ${{ secrets['NEXT_PUBLIC_AZURE_REDIRECT_URI'] }}
+          NEXT_PUBLIC_AZURE_API_SCOPES: ${{ secrets['NEXT_PUBLIC_AZURE_API_SCOPES'] }}
+          NEXT_PUBLIC_RECAPTCHA_SITE_KEY: ${{ secrets['NEXT_PUBLIC_RECAPTCHA_SITE_KEY'] }}
         run: npm run build
 
       - name: Setup .NET
