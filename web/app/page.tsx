@@ -172,15 +172,15 @@ export default function Home() {
               </button>
             </div>
           )}
-        </div>
-        <div className="w-[90%] flex flex-wrap items-center gap-6 text-sm text-gray-300">
-          <div className="flex items-center gap-2">
-            <span className="inline-block h-3 w-3 rounded-full" style={{ backgroundColor: "#3b82f6" }} />
-            <span>Sensação de Insegurança</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="inline-block h-3 w-3 rounded-full" style={{ backgroundColor: "#ef4444" }} />
-            <span>Crime</span>
+          <div className="pointer-events-none absolute bottom-0 right-0 z-[9999] flex items-center gap-6 rounded-tl-xl border-t border-l border-[#24BBE0] bg-neutral-900 px-5 py-3 shadow-lg">
+            <div className="flex items-center gap-2">
+              <span className="inline-block h-3 w-3 rounded-full" style={{ backgroundColor: "#3b82f6" }} />
+              <span className="text-sm text-gray-200">Sensação de Insegurança</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="inline-block h-3 w-3 rounded-full" style={{ backgroundColor: "#ef4444" }} />
+              <span className="text-sm text-gray-200">Crime</span>
+            </div>
           </div>
         </div>
       </div>
