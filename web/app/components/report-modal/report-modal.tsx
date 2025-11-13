@@ -18,6 +18,7 @@ const ReCAPTCHA = dynamic(() => import("react-google-recaptcha"), {
 })
 
 const RECAPTCHA_SITE_KEY = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY ?? ""
+const RECAPTCHA_ENABLED = Boolean(RECAPTCHA_SITE_KEY)
 
 type PresetLocation = { lat: number; lng: number }
 
@@ -233,7 +234,7 @@ export default function ReportModal({ show, onCloseAction, presetLocation = null
       return
     }
 
-    if (RECAPTCHA_SITE_KEY && !recaptchaToken) {
+    if (RECAPTCHA_ENABLED && !recaptchaToken) {
       setRecaptchaError(true)
       return
     }
@@ -251,7 +252,7 @@ export default function ReportModal({ show, onCloseAction, presetLocation = null
       ethnicity,
       region,
       location,
-      recaptchaToken: RECAPTCHA_SITE_KEY ? recaptchaToken : null,
+      recaptchaToken: RECAPTCHA_ENABLED ? recaptchaToken : null,
     })
 
     if (result.success) {
@@ -963,7 +964,7 @@ export default function ReportModal({ show, onCloseAction, presetLocation = null
                     </div>
                   </div>
 
-                  {RECAPTCHA_SITE_KEY ? (
+                  {RECAPTCHA_ENABLED ? (
                     <div>
                       <ReCAPTCHA
                         sitekey={RECAPTCHA_SITE_KEY}
@@ -1002,7 +1003,7 @@ export default function ReportModal({ show, onCloseAction, presetLocation = null
 
                     <button
                       type="submit"
-                      disabled={isSubmitting || (RECAPTCHA_SITE_KEY && !recaptchaToken)}
+                      disabled={isSubmitting || (RECAPTCHA_ENABLED && !recaptchaToken)}
                       className="bg-[#FF7A00] hover:bg-[#c36003] disabled:bg-gray-600 disabled:cursor-not-allowed text-white px-6 py-2 rounded font-semibold flex items-center gap-2"
                     >
                       {isSubmitting ? "Enviando..." : "Enviar"} <FaArrowRight />
