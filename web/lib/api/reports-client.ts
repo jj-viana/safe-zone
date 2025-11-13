@@ -77,13 +77,19 @@ export class ReportsClient {
   }
 
   /**
-   * Lista todas as denúncias.
+   * Lista denúncias, permitindo filtrar por status.
+   * @param status - Status opcional para filtrar (ex: "Approved").
    * @returns Promise com array de denúncias.
    * @throws {ApiResponseError} Quando a requisição falha.
    */
-  async getAllReports(): Promise<ReportResponse[]> {
+  async getAllReports(status?: string): Promise<ReportResponse[]> {
     try {
-      const response = await fetch(`${this.baseUrl}/api/reports`, {
+      const url = new URL('/api/reports', this.baseUrl);
+      if (status && status.trim().length > 0) {
+        url.searchParams.set('status', status.trim());
+      }
+
+      const response = await fetch(url.toString(), {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -192,6 +198,58 @@ export class ReportsClient {
       }
 
       const data: ReportResponse[] = await response.json();
+      return data;
+    } catch (error) {
+      if (error instanceof ApiResponseError) {
+        throw error;
+      }
+
+      throw new ApiResponseError(
+        error instanceof Error ? error.message : 'Unknown error occurred',
+        0
+      );
+    }
+  }
+
+  /**
+   * Atualiza o status de uma denúncia existente.
+   * @param id - Identificador da denúncia.
+   * @param status - Novo status a ser aplicado.
+   * @returns Promise com a denúncia atualizada.
+   * @throws {ApiResponseError} Quando a requisição falha.
+   */
+  async updateReportStatus(id: string, status: string): Promise<ReportResponse> {
+    if (!id || id.trim().length === 0) {
+      throw new ApiResponseError('Report id is required', 400);
+    }
+
+    if (!status || status.trim().length === 0) {
+      throw new ApiResponseError('Status is required', 400);
+    }
+
+    try {
+      const normalizedStatus = status.trim();
+      const response = await fetch(`${this.baseUrl}/api/reports/${encodeURIComponent(id)}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status: normalizedStatus }),
+      });
+
+      if (!response.ok) {
+        const errorData: ApiError = await response.json().catch(() => ({
+          error: 'Failed to parse error response',
+        }));
+
+        throw new ApiResponseError(
+          errorData.error || `HTTP ${response.status}: ${response.statusText}`,
+          response.status,
+          errorData
+        );
+      }
+
+      const data: ReportResponse = await response.json();
       return data;
     } catch (error) {
       if (error instanceof ApiResponseError) {
