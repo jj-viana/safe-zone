@@ -21,7 +21,8 @@
     "react-icons": "^5.5.0",
     "react-input-mask": "^2.0.4",
     "react-leaflet": "^5.0.0",
-    "recharts": "^3.3.0"
+    "recharts": "^3.3.0",
+    "jose": "^5.9.6"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
