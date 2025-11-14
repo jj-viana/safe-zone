@@ -1,5 +1,6 @@
 'use client';
 
+import dynamic from "next/dynamic";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useMsal } from "@azure/msal-react";
 import { EventType, InteractionStatus, type AuthenticationResult } from "@azure/msal-browser";
@@ -15,6 +16,13 @@ const styles = {
   button: "mt-8 w-full rounded-full bg-[#24BBE0] px-4 py-3 text-center text-sm font-semibold uppercase tracking-wide text-neutral-950 transition hover:bg-[#1ba4c5] disabled:cursor-not-allowed disabled:opacity-70",
   footer: "mt-6 text-center text-xs text-neutral-500",
 };
+
+const ReCAPTCHA = dynamic(() => import("react-google-recaptcha"), {
+  ssr: false,
+});
+
+const RECAPTCHA_SITE_KEY = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY ?? "";
+const RECAPTCHA_ENABLED = Boolean(RECAPTCHA_SITE_KEY);
 
 const buildCookie = (value: string, maxAge: number) => {
   const parts = [
@@ -44,6 +52,8 @@ export default function LoginPage() {
   const router = useRouter();
   const params = useSearchParams();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
+  const [recaptchaError, setRecaptchaError] = useState(false);
 
   const redirectTo = useMemo(() => params?.get("redirectTo") ?? "/admin", [params]);
   const isAuthenticating = inProgress !== InteractionStatus.None;
@@ -106,13 +116,29 @@ export default function LoginPage() {
 
   const handleLogin = useCallback(async () => {
     setErrorMessage(null);
+
+    if (RECAPTCHA_ENABLED && !recaptchaToken) {
+      setRecaptchaError(true);
+      return;
+    }
+
     try {
       await instance.loginRedirect(loginRequest);
     } catch (error) {
       console.error("Microsoft login failed", error);
       setErrorMessage("Não foi possível iniciar o login com a Microsoft.");
     }
-  }, [instance]);
+  }, [instance, recaptchaToken]);
+
+  const handleRecaptchaChange = useCallback((token: string | null) => {
+    setRecaptchaToken(token);
+    setRecaptchaError(false);
+  }, []);
+
+  const handleRecaptchaExpired = useCallback(() => {
+    setRecaptchaToken(null);
+    setRecaptchaError(true);
+  }, []);
 
   return (
     <main className={styles.container}>
@@ -128,10 +154,28 @@ export default function LoginPage() {
           </p>
         ) : null}
 
+        {RECAPTCHA_ENABLED ? (
+          <div className="mt-6 flex flex-col items-center gap-2">
+            <ReCAPTCHA
+              sitekey={RECAPTCHA_SITE_KEY}
+              onChange={handleRecaptchaChange}
+              onExpired={handleRecaptchaExpired}
+              onErrored={() => setRecaptchaError(true)}
+            />
+            {recaptchaError ? (
+              <p className="text-sm text-red-200">
+                Confirme que você não é um robô para continuar.
+              </p>
+            ) : null}
+          </div>
+        ) : null}
+
         <button
           type="button"
           onClick={handleLogin}
-          disabled={isAuthenticating}
+          disabled={
+            isAuthenticating || (RECAPTCHA_ENABLED && !recaptchaToken)
+          }
           className={styles.button}
         >
           {isAuthenticating ? "Redirecionando..." : "Entrar com Microsoft"}
