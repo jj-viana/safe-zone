@@ -37,8 +37,8 @@ const createInitialFilters = (): SelectedFilters => ({
   searchTerm: '',
 });
 
-const normalizeText = (value: string) =>
-  value
+const normalizeText = (value: string | null | undefined) =>
+  (value ?? '')
     .trim()
     .normalize('NFD')
     .replace(/\p{Diacritic}/gu, '')
