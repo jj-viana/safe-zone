@@ -7,7 +7,6 @@ import "leaflet/dist/leaflet.css"
 import { useEffect, useState } from "react"
 import { reportsClient } from "@/lib/api/reports-client"
 import type { ReportResponse, ReporterDetailsResponse } from "@/lib/api/types"
-import { getStatusLabel } from "@/lib/utils/status-utils"
 import { formatUtcDateTimeInSaoPaulo } from "@/lib/utils/date-utils"
 
 const parseLocation = (location: ReportResponse['location']): [number, number] | null => {
@@ -53,7 +52,6 @@ export default function MapaDepoimentos({ hideMarkers = false, hideTitle = false
     reporterDetails: ReporterDetailsResponse | null
     createdDate: string
     resolved: boolean
-    status: string
     cor?: string
   }
 
@@ -88,7 +86,6 @@ export default function MapaDepoimentos({ hideMarkers = false, hideTitle = false
             crimeDate: report.crimeDate,
             reporterDetails: report.reporterDetails ?? null,
             createdDate: report.createdDate,
-            status: report.status,
             resolved: report.resolved,
           })
 
@@ -160,23 +157,6 @@ export default function MapaDepoimentos({ hideMarkers = false, hideTitle = false
         </div>
       `,
     })
-
-  const getStatusBadgeClass = (status: string): string => {
-    const normalized = status.trim().toLowerCase()
-    if (normalized === "approved") {
-      return "bg-green-500/20 text-green-400 border border-green-500/50"
-    }
-
-    if (normalized === "draft") {
-      return "bg-yellow-500/20 text-yellow-400 border border-yellow-500/50"
-    }
-
-    if (normalized === "rejected") {
-      return "bg-red-500/20 text-red-400 border border-red-500/50"
-    }
-
-    return "bg-blue-500/20 text-blue-400 border border-blue-500/50"
-  }
 
   useEffect(() => {
     const style = document.createElement("style")
@@ -428,22 +408,15 @@ export default function MapaDepoimentos({ hideMarkers = false, hideTitle = false
                   <h4 className="text-sm font-semibold text-[#24BBE0] uppercase mb-2">
                     Status
                   </h4>
-                  <div className="flex flex-wrap gap-2 text-white">
-                    <span
-                      className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusBadgeClass(selectedDepoimento.status)}`}
-                    >
-                      {getStatusLabel(selectedDepoimento.status)}
-                    </span>
-                    <span
-                      className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
-                        selectedDepoimento.resolved
-                          ? 'bg-green-500/20 text-green-400 border border-green-500/50'
-                          : 'bg-red-500/20 text-red-400 border border-red-500/50'
-                      }`}
-                    >
-                      {selectedDepoimento.resolved ? 'Resolvido' : 'Não resolvido'}
-                    </span>
-                  </div>
+                  <span
+                    className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
+                      selectedDepoimento.resolved
+                        ? 'bg-green-500/20 text-green-400 border border-green-500/50'
+                        : 'bg-red-500/20 text-red-400 border border-red-500/50'
+                    }`}
+                  >
+                    {selectedDepoimento.resolved ? 'Resolvido' : 'Não resolvido'}
+                  </span>
                 </div>
               </div>
 
