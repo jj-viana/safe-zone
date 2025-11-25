@@ -9,7 +9,7 @@ using ReportsApi.Models;
 using ReportsApi.Services;
 using Xunit;
 
-namespace tests.Services;
+namespace ReportsApi.Tests.Services;
 
 public class ReportServiceInitializationTests
 {
