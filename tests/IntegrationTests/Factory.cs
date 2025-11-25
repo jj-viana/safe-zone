@@ -1,4 +1,6 @@
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using System.IO;
 
 public class CustomWebApplicationFactory : WebApplicationFactory<Program>
 {

@@ -27,6 +27,8 @@ next-env.d.ts
 
 # ---- Testing & Coverage ----
 coverage/
+coveragereport/
+coverage-report/
 .nyc_output/
 playwright-report/
 .playwright-cache/

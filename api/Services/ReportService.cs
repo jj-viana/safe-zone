@@ -268,7 +268,10 @@ public class ReportService : IReportService
                 response.RequestCharge,
                 pageTelemetry);
             pageIndex++;
-            results.AddRange(response.Resource.Select(ReportResponse.FromModel));
+            foreach (var item in response.Resource)
+            {
+                results.Add(ReportResponse.FromModel(item));
+            }
         }
 
         var totalTelemetry = new Dictionary<string, string?>
@@ -352,7 +355,10 @@ public class ReportService : IReportService
                     ["crimeGenre"] = normalizedCrimeGenre
                 });
             pageIndex++;
-            results.AddRange(response.Resource.Select(ReportResponse.FromModel));
+            foreach (var item in response.Resource)
+            {
+                results.Add(ReportResponse.FromModel(item));
+            }
         }
 
         _cosmosTelemetry.TrackRequestUnits(
@@ -431,7 +437,10 @@ public class ReportService : IReportService
                     ["crimeType"] = normalizedCrimeType
                 });
             pageIndex++;
-            results.AddRange(response.Resource.Select(ReportResponse.FromModel));
+            foreach (var item in response.Resource)
+            {
+                results.Add(ReportResponse.FromModel(item));
+            }
         }
 
         _cosmosTelemetry.TrackRequestUnits(
