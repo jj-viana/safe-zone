@@ -117,7 +117,6 @@ public class ReportServiceInitializationTests
             .ReturnsAsync(Mock.Of<DatabaseResponse>(r => r.Database == Mock.Of<Database>()));
         
         var containerMock = new Mock<Container>();
-        var databaseMock = Mock.Get(Mock.Of<Database>()); // This won't work as expected with the previous line setup.
         
         // Better setup
         var databaseObj = new Mock<Database>();
