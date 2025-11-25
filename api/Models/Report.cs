@@ -20,6 +20,9 @@ public class Report
     [JsonPropertyName("location")]
     public string Location { get; set; } = null!;
 
+    [JsonPropertyName("region")]
+    public string Region { get; set; } = null!;
+
     [JsonPropertyName("crimeDate")]
     public DateTime CrimeDate { get; set; }
         = DateTime.UtcNow;
@@ -27,6 +30,10 @@ public class Report
     [JsonPropertyName("reporterDetails")]
     public ReporterDetails? ReporterDetails { get; set; }
         = null;
+
+    [JsonPropertyName("status")]
+    public string Status { get; set; }
+        = "Draft";
 
     [JsonPropertyName("createdDate")]
     public DateTime CreatedDate { get; set; }
@@ -105,6 +112,11 @@ public class CreateReportRequest
     public string Location { get; set; } = null!;
 
     [Required]
+    [StringLength(128)]
+    [JsonPropertyName("region")]
+    public string Region { get; set; } = null!;
+
+    [Required]
     [JsonPropertyName("crimeDate")]
     public DateTime? CrimeDate { get; set; }
         = null;
@@ -112,6 +124,12 @@ public class CreateReportRequest
     [JsonPropertyName("reporterDetails")]
     public ReporterDetailsRequest? ReporterDetails { get; set; }
         = null;
+
+    [Required]
+    [StringLength(64)]
+    [JsonPropertyName("status")]
+    public string Status { get; set; }
+        = null!;
 
     [Required]
     [JsonPropertyName("resolved")]
@@ -141,6 +159,11 @@ public class UpdateReportRequest
     public string? Location { get; set; }
         = null;
 
+    [StringLength(128)]
+    [JsonPropertyName("region")]
+    public string? Region { get; set; }
+        = null;
+
     [JsonPropertyName("crimeDate")]
     public DateTime? CrimeDate { get; set; }
         = null;
@@ -151,6 +174,11 @@ public class UpdateReportRequest
 
     [JsonPropertyName("resolved")]
     public bool? Resolved { get; set; }
+        = null;
+
+    [StringLength(64)]
+    [JsonPropertyName("status")]
+    public string? Status { get; set; }
         = null;
 }
 
@@ -176,8 +204,10 @@ public record ReportResponse(
     [property: JsonPropertyName("crimeType")] string CrimeType,
     [property: JsonPropertyName("description")] string Description,
     [property: JsonPropertyName("location")] string Location,
+    [property: JsonPropertyName("region")] string Region,
     [property: JsonPropertyName("crimeDate")] DateTime CrimeDate,
     [property: JsonPropertyName("reporterDetails")] ReporterDetailsResponse? ReporterDetails,
+    [property: JsonPropertyName("status")] string Status,
     [property: JsonPropertyName("createdDate")] DateTime CreatedDate,
     [property: JsonPropertyName("resolved")] bool Resolved)
 {
@@ -188,8 +218,10 @@ public record ReportResponse(
             report.CrimeType,
             report.Description,
             report.Location,
+            report.Region,
             report.CrimeDate,
             ReporterDetailsResponse.FromModel(report.ReporterDetails),
+            report.Status,
             report.CreatedDate,
             report.Resolved);
 }

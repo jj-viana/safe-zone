@@ -7,7 +7,8 @@ import Link from "next/link"
 import { IoIosArrowRoundDown } from "react-icons/io"
 import { FiLock } from "react-icons/fi"
 import { useEffect, useState } from "react"
-import DenunciaModal from "./components/denuncia/denuncia"
+import type { LeafletMouseEvent } from "leaflet"
+import ReportModal from "./components/report-modal/report-modal"
 
 const MapaDepoimentos = dynamic(() => import("./components/map/map"), {
   ssr: false,
@@ -26,6 +27,36 @@ export default function Home() {
 
   const [locks, setLocks] = useState<FloatingLock[]>([])
   const [showModal, setShowModal] = useState(false)
+  const [contextMenu, setContextMenu] = useState<{
+    lat: number
+    lng: number
+    x: number
+    y: number
+  } | null>(null)
+  const [presetLocation, setPresetLocation] = useState<{ lat: number; lng: number } | null>(null)
+
+  function handleMapContextMenu(event: LeafletMouseEvent) {
+    const { lat, lng } = event.latlng
+    const { x, y } = event.containerPoint
+    setContextMenu({ lat, lng, x, y })
+  }
+
+  useEffect(() => {
+    const handleClick = () => setContextMenu(null)
+    const handleKeyPress = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setContextMenu(null)
+      }
+    }
+
+    window.addEventListener("click", handleClick)
+    window.addEventListener("keydown", handleKeyPress)
+
+    return () => {
+      window.removeEventListener("click", handleClick)
+      window.removeEventListener("keydown", handleKeyPress)
+    }
+  }, [])
 
   useEffect(() => {
     const newLocks: FloatingLock[] = Array.from({ length: 12 }, () => ({
@@ -76,7 +107,11 @@ export default function Home() {
             <li><Link href="/dashboards" className="hover:text-gray-300 transition-colors">Dashboards</Link></li>
             <li>
               <button
-                onClick={() => setShowModal(true)}
+                onClick={() => {
+                  setContextMenu(null)
+                  setPresetLocation(null)
+                  setShowModal(true)
+                }}
                 className="hover:text-gray-300 transition-colors cursor-pointer"
               >
                 Fazer Denúncia
@@ -103,13 +138,61 @@ export default function Home() {
         </div>
       </div>
 
-      <div className="relative z-10 w-full flex justify-center py-20 bg-neutral-900">
-        <div className="w-[90%] h-[500px] rounded-2xl overflow-hidden">
-          <MapaDepoimentos height="200%" />
+      <div className="relative z-10 w-full flex flex-col items-center gap-6 py-20 bg-neutral-900">
+        <div className="w-[90%] text-center text-white">
+          <h2 className="text-3xl font-semibold">Mapa de Depoimentos</h2>
+          <p className="mt-2 text-sm text-gray-300">
+            Clique com o botão direito no mapa para criar uma denúncia no local desejado.
+          </p>
+        </div>
+        <div className="relative w-[90%] h-[800px]">
+          <div className="h-full rounded-2xl overflow-hidden">
+            <MapaDepoimentos hideTitle onContextMenu={handleMapContextMenu} />
+          </div>
+          {contextMenu && (
+            <div
+              className="absolute z-[1000] bg-neutral-800 border border-[#24BBE0] rounded-md shadow-lg"
+              style={{ top: contextMenu.y, left: contextMenu.x, transform: "translate(-50%, -110%)" }}
+              onClick={(event) => event.stopPropagation()}
+              onContextMenu={(event) => event.preventDefault()}
+            >
+              <button
+                type="button"
+                className="px-4 py-2 text-sm text-white hover:bg-[#24BBE0]/20 whitespace-nowrap text-left"
+                onClick={(event) => {
+                  event.stopPropagation()
+                  if (contextMenu) {
+                    setPresetLocation({ lat: contextMenu.lat, lng: contextMenu.lng })
+                  }
+                  setShowModal(true)
+                  setContextMenu(null)
+                }}
+              >
+                Fazer denúncia nesse local
+              </button>
+            </div>
+          )}
+          <div className="pointer-events-none absolute bottom-0 right-0 z-[9999] flex items-center gap-6 rounded-tl-xl border-t border-l border-[#24BBE0] bg-neutral-900 px-5 py-3 shadow-lg">
+            <div className="flex items-center gap-2">
+              <span className="inline-block h-3 w-3 rounded-full" style={{ backgroundColor: "#3b82f6" }} />
+              <span className="text-sm text-gray-200">Sensação de Insegurança</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="inline-block h-3 w-3 rounded-full" style={{ backgroundColor: "#ef4444" }} />
+              <span className="text-sm text-gray-200">Crime</span>
+            </div>
+          </div>
         </div>
       </div>
 
-      <DenunciaModal show={showModal} onCloseAction={() => setShowModal(false)} />
+      <ReportModal
+        show={showModal}
+        presetLocation={presetLocation}
+        onCloseAction={() => {
+          setShowModal(false)
+          setPresetLocation(null)
+        }}
+      />
     </>
   )
 }

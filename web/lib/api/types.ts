@@ -15,9 +15,12 @@ export interface CreateReportRequest {
   crimeType: string;
   description: string;
   location: string;
+  region: string;
   crimeDate: string; // ISO 8601 format
   reporterDetails?: ReporterDetailsRequest | null;
+  status: string;
   resolved: boolean;
+  recaptchaToken?: string | null;
 }
 
 export interface ReporterDetailsResponse {
@@ -33,8 +36,10 @@ export interface ReportResponse {
   crimeType: string;
   description: string;
   location: string;
+  region: string;
   crimeDate: string;
   reporterDetails?: ReporterDetailsResponse | null;
+  status: string;
   createdDate: string;
   resolved: boolean;
 }

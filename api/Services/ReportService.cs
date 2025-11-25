@@ -114,8 +114,16 @@ public class ReportService : IReportService
         var crimeType = request.CrimeType ?? throw new ArgumentException("The crimeType field is required.", nameof(request.CrimeType));
         var description = request.Description ?? throw new ArgumentException("The description field is required.", nameof(request.Description));
         var location = request.Location ?? throw new ArgumentException("The location field is required.", nameof(request.Location));
+        var region = request.Region ?? throw new ArgumentException("The region field is required.", nameof(request.Region));
         var crimeDate = request.CrimeDate ?? throw new ArgumentException("The crimeDate field is required.", nameof(request.CrimeDate));
+        var status = request.Status ?? throw new ArgumentException("The status field is required.", nameof(request.Status));
         var resolved = request.Resolved ?? throw new ArgumentException("The resolved field is required.", nameof(request.Resolved));
+
+        var normalizedStatus = status.Trim();
+        if (normalizedStatus.Length == 0)
+        {
+            throw new ArgumentException("The status field must not be empty.", nameof(request.Status));
+        }
 
         ReporterDetails? reporterDetails = null;
         if (request.ReporterDetails is not null)
@@ -137,9 +145,11 @@ public class ReportService : IReportService
             CrimeType = crimeType.Trim(),
             Description = description.Trim(),
             Location = location.Trim(),
+            Region = region.Trim(),
             CrimeDate = NormalizeDateTime(crimeDate),
             ReporterDetails = reporterDetails,
             CreatedDate = DateTime.UtcNow,
+            Status = normalizedStatus,
             Resolved = resolved
         };
 
@@ -184,19 +194,32 @@ public class ReportService : IReportService
         return ReportResponse.FromModel(report);
     }
 
-    public async Task<IReadOnlyCollection<ReportResponse>> GetAllAsync(CancellationToken cancellationToken)
+    public async Task<IReadOnlyCollection<ReportResponse>> GetAllAsync(string? status, CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Fetching all reports");
+        var normalizedStatus = string.IsNullOrWhiteSpace(status) ? null : status.Trim();
+        _logger.LogInformation("Fetching all reports with status filter {StatusFilter}", normalizedStatus ?? "Any");
         var container = await GetContainerAsync(cancellationToken);
         var results = new List<ReportResponse>();
         double totalRequestCharge = 0;
         var pageIndex = 0;
 
-        var queryIterator = container.GetItemQueryIterator<Report>(requestOptions: new QueryRequestOptions
+        var queryRequestOptions = new QueryRequestOptions
         {
             MaxBufferedItemCount = 100,
             MaxConcurrency = -1
-        });
+        };
+
+        FeedIterator<Report> queryIterator;
+        if (normalizedStatus is null)
+        {
+            queryIterator = container.GetItemQueryIterator<Report>(requestOptions: queryRequestOptions);
+        }
+        else
+        {
+            var queryDefinition = new QueryDefinition("SELECT * FROM c WHERE c.status = @status")
+                .WithParameter("@status", normalizedStatus);
+            queryIterator = container.GetItemQueryIterator<Report>(queryDefinition, requestOptions: queryRequestOptions);
+        }
 
         while (queryIterator.HasMoreResults)
         {
@@ -207,45 +230,65 @@ public class ReportService : IReportService
             }
             catch (CosmosException ex)
             {
-                _logger.LogError(ex, "Failed to fetch reports from Cosmos DB");
+                _logger.LogError(ex, "Failed to fetch reports from Cosmos DB with status filter {StatusFilter}", normalizedStatus ?? "Any");
+                var failureTelemetry = new Dictionary<string, string?>
+                {
+                    ["statusCode"] = ex.StatusCode.ToString()
+                };
+                if (normalizedStatus is not null)
+                {
+                    failureTelemetry["status"] = normalizedStatus;
+                }
+
                 _cosmosTelemetry.TrackRequestUnits(
                     "ReportQueryAllFailed",
                     ex.RequestCharge,
-                    new Dictionary<string, string?>
-                    {
-                        ["statusCode"] = ex.StatusCode.ToString()
-                    });
+                    failureTelemetry);
                 throw;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Unexpected error while fetching all reports");
+                _logger.LogError(ex, "Unexpected error while fetching reports with status filter {StatusFilter}", normalizedStatus ?? "Any");
                 throw;
             }
 
-            _logger.LogDebug("Fetched {Count} reports batch", response.Count);
+            _logger.LogDebug("Fetched {Count} reports batch (status filter {StatusFilter})", response.Count, normalizedStatus ?? "Any");
             totalRequestCharge += response.RequestCharge;
+            var pageTelemetry = new Dictionary<string, string?>
+            {
+                ["pageIndex"] = pageIndex.ToString(CultureInfo.InvariantCulture),
+                ["queryName"] = normalizedStatus is null ? "GetAllReports" : "GetAllReportsByStatus"
+            };
+            if (normalizedStatus is not null)
+            {
+                pageTelemetry["status"] = normalizedStatus;
+            }
             _cosmosTelemetry.TrackRequestUnits(
                 "ReportQueryAllPage",
                 response.RequestCharge,
-                new Dictionary<string, string?>
-                {
-                    ["pageIndex"] = pageIndex.ToString(CultureInfo.InvariantCulture),
-                    ["queryName"] = "GetAllReports"
-                });
+                pageTelemetry);
             pageIndex++;
-            results.AddRange(response.Resource.Select(ReportResponse.FromModel));
+            foreach (var item in response.Resource)
+            {
+                results.Add(ReportResponse.FromModel(item));
+            }
+        }
+
+        var totalTelemetry = new Dictionary<string, string?>
+        {
+            ["pages"] = pageIndex.ToString(CultureInfo.InvariantCulture)
+        };
+        if (normalizedStatus is not null)
+        {
+            totalTelemetry["status"] = normalizedStatus;
         }
 
         _cosmosTelemetry.TrackRequestUnits(
             "ReportQueryAllTotal",
             totalRequestCharge,
-            new Dictionary<string, string?>
-            {
-                ["pages"] = pageIndex.ToString(CultureInfo.InvariantCulture)
-            });
+            totalTelemetry);
 
-        _logger.LogInformation("Returning {Count} reports", results.Count);
+        _logger.LogInformation("Returning {Count} reports for status filter {StatusFilter}", results.Count, normalizedStatus ?? "Any");
         return results;
     }
 
@@ -312,7 +355,10 @@ public class ReportService : IReportService
                     ["crimeGenre"] = normalizedCrimeGenre
                 });
             pageIndex++;
-            results.AddRange(response.Resource.Select(ReportResponse.FromModel));
+            foreach (var item in response.Resource)
+            {
+                results.Add(ReportResponse.FromModel(item));
+            }
         }
 
         _cosmosTelemetry.TrackRequestUnits(
@@ -391,7 +437,10 @@ public class ReportService : IReportService
                     ["crimeType"] = normalizedCrimeType
                 });
             pageIndex++;
-            results.AddRange(response.Resource.Select(ReportResponse.FromModel));
+            foreach (var item in response.Resource)
+            {
+                results.Add(ReportResponse.FromModel(item));
+            }
         }
 
         _cosmosTelemetry.TrackRequestUnits(
@@ -559,6 +608,17 @@ public class ReportService : IReportService
             }
         }
 
+        string? updatedRegion = null;
+        if (!string.IsNullOrWhiteSpace(request.Region))
+        {
+            var normalized = request.Region.Trim();
+            if (!string.Equals(existing.Region, normalized, StringComparison.Ordinal))
+            {
+                operations.Add(PatchOperation.Set("/region", normalized));
+                updatedRegion = normalized;
+            }
+        }
+
         DateTime? updatedCrimeDate = null;
         if (request.CrimeDate.HasValue)
         {
@@ -575,6 +635,21 @@ public class ReportService : IReportService
         {
             operations.Add(PatchOperation.Set("/resolved", request.Resolved.Value));
             updatedResolved = request.Resolved.Value;
+        }
+
+        string? updatedStatus = null;
+        if (request.Status is not null)
+        {
+            var normalized = request.Status.Trim();
+            if (normalized.Length == 0)
+            {
+                throw new ArgumentException("The status field must not be empty.", nameof(request.Status));
+            }
+            if (!string.Equals(existing.Status, normalized, StringComparison.Ordinal))
+            {
+                operations.Add(PatchOperation.Set("/status", normalized));
+                updatedStatus = normalized;
+            }
         }
 
         ReporterDetails? updatedReporterDetails = null;
@@ -664,6 +739,11 @@ public class ReportService : IReportService
                     existing.Location = updatedLocation;
                 }
 
+                if (updatedRegion is not null)
+                {
+                    existing.Region = updatedRegion;
+                }
+
                 if (updatedCrimeDate.HasValue)
                 {
                     existing.CrimeDate = updatedCrimeDate.Value;
@@ -672,6 +752,11 @@ public class ReportService : IReportService
                 if (updatedResolved.HasValue)
                 {
                     existing.Resolved = updatedResolved.Value;
+                }
+
+                if (updatedStatus is not null)
+                {
+                    existing.Status = updatedStatus;
                 }
 
                 if (updatedReporterDetails is not null)
