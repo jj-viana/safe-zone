@@ -124,4 +124,20 @@ public class ReportsControllerCreateTests
         var value = createdAtRouteResult.Value;
         Assert.NotNull(value);
     }
+
+    [Fact]
+    public async Task CreateAsync_WhenServiceThrowsGenericException_ReturnsInternalServerError()
+    {
+        var request = CreateSampleReport();
+        _serviceMock
+            .Setup(s => s.CreateAsync(It.IsAny<CreateReportRequest>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new Exception("Unexpected error"));
+
+        var result = await _controller.CreateAsync(request, CancellationToken.None);
+
+        var problemResult = Assert.IsType<ObjectResult>(result);
+        Assert.Equal(StatusCodes.Status500InternalServerError, problemResult.StatusCode);
+        var problemDetails = Assert.IsType<ProblemDetails>(problemResult.Value);
+        Assert.Equal("Unexpected error when creating report", problemDetails.Title);
+    }
 }

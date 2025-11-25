@@ -24,6 +24,25 @@ namespace ReportsApi.Tests.IntegrationTests
             Resolved = true
         };
 
+        private static CreateReportRequest CreateSampleCreateRequest(string genre = "Hate Crime", string crimeType = "Assault") => new()
+        {
+            CrimeGenre = genre,
+            CrimeType = crimeType,
+            Description = "Initial description",
+            Location = "Central Park",
+            Region = "Taguatinga",
+            CrimeDate = DateTime.UtcNow.AddDays(-1),
+            Status = "Draft",
+            Resolved = false,
+            ReporterDetails = new ReporterDetailsRequest
+            {
+                AgeGroup = "18-24",
+                Ethnicity = "Latino",
+                GenderIdentity = "Non-binary",
+                SexualOrientation = "Gay"
+            }
+        };
+
         // create a report 
         private async Task<ReportResponse> CreateReportAndGetIdAsync(CreateReportRequest createRequest)
         {
@@ -51,17 +70,7 @@ namespace ReportsApi.Tests.IntegrationTests
             try
             {
                 // Arrange
-                var createRequest = new CreateReportRequest
-                {
-                    CrimeGenre = "Hate Crime",
-                    CrimeType = "Assault",
-                    Description = "Initial description",
-                    Location = "Central Park",
-                    Region = "Taguatinga",
-                    CrimeDate = DateTime.UtcNow,
-                    Status = "Draft",
-                    Resolved = false
-                };
+                var createRequest = CreateSampleCreateRequest();
 
                 // create the report 
                 var createdReport = await CreateReportAndGetIdAsync(createRequest);
@@ -113,17 +122,7 @@ namespace ReportsApi.Tests.IntegrationTests
             try
             {
                 // Arrange
-                var createRequest = new CreateReportRequest
-                {
-                    CrimeGenre = "Hate Crime",
-                    CrimeType = "Assault",
-                    Description = "Initial description",
-                    Location = "Central Park",
-                    Region = "Taguatinga",
-                    CrimeDate = DateTime.UtcNow,
-                    Status = "Draft",
-                    Resolved = false
-                };
+                var createRequest = CreateSampleCreateRequest();
 
                 var createdReport = await CreateReportAndGetIdAsync(createRequest);
                 reportId = createdReport.Id;
@@ -153,17 +152,7 @@ namespace ReportsApi.Tests.IntegrationTests
             try
             {
                 // Arrange
-                var createRequest = new CreateReportRequest
-                {
-                    CrimeGenre = "Hate Crime",
-                    CrimeType = "Assault",
-                    Description = "Initial description",
-                    Location = "Central Park",
-                    Region = "Taguatinga",
-                    CrimeDate = DateTime.UtcNow,
-                    Status = "Draft",
-                    Resolved = false
-                };
+                var createRequest = CreateSampleCreateRequest();
 
                 var createdReport = await CreateReportAndGetIdAsync(createRequest);
                 reportId = createdReport.Id;
@@ -200,17 +189,7 @@ namespace ReportsApi.Tests.IntegrationTests
             try
             {
                 // Arrange 
-                var createRequest = new CreateReportRequest
-                {
-                    CrimeGenre = "Hate Crime",
-                    CrimeType = "Assault",
-                    Description = "Initial description",
-                    Location = "Central Park",
-                    Region = "Taguatinga",
-                    CrimeDate = DateTime.UtcNow,
-                    Status = "Draft",
-                    Resolved = false
-                };
+                var createRequest = CreateSampleCreateRequest();
 
                 var createdReport = await CreateReportAndGetIdAsync(createRequest);
                 reportId = createdReport.Id;
@@ -231,6 +210,106 @@ namespace ReportsApi.Tests.IntegrationTests
             finally
             {
                 // CLEANUP
+                await CleanupReportAsync(reportId);
+            }
+        }
+
+        [Fact]
+        public async Task UpdateReport_WithAllMutableFields_UpdatesEveryValue()
+        {
+            string? reportId = null;
+            try
+            {
+                var createdReport = await CreateReportAndGetIdAsync(CreateSampleCreateRequest());
+                reportId = createdReport.Id;
+
+                var updateRequest = new UpdateReportRequest
+                {
+                    CrimeGenre = " Updated Genre ",
+                    CrimeType = "Updated Type",
+                    Description = "Updated description",
+                    Location = "Updated location",
+                    Region = "Updated region",
+                    CrimeDate = DateTime.UtcNow,
+                    Status = " Approved ",
+                    Resolved = true,
+                    ReporterDetails = new ReporterDetailsRequest
+                    {
+                        AgeGroup = "25-34",
+                        Ethnicity = "Other",
+                        GenderIdentity = "Female",
+                        SexualOrientation = "Heterosexual"
+                    }
+                };
+
+                var response = await _client.PatchAsJsonAsync($"/api/Reports/{reportId}", updateRequest);
+
+                response.EnsureSuccessStatusCode();
+                var updatedReport = await response.Content.ReadFromJsonAsync<ReportResponse>();
+                Assert.NotNull(updatedReport);
+                Assert.Equal("Updated Genre", updatedReport.CrimeGenre);
+                Assert.Equal(updateRequest.CrimeType, updatedReport.CrimeType);
+                Assert.Equal(updateRequest.Description, updatedReport.Description);
+                Assert.Equal(updateRequest.Location, updatedReport.Location);
+                Assert.Equal(updateRequest.Region, updatedReport.Region);
+                Assert.Equal(updateRequest.Resolved, updatedReport.Resolved);
+                Assert.Equal("Approved", updatedReport.Status);
+                Assert.Equal(updateRequest.ReporterDetails!.AgeGroup, updatedReport.ReporterDetails!.AgeGroup);
+                Assert.Equal(updateRequest.ReporterDetails!.Ethnicity, updatedReport.ReporterDetails!.Ethnicity);
+                Assert.Equal(updateRequest.ReporterDetails!.GenderIdentity, updatedReport.ReporterDetails!.GenderIdentity);
+                Assert.Equal(updateRequest.ReporterDetails!.SexualOrientation, updatedReport.ReporterDetails!.SexualOrientation);
+            }
+            finally
+            {
+                await CleanupReportAsync(reportId);
+            }
+        }
+
+        [Fact]
+        public async Task UpdateReport_WithWhitespaceStatus_ReturnsBadRequest()
+        {
+            string? reportId = null;
+            try
+            {
+                var createdReport = await CreateReportAndGetIdAsync(CreateSampleCreateRequest());
+                reportId = createdReport.Id;
+
+                var updateRequest = new UpdateReportRequest
+                {
+                    Status = "  "
+                };
+
+                var response = await _client.PatchAsJsonAsync($"/api/Reports/{reportId}", updateRequest);
+
+                Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+            }
+            finally
+            {
+                await CleanupReportAsync(reportId);
+            }
+        }
+
+        [Fact]
+        public async Task UpdateReport_WithNoChanges_ReturnsExistingPayload()
+        {
+            string? reportId = null;
+            try
+            {
+                var createdReport = await CreateReportAndGetIdAsync(CreateSampleCreateRequest());
+                reportId = createdReport.Id;
+
+                var response = await _client.PatchAsJsonAsync($"/api/Reports/{reportId}", new UpdateReportRequest());
+
+                response.EnsureSuccessStatusCode();
+                var updatedReport = await response.Content.ReadFromJsonAsync<ReportResponse>();
+                Assert.NotNull(updatedReport);
+                Assert.Equal(createdReport.Id, updatedReport.Id);
+                Assert.Equal(createdReport.Description, updatedReport.Description);
+                Assert.Equal(createdReport.Status, updatedReport.Status);
+                Assert.Equal(createdReport.ReporterDetails!.AgeGroup, updatedReport.ReporterDetails!.AgeGroup);
+            }
+            finally
+            {
                 await CleanupReportAsync(reportId);
             }
         }
