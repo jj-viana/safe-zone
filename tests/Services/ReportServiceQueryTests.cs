@@ -122,7 +122,7 @@ public class ReportServiceQueryTests
         telemetryMock.Verify(t => t.TrackRequestUnits(
             "ReportQueryAllPage",
             It.IsAny<double>(),
-            It.Is<IReadOnlyDictionary<string, string?>>(d => d.ContainsKey("status") && d["status"] == "Approved")), Times.Once);
+            It.Is<IReadOnlyDictionary<string, string?>>(d => d.TryGetValue("status", out var status) && status == "Approved")), Times.Once);
     }
 
     [Fact]
