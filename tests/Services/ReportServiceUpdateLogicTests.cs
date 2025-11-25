@@ -206,7 +206,7 @@ public class ReportServiceUpdateLogicTests
         };
 
         // Act
-        var result = await service.UpdateAsync(reportId, request, CancellationToken.None);
+        await service.UpdateAsync(reportId, request, CancellationToken.None);
 
         // Assert
         _containerMock.Verify(c => c.PatchItemAsync<Report>(
