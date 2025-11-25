@@ -52,6 +52,7 @@ Jobs e etapas:
 	- Checkout
 	- `dotnet restore api/api.sln`
 	- `dotnet build api/api.sln --configuration Release --no-restore`
+	- Verifica segredos do Cosmos DB (`TEST_COSMOS_CONNECTION_STRING`, etc.)
 	- `dotnet test api/api.sln --configuration Release --no-build --verbosity normal`
 
 Resultado esperado:
@@ -66,7 +67,7 @@ Arquivo: `.github/workflows/release-deploy.yml`
 
 Disparo:
 
-- `push` na branch `main` (merge de release) e manual via `workflow_dispatch`.
+- `push` na branch `main` (merge de release) com filtros de path (`web/**`, `api/**`, `tests/**`, workflow file) e manual via `workflow_dispatch`.
 
 Permissões do job:
 
@@ -75,39 +76,50 @@ Permissões do job:
 
 O que o pipeline faz:
 
-1) Build do front-end
+1) Detecção de mudanças
+
+- Verifica se houve alterações em `web/` ou `api/` (incluindo `tests/`) para executar apenas os jobs necessários.
+
+2) Build do front-end (se houver mudanças em `web/`)
 
 - Node.js 20
 - `npm ci` em `web/`
-- Injeta variável `NEXT_PUBLIC_API_BASE_URL` no ambiente de build
+- Injeta variáveis de ambiente de build:
+    - `NEXT_PUBLIC_API_BASE_URL`
+    - `NEXT_PUBLIC_AZURE_TENANT_ID`
+    - `NEXT_PUBLIC_AZURE_CLIENT_ID`
+    - `NEXT_PUBLIC_AZURE_REDIRECT_URI`
+    - `NEXT_PUBLIC_AZURE_API_SCOPES`
+    - `NEXT_PUBLIC_RECAPTCHA_SITE_KEY`
 - `npm run build` (gera `.next`)
 
-2) Build/Publish da API
+3) Build/Publish da API (se houver mudanças em `api/`)
 
 - .NET 9.0
+- Verifica presença dos segredos de teste do Cosmos DB
 - `dotnet restore api/api.sln`
 - `dotnet publish api/api.csproj -c Release -o publish/api`
 
-3) Login no Azure com OIDC
+4) Login no Azure com OIDC
 
 - `azure/login@v2` usando `AZURE_CLIENT_ID`, `AZURE_TENANT_ID`, `AZURE_SUBSCRIPTION_ID`
 
-4) Deploy do front-end (SWA)
+5) Deploy do front-end (SWA) (se `web` mudou)
 
 - `Azure/static-web-apps-deploy@v1`
 - Publica artefatos de `web/.next` para o Azure Static Web Apps
 - Usa token de implantação do SWA (`AZURE_STATIC_WEB_APPS_API_TOKEN`)
 
-5) Deploy da API (App Service)
+6) Deploy da API (App Service) (se `api` mudou)
 
 - `azure/webapps-deploy@v3`
 - Publica pasta `publish/api` no App Service (`app-name` e `resource-group-name` do segredo)
 
-6) Health checks (opcional)
+7) Health checks (opcional)
 
 - Se configurados, valida URLs de saúde do front-end e da API (5 tentativas com backoff)
 
-7) Release e tag SemVer automática
+8) Release e tag SemVer automática
 
 - Determina a próxima tag (`vX.Y.Z`) incrementando `PATCH` da última tag existente (ou inicia em `v0.1.0`)
 - Cria release no GitHub com `softprops/action-gh-release@v1`
@@ -132,7 +144,7 @@ O que o pipeline faz:
 
 ### Segredos no GitHub (Repository Secrets)
 
-Obrigatórios para deploy:
+Obrigatórios para deploy e build:
 
 - `AZURE_CLIENT_ID` — Client ID do App Registration (OIDC)
 - `AZURE_TENANT_ID` — Tenant ID (OIDC)
@@ -141,6 +153,17 @@ Obrigatórios para deploy:
 - `AZURE_WEBAPP_NAME` — Nome do App Service (API)
 - `AZURE_STATIC_WEB_APPS_API_TOKEN` — Token de implantação do SWA
 - `NEXT_PUBLIC_API_BASE_URL` — Base URL da API usada pelo Next (ex.: `https://<app>.azurewebsites.net`)
+- `NEXT_PUBLIC_AZURE_TENANT_ID` — Tenant ID para autenticação no front-end
+- `NEXT_PUBLIC_AZURE_CLIENT_ID` — Client ID para autenticação no front-end
+- `NEXT_PUBLIC_AZURE_REDIRECT_URI` — Redirect URI para autenticação
+- `NEXT_PUBLIC_AZURE_API_SCOPES` — Scopes da API
+- `NEXT_PUBLIC_RECAPTCHA_SITE_KEY` — Chave do ReCaptcha
+
+Obrigatórios para testes (CI e CD check):
+
+- `TEST_COSMOS_CONNECTION_STRING` — Connection string do Cosmos DB para testes
+- `TEST_COSMOS_DATABASE_ID` — ID do banco de dados de teste
+- `TEST_COSMOS_CONTAINER_ID` — ID do container de teste
 
 Opcionais (para health check pós-deploy):
 
@@ -186,6 +209,10 @@ Permissões do repositório:
 	- `AZURE_RESOURCE_GROUP`, `AZURE_WEBAPP_NAME`
 	- `AZURE_STATIC_WEB_APPS_API_TOKEN`
 	- `NEXT_PUBLIC_API_BASE_URL`
+	- `NEXT_PUBLIC_AZURE_TENANT_ID`, `NEXT_PUBLIC_AZURE_CLIENT_ID`
+	- `NEXT_PUBLIC_AZURE_REDIRECT_URI`, `NEXT_PUBLIC_AZURE_API_SCOPES`
+	- `NEXT_PUBLIC_RECAPTCHA_SITE_KEY`
+	- `TEST_COSMOS_CONNECTION_STRING`, `TEST_COSMOS_DATABASE_ID`, `TEST_COSMOS_CONTAINER_ID`
 	- (opcional) `AZURE_API_HEALTHCHECK_URL`, `AZURE_STATIC_WEB_APP_HEALTHCHECK_URL`
 
 5) Verificar configurações do projeto
