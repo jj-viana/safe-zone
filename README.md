@@ -3,6 +3,7 @@
 ![Safezone](./safezone.jpg)
 
 [![Acessar o Site](https://img.shields.io/badge/Acessar_o_Site-0078D4?style=for-the-badge&logo=microsoft-edge&logoColor=white)](https://zealous-coast-056b8750f.3.azurestaticapps.net/)
+[![Acessar Documentação](https://img.shields.io/badge/Acessar_Documentação-0078D4?style=for-the-badge&logo=github&logoColor=white)](https://jj-viana.github.io/docs-safe-zone/)
 
 O **Amaterasu - Safe Zone** é uma aplicação web em formato de dashboard projetada para analisar e processar dados sobre criminalidade e insegurança no Distrito Federal e entorno. O objetivo é informar os cidadãos, facilitar a denúncia de ocorrências de forma menos burocrática e auxiliar na tomada de decisões mais direcionadas por parte dos órgãos competentes.
 
