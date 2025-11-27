@@ -752,6 +752,7 @@ export default function AdminPage() {
             </button>
           </div>
         )}
+        <div className="h-24 md:h-32" />
       </main>
 
       {selectedReport && (
@@ -762,7 +763,7 @@ export default function AdminPage() {
           onClick={closeReportDetails}
         >
           <div
-            className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-2xl border border-neutral-800 bg-neutral-950 p-8 shadow-2xl"
+            className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-2xl border border-neutral-800 bg-neutral-950 p-4 md:p-8 shadow-2xl"
             onClick={event => event.stopPropagation()}
           >
             <div className="flex items-start justify-between">

@@ -47,11 +47,39 @@ export default function SobrePage() {
     setMousePosition({ x: 0, y: 0 });
   }, []);
 
+  const handleTouchMove = useCallback((e: React.TouchEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const touch = e.touches[0];
+    const x = touch.clientX - rect.left;
+    const y = touch.clientY - rect.top;
+    const centerX = rect.width / 2;
+    const centerY = rect.height / 2;
+
+    // Normaliza coordenadas (-1 a 1)
+    const normalizedX = (x - centerX) / centerX;
+    const normalizedY = (y - centerY) / centerY;
+
+    // Limita o valor para evitar exageros
+    const clampedX = Math.max(-1, Math.min(1, normalizedX));
+    const clampedY = Math.max(-1, Math.min(1, normalizedY));
+
+    // Suaviza o movimento
+    const easeOut = (t: number) => 1 - Math.pow(1 - Math.abs(t), 3);
+    const easedX = Math.sign(clampedX) * easeOut(clampedX);
+    const easedY = Math.sign(clampedY) * easeOut(clampedY);
+
+    // Calcula a rotação (ajustada para suavidade)
+    const rotateX = easedY * -8;
+    const rotateY = easedX * 8;
+
+    setMousePosition({ x: rotateY, y: rotateX });
+  }, []);
+
   return (
     <>
       <Navbar />
       <main className="min-h-screen flex flex-col items-center bg-neutral-900 text-white">
-        <section className="w-full max-w-[1920px] px-[128px] py-16 flex flex-col md:flex-row items-start justify-between gap-12">
+        <section className="w-full max-w-[1920px] px-6 md:px-[128px] py-16 flex flex-col md:flex-row items-start justify-between gap-12">
           {/* Texto lateral esquerdo */}
           <div className="md:w-1/2 mt-3">
             <h1 className={`${merriweather.className} text-4xl font-bold mb-3`}>
@@ -90,11 +118,14 @@ export default function SobrePage() {
             className="md:w-1/2 flex justify-center items-end cursor-pointer"
             onMouseMove={handleMouseMove}
             onMouseLeave={handleMouseLeave}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleMouseLeave}
             style={{
               transform: `perspective(1000px) rotateX(${mousePosition.y}deg) rotateY(${mousePosition.x}deg)`,
               transformStyle: "preserve-3d",
               transition: "transform 0.15s cubic-bezier(0.25, 0.46, 0.45, 0.94)",
               willChange: "transform",
+              touchAction: "none",
             }}
           >
             <div className="bg-white rounded-[4rem] p-6 md:p-10 shadow-2xl">

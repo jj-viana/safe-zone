@@ -73,8 +73,8 @@ export default function Home() {
 
   return (
     <>
-      <div className="relative min-h-screen overflow-hidden flex flex-col justify-between text-white bg-neutral-900">
-        <div className="absolute inset-0 overflow-hidden">
+      <div className="relative min-h-[100dvh] overflow-x-hidden flex flex-col justify-between text-white bg-neutral-900">
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
           {locks.map((lock: FloatingLock, index: number) => (
             <motion.div
               key={`lock-${index}`}
@@ -102,8 +102,7 @@ export default function Home() {
         </div>
 
         <nav className="relative z-10 w-full flex justify-center pt-6">
-          <ul className="flex gap-20 text-lg font-medium">
-            <li><Link href="/sobre" className="hover:text-gray-300 transition-colors">Sobre</Link></li>
+          <ul className="flex flex-wrap justify-center gap-6 md:gap-20 text-sm md:text-lg font-medium px-4">
             <li><Link href="/dashboards" className="hover:text-gray-300 transition-colors">Dashboards</Link></li>
             <li>
               <button
@@ -117,16 +116,17 @@ export default function Home() {
                 Fazer Denúncia
               </button>
             </li>
+            <li><Link href="/sobre" className="hover:text-gray-300 transition-colors">Sobre</Link></li>
           </ul>
         </nav>
 
-        <div className="relative z-10 flex-1 flex items-center justify-center">
+        <div className="relative z-10 flex-1 flex items-center justify-center px-4">
           <Image
             src="/logo.svg"
             alt="Logo SafeZone"
             width={620}
             height={620}
-            className="w-[620px] h-auto drop-shadow-[0_0_80px_rgba(59,130,246,0.4)]"
+            className="w-[280px] sm:w-[400px] md:w-[620px] h-auto drop-shadow-[0_0_80px_rgba(59,130,246,0.4)]"
             priority
           />
         </div>
@@ -138,14 +138,14 @@ export default function Home() {
         </div>
       </div>
 
-      <div className="relative z-10 w-full flex flex-col items-center gap-6 py-20 bg-neutral-900">
+      <div className="relative z-10 w-full flex flex-col items-center gap-6 py-20 pb-32 bg-neutral-900">
         <div className="w-[90%] text-center text-white">
-          <h2 className="text-3xl font-semibold">Mapa de Depoimentos</h2>
-          <p className="mt-2 text-sm text-gray-300">
-            Clique com o botão direito no mapa para criar uma denúncia no local desejado.
+          <h2 className="text-2xl md:text-3xl font-semibold">Mapa de Depoimentos</h2>
+          <p className="mt-2 text-xs md:text-sm text-gray-300">
+            Clique com o botão direito (ou toque longo) no mapa para criar uma denúncia no local desejado.
           </p>
         </div>
-        <div className="relative w-[90%] h-[800px]">
+        <div className="relative w-[95%] md:w-[90%] h-[500px] md:h-[800px]">
           <div className="h-full rounded-2xl overflow-hidden">
             <MapaDepoimentos hideTitle onContextMenu={handleMapContextMenu} />
           </div>
@@ -172,14 +172,14 @@ export default function Home() {
               </button>
             </div>
           )}
-          <div className="pointer-events-none absolute bottom-0 right-0 z-[9999] flex items-center gap-6 rounded-tl-xl border-t border-l border-[#24BBE0] bg-neutral-900 px-5 py-3 shadow-lg">
+          <div className="pointer-events-none absolute bottom-0 right-0 z-[9999] flex flex-row items-center gap-4 md:gap-6 rounded-tl-xl border-t border-l border-[#24BBE0] bg-neutral-900 px-3 py-2 md:px-5 md:py-3 shadow-lg">
             <div className="flex items-center gap-2">
-              <span className="inline-block h-3 w-3 rounded-full" style={{ backgroundColor: "#3b82f6" }} />
-              <span className="text-sm text-gray-200">Sensação de Insegurança</span>
+              <span className="inline-block h-2 w-2 md:h-3 md:w-3 rounded-full" style={{ backgroundColor: "#3b82f6" }} />
+              <span className="text-xs md:text-sm text-gray-200">Sensação de Insegurança</span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="inline-block h-3 w-3 rounded-full" style={{ backgroundColor: "#ef4444" }} />
-              <span className="text-sm text-gray-200">Crime</span>
+              <span className="inline-block h-2 w-2 md:h-3 md:w-3 rounded-full" style={{ backgroundColor: "#ef4444" }} />
+              <span className="text-xs md:text-sm text-gray-200">Crime</span>
             </div>
           </div>
         </div>

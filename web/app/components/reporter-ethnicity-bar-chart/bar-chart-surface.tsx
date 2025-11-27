@@ -23,7 +23,7 @@ const DEFAULT_COLORS = ['#EC4899', '#F97316', '#06B6D4', '#FBBF24', '#EF4444', '
 
 export default function BarChartSurface({ data, colors = DEFAULT_COLORS }: BarChartSurfaceProps) {
   return (
-    <ResponsiveContainer width="100%" height={220}>
+    <ResponsiveContainer width="100%" height="100%">
       <BarChart
         data={data}
         margin={{ top: 20, right: 30, left: 5, bottom: 0 }}
@@ -42,8 +42,10 @@ export default function BarChartSurface({ data, colors = DEFAULT_COLORS }: BarCh
             border: '1px solid #404040',
             borderRadius: '8px',
             color: '#F3F4F6',
+            fontSize: '12px',
+            padding: '5px',
           }}
-          itemStyle={{ color: '#fff' }}
+          itemStyle={{ color: '#fff', padding: 0, margin: 0 }}
           formatter={value => [value, 'Ocorrências']}
         />
         <Bar dataKey="value" radius={[8, 8, 0, 0]}>
