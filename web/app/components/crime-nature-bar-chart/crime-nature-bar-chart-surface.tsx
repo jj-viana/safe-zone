@@ -33,8 +33,8 @@ export default function CrimeNatureBarChartSurface({ data, colors }: CrimeNature
           dataKey="name"
           type="category"
           stroke="#9CA3AF"
-          width={50}
-          tick={{ fontSize: 13 }}
+          width={80}
+          tick={{ fontSize: 12, width: 170 }}
         />
         <Tooltip
           contentStyle={{
@@ -42,8 +42,10 @@ export default function CrimeNatureBarChartSurface({ data, colors }: CrimeNature
             border: '1px solid #404040',
             borderRadius: '8px',
             color: '#F3F4F6',
+            fontSize: '12px',
+            padding: '5px',
           }}
-          itemStyle={{ color: '#fff' }}
+          itemStyle={{ color: '#fff', padding: 0, margin: 0 }}
           formatter={value => [value, 'Ocorrências']}
         />
         <Bar dataKey="value" fill="#8884d8" radius={[0, 8, 8, 0]} barSize={30}>
