@@ -32,8 +32,10 @@ export default function PieChartSurface({ data, colors = DEFAULT_COLORS }: PieCh
             border: '1px solid #404040',
             borderRadius: '8px',
             color: '#F3F4F6',
+            fontSize: '12px',
+            padding: '5px',
           }}
-          itemStyle={{ color: '#fff' }}
+          itemStyle={{ color: '#fff', padding: 0, margin: 0 }}
           formatter={(value: number | string, name: string) => [value, name]}
         />
         <Legend wrapperStyle={{ fontSize: '11px' }} />

@@ -287,7 +287,7 @@ export default function ReportModal({ show, onCloseAction, presetLocation = null
           onClick={() => handleClose()}
         >
           <motion.div
-            className="bg-neutral-900 p-8 rounded-2xl w-[700px] text-white relative flex flex-col items-center border border-[#24BBE0]/30 shadow-lg"
+            className="bg-neutral-900 p-4 md:p-8 rounded-2xl w-[95%] md:w-[700px] max-h-[90vh] overflow-y-auto text-white relative flex flex-col items-center border border-[#24BBE0]/30 shadow-lg"
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.8, opacity: 0 }}

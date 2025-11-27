@@ -527,10 +527,10 @@ export default function DashboardPage() {
   const totalReports = filteredData.length;
 
   return (
-    <div className={`${merriweather.className} h-screen flex flex-col bg-neutral-900`}>
+    <div className={`${merriweather.className} min-h-screen flex flex-col bg-neutral-900`}>
       <Navbar />
-      <main className="flex-1 text-white text-2xl pt-4 px-6 pb-6 overflow-hidden">
-        <div className="w-full h-full">
+      <main className="flex-1 text-white text-2xl pt-4 px-6 pb-32">
+        <div className="w-full h-full flex flex-col gap-4">
           {(isLoading || fetchError) && (
             <div className="mb-4 space-y-2">
               {isLoading && (
@@ -545,11 +545,53 @@ export default function DashboardPage() {
               )}
             </div>
           )}
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 h-full">
+          {/* Filtros */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+            <FilterDropdown
+              label="Tipo"
+              options={crimeGenreOptions}
+              selected={selectedFilters.crimeGenre}
+              open={openFilter === "crimeGenre"}
+              onToggle={() => toggleFilter("crimeGenre")}
+              onSelect={handleCrimeSelect}
+            />
+            <FilterDropdown
+              label="Natureza"
+              options={crimeTypeOptions}
+              selected={selectedFilters.crimeTypes}
+              multi
+              open={openFilter === "crimeTypes"}
+              onToggle={() => toggleFilter("crimeTypes")}
+              onSelect={(option: string) => handleMultiSelect("crimeTypes", option)}
+              onSelectAll={(selectAll: boolean) => handleMultiSelectAll("crimeTypes", selectAll)}
+            />
+            <FilterDropdown
+              label="Região"
+              options={regionOptions}
+              selected={selectedFilters.regions}
+              multi
+              open={openFilter === "regions"}
+              onToggle={() => toggleFilter("regions")}
+              onSelect={(option: string) => handleMultiSelect("regions", option)}
+              onSelectAll={(selectAll: boolean) => handleMultiSelectAll("regions", selectAll)}
+            />
+            <FilterDropdown
+              label="Ano"
+              options={yearOptions}
+              selected={selectedFilters.years}
+              multi
+              open={openFilter === "years"}
+              onToggle={() => toggleFilter("years")}
+              onSelect={(option: number) => handleMultiSelect("years", option)}
+              onSelectAll={(selectAll: boolean) => handleMultiSelectAll("years", selectAll)}
+            />
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 flex-1">
             
             {/* --- Coluna Esquerda --- */}
             <div className="lg:col-span-1 flex flex-col gap-4">
-              <div className="bg-[#1F1F1F] shadow-xl shadow-black/50 flex flex-col justify-end items-center rounded-lg p-6 h-36">
+              <div className="bg-[#1F1F1F] shadow-xl shadow-black/50 flex flex-col justify-end items-center rounded-lg p-6 h-auto min-h-[144px]">
                 <p className="text-4xl font-bold">{totalReports}</p>
                 <p>Total Denúncias</p>
               </div>
@@ -561,68 +603,28 @@ export default function DashboardPage() {
             </div>
 
             {/* --- Coluna Direita --- */}
-            <div className="lg:col-span-3 flex gap-4">
+            <div className="lg:col-span-3 flex flex-col lg:flex-row gap-4">
               
               {/* Subcoluna Esquerda */}
-              <div className="w-2/3 flex flex-col gap-4">
+              <div className="w-full lg:w-2/3 flex flex-col gap-4">
                 
-                {/* Filtros */}
-                <div className="grid grid-cols-4 gap-4">
-                  <FilterDropdown
-                    label="Tipo"
-                    options={crimeGenreOptions}
-                    selected={selectedFilters.crimeGenre}
-                    open={openFilter === "crimeGenre"}
-                    onToggle={() => toggleFilter("crimeGenre")}
-                    onSelect={handleCrimeSelect}
-                  />
-                  <FilterDropdown
-                    label="Natureza"
-                    options={crimeTypeOptions}
-                    selected={selectedFilters.crimeTypes}
-                    multi
-                    open={openFilter === "crimeTypes"}
-                    onToggle={() => toggleFilter("crimeTypes")}
-                    onSelect={(option: string) => handleMultiSelect("crimeTypes", option)}
-                    onSelectAll={(selectAll: boolean) => handleMultiSelectAll("crimeTypes", selectAll)}
-                  />
-                  <FilterDropdown
-                    label="Região"
-                    options={regionOptions}
-                    selected={selectedFilters.regions}
-                    multi
-                    open={openFilter === "regions"}
-                    onToggle={() => toggleFilter("regions")}
-                    onSelect={(option: string) => handleMultiSelect("regions", option)}
-                    onSelectAll={(selectAll: boolean) => handleMultiSelectAll("regions", selectAll)}
-                  />
-                  <FilterDropdown
-                    label="Ano"
-                    options={yearOptions}
-                    selected={selectedFilters.years}
-                    multi
-                    open={openFilter === "years"}
-                    onToggle={() => toggleFilter("years")}
-                    onSelect={(option: number) => handleMultiSelect("years", option)}
-                    onSelectAll={(selectAll: boolean) => handleMultiSelectAll("years", selectAll)}
-                  />
-                </div>
-
                 {/* Gráfico Principal */}
-                <div className="bg-[#1F1F1F] shadow-xl shadow-black/50 rounded-lg p-6 h-75">
-                  <p>Número de denúncias por mês</p>
-                  <CrimeTypeLineChart data={filteredData} />
+                <div className="bg-[#1F1F1F] shadow-xl shadow-black/50 rounded-lg p-6 h-96 flex flex-col">
+                  <p className="mb-2">Número de denúncias por mês</p>
+                  <div className="flex-1 w-full min-h-0">
+                    <CrimeTypeLineChart data={filteredData} />
+                  </div>
                 </div>
 
                 {/* Indicadores */}
-                <div className="flex-1 grid grid-cols-2 gap-4">
-                  <div className="bg-[#1F1F1F] shadow-xl shadow-black/50 rounded-lg p-6 flex flex-col">
+                <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="bg-[#1F1F1F] shadow-xl shadow-black/50 rounded-lg p-6 flex flex-col min-h-[300px]">
                     <p className="text-white">Distribuição por Identidade de Gênero</p>
                     <div className="flex-1 w-full h-full">
                       <ReporterGenderIdentityPieChart data={filteredData} />
                     </div> 
                   </div>
-                  <div className="bg-[#1F1F1F] shadow-xl shadow-black/50 rounded-lg p-6">
+                  <div className="bg-[#1F1F1F] shadow-xl shadow-black/50 rounded-lg p-6 h-auto min-h-[300px]">
                     <p>Distribuição por Orientação Sexual</p>
                     <ReporterSexualOrientationDistribution data={filteredData} />
                   </div>
@@ -630,9 +632,9 @@ export default function DashboardPage() {
               </div> 
 
               {/* Subcoluna Direita */}
-              <div className="w-1/3 flex flex-col gap-4">
+              <div className="w-full lg:w-1/3 flex flex-col gap-4">
                 <div className="flex-1 grid">
-                  <div className="bg-[#1F1F1F] shadow-xl shadow-black/50 rounded-lg p-6 h-91 flex flex-col">
+                  <div className="bg-[#1F1F1F] shadow-xl shadow-black/50 rounded-lg p-6 h-full min-h-[300px] flex flex-col">
                     <p className="text-white">Distribuição por Faixa Etária</p>
                     <div className="flex-1 w-full h-full">
                       <ReporterAgeGroupPieChart data={filteredData} />
@@ -641,9 +643,9 @@ export default function DashboardPage() {
                 </div>
 
                 <div className="flex-1 grid">
-                  <div className="bg-[#1F1F1F] shadow-xl shadow-black/50 rounded-lg p-6 flex flex-col justify-between">
+                  <div className="bg-[#1F1F1F] shadow-xl shadow-black/50 rounded-lg p-6 flex flex-col justify-between min-h-[300px]">
                     <p>Distribuição por Raça/Cor</p>
-                    <div className="flex items-center justify-center">
+                    <div className="flex-1 w-full h-full min-h-0 flex items-center justify-center">
                       <ReporterEthnicityBarChart data={filteredData} />
                     </div>
                   </div>

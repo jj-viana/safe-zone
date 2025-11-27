@@ -50,8 +50,10 @@ export default function CrimeNatureBarChart({ data }: CrimeNatureBarChartProps) 
       .sort((a, b) => b.value - a.value);
   }, [data]);
 
+  const containerHeight = Math.max(500, chartData.length * 60);
+
   return (
-    <section className="w-full h-full">
+    <section className="w-full" style={{ height: containerHeight }}>
       <CrimeNatureBarChartSurface data={chartData} colors={COLORS} />
     </section>
   );

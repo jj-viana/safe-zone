@@ -218,7 +218,8 @@ Permissões do repositório:
 5) Verificar configurações do projeto
 
 - `web/staticwebapp.config.json` presente e adequado às rotas/headers.
-- `web/next.config.ts` e build `npm run build` funcionando localmente com Node 20.
+- `web/next.config.mjs` e build `npm run build` funcionando localmente com Node 20.
+- O artefato de deploy do front-end inclui `node_modules` (apenas dependências de produção) para garantir a execução correta no SWA.
 - `api/` compila e testa localmente com .NET 9.
 
 6) Fluxo de uso

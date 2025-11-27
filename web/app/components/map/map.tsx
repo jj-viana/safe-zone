@@ -347,7 +347,7 @@ export default function MapaDepoimentos({ hideMarkers = false, hideTitle = false
           onClick={() => setSelectedDepoimento(null)}
         >
           <div
-            className="bg-neutral-900 rounded-2xl shadow-xl max-w-2xl w-full p-8 max-h-[90vh] overflow-y-auto border border-[#24BBE0]/30 relative"
+            className="bg-neutral-900 rounded-2xl shadow-xl max-w-2xl w-full p-4 md:p-8 max-h-[90vh] overflow-y-auto border border-[#24BBE0]/30 relative"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Botão de fechar no canto superior direito */}

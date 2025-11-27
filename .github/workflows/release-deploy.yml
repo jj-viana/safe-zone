@@ -4,263 +4,172 @@ on:
   push:
     branches:
       - main
-    paths:
-      - 'web/**'
-      - 'api/**'
-      - 'tests/**'
-      - '.github/workflows/release-deploy.yml'
   workflow_dispatch:
 
 jobs:
-  build:
-    name: Build artifacts
+  deploy:
+    name: Deploy to Azure and Create Release
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    outputs:
-      web_changed: ${{ steps.detect.outputs.web_changed }}
-      api_changed: ${{ steps.detect.outputs.api_changed }}
+    permissions:
+      contents: write
+      id-token: write
     env:
       DOTNET_NOLOGO: true
       DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
       DOTNET_CLI_TELEMETRY_OPTOUT: true
-      WEB_CHANGED: 'false'
-      API_CHANGED: 'false'
+      RESOURCE_GROUP: ${{ secrets.AZURE_RESOURCE_GROUP }}
+      WEBAPP_NAME: ${{ secrets.AZURE_WEBAPP_NAME }}
+      STATIC_WEB_APP_TOKEN: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
+      STATIC_WEB_APP_LOCATION: web
+      STATIC_WEB_APP_CONFIG: web
+      API_HEALTHCHECK_URL: ${{ secrets.AZURE_API_HEALTHCHECK_URL }}
+      WEB_HEALTHCHECK_URL: ${{ secrets.AZURE_STATIC_WEB_APP_HEALTHCHECK_URL }}
+      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      NEXT_PUBLIC_API_BASE_URL: ${{ secrets.NEXT_PUBLIC_API_BASE_URL }}
+      NEXT_PUBLIC_AZURE_TENANT_ID: ${{ secrets.NEXT_PUBLIC_AZURE_TENANT_ID }}
+      NEXT_PUBLIC_AZURE_CLIENT_ID: ${{ secrets.NEXT_PUBLIC_AZURE_CLIENT_ID }}
+      NEXT_PUBLIC_AZURE_REDIRECT_URI: ${{ secrets.NEXT_PUBLIC_AZURE_REDIRECT_URI }}
+      NEXT_PUBLIC_AZURE_API_SCOPES: ${{ secrets.NEXT_PUBLIC_AZURE_API_SCOPES }}
+      NEXT_PUBLIC_RECAPTCHA_SITE_KEY: ${{ secrets.NEXT_PUBLIC_RECAPTCHA_SITE_KEY }}
     steps:
+      - name: Validate required secrets
+        shell: bash
+        run: |
+          missing=()
+          required=(
+            RESOURCE_GROUP
+            WEBAPP_NAME
+            STATIC_WEB_APP_TOKEN
+            AZURE_CLIENT_ID
+            AZURE_TENANT_ID
+            AZURE_SUBSCRIPTION_ID
+            NEXT_PUBLIC_API_BASE_URL
+            NEXT_PUBLIC_AZURE_TENANT_ID
+            NEXT_PUBLIC_AZURE_CLIENT_ID
+            NEXT_PUBLIC_AZURE_REDIRECT_URI
+            NEXT_PUBLIC_AZURE_API_SCOPES
+            NEXT_PUBLIC_RECAPTCHA_SITE_KEY
+          )
+
+          for var_name in "${required[@]}"; do
+            value="${!var_name}"
+            if [ -z "$value" ]; then
+              missing+=("$var_name")
+            fi
+          done
+
+          if [ ${#missing[@]} -ne 0 ]; then
+            printf 'Missing required secrets: %s\n' "${missing[*]}"
+            exit 1
+          fi
+
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Detect changed components
-        id: detect
+      - name: Determine base commit
+        id: base_ref
         shell: bash
         run: |
-          set -eo pipefail
-          BASE_SHA="${{ github.event.before }}"
-          if [ -z "$BASE_SHA" ]; then
-            if git rev-parse --verify HEAD^ >/dev/null 2>&1; then
-              BASE_SHA=$(git rev-parse HEAD^)
-            fi
+          base="${{ github.event.before }}"
+          if [ -z "$base" ]; then
+            base=$(git rev-parse HEAD^ 2>/dev/null || true)
           fi
-          if [ -n "$BASE_SHA" ]; then
-            CHANGED_FILES="$(git diff --name-only "$BASE_SHA" HEAD)"
-          else
-            CHANGED_FILES="$(git ls-tree --name-only -r HEAD)"
+          if [ -z "$base" ]; then
+            base=$(git rev-list --max-parents=0 HEAD)
           fi
-          WEB_CHANGED=false
-          API_CHANGED=false
-          if printf '%s\n' "$CHANGED_FILES" | grep -q '^web/'; then
-            WEB_CHANGED=true
-          fi
-          if printf '%s\n' "$CHANGED_FILES" | grep -Eq '^(api/|tests/)'; then
-            API_CHANGED=true
-          fi
-          echo "web_changed=$WEB_CHANGED" >> "$GITHUB_OUTPUT"
-          echo "api_changed=$API_CHANGED" >> "$GITHUB_OUTPUT"
-          echo "WEB_CHANGED=$WEB_CHANGED" >> "$GITHUB_ENV"
-          echo "API_CHANGED=$API_CHANGED" >> "$GITHUB_ENV"
-          printf 'Detected changes -> web: %s | api: %s\n' "$WEB_CHANGED" "$API_CHANGED"
+          echo "sha=$base" >> "$GITHUB_OUTPUT"
 
-      - name: Web build secrets are present
-        if: env.WEB_CHANGED == 'true'
-        env:
-          NEXT_PUBLIC_API_BASE_URL: ${{ secrets['NEXT_PUBLIC_API_BASE_URL'] }}
-          NEXT_PUBLIC_AZURE_TENANT_ID: ${{ secrets['NEXT_PUBLIC_AZURE_TENANT_ID'] }}
-          NEXT_PUBLIC_AZURE_CLIENT_ID: ${{ secrets['NEXT_PUBLIC_AZURE_CLIENT_ID'] }}
-          NEXT_PUBLIC_AZURE_REDIRECT_URI: ${{ secrets['NEXT_PUBLIC_AZURE_REDIRECT_URI'] }}
-          NEXT_PUBLIC_AZURE_API_SCOPES: ${{ secrets['NEXT_PUBLIC_AZURE_API_SCOPES'] }}
-          NEXT_PUBLIC_RECAPTCHA_SITE_KEY: ${{ secrets['NEXT_PUBLIC_RECAPTCHA_SITE_KEY'] }}
-        run: |
-          missing=()
-          [ -z "$NEXT_PUBLIC_API_BASE_URL" ] && missing+=(NEXT_PUBLIC_API_BASE_URL)
-          [ -z "$NEXT_PUBLIC_AZURE_TENANT_ID" ] && missing+=(NEXT_PUBLIC_AZURE_TENANT_ID)
-          [ -z "$NEXT_PUBLIC_AZURE_CLIENT_ID" ] && missing+=(NEXT_PUBLIC_AZURE_CLIENT_ID)
-          [ -z "$NEXT_PUBLIC_AZURE_REDIRECT_URI" ] && missing+=(NEXT_PUBLIC_AZURE_REDIRECT_URI)
-          [ -z "$NEXT_PUBLIC_AZURE_API_SCOPES" ] && missing+=(NEXT_PUBLIC_AZURE_API_SCOPES)
-          [ -z "$NEXT_PUBLIC_RECAPTCHA_SITE_KEY" ] && missing+=(NEXT_PUBLIC_RECAPTCHA_SITE_KEY)
-          if [ ${#missing[@]} -gt 0 ]; then
-            printf '::error::Missing web secrets: %s\n' "${missing[*]}"
-            exit 1
-          fi
-
-      - name: Cosmos secrets are present
-        if: env.API_CHANGED == 'true'
-        env:
-          TEST_COSMOS_CONNECTION_STRING: ${{ secrets.TEST_COSMOS_CONNECTION_STRING }}
-          TEST_COSMOS_DATABASE_ID: ${{ secrets.TEST_COSMOS_DATABASE_ID }}
-          TEST_COSMOS_CONTAINER_ID: ${{ secrets.TEST_COSMOS_CONTAINER_ID }}
-        run: |
-          missing=()
-          [ -z "$TEST_COSMOS_CONNECTION_STRING" ] && missing+=(TEST_COSMOS_CONNECTION_STRING)
-          [ -z "$TEST_COSMOS_DATABASE_ID" ] && missing+=(TEST_COSMOS_DATABASE_ID)
-          [ -z "$TEST_COSMOS_CONTAINER_ID" ] && missing+=(TEST_COSMOS_CONTAINER_ID)
-          if [ ${#missing[@]} -gt 0 ]; then
-            printf '::error::Missing Cosmos secrets: %s\n' "${missing[*]}"
-            exit 1
-          fi
+      - name: Detect affected folders
+        id: changes
+        uses: dorny/paths-filter@v3
+        with:
+          base: ${{ steps.base_ref.outputs.sha }}
+          ref: ${{ github.sha }}
+          filters: |
+            web:
+              - 'web/**'
+            api_or_tests:
+              - 'api/**'
+              - 'tests/**'
 
       - name: Setup Node.js
+        if: steps.changes.outputs.web == 'true'
         uses: actions/setup-node@v4
-        if: env.WEB_CHANGED == 'true'
         with:
           node-version: '20'
           cache: 'npm'
           cache-dependency-path: web/package-lock.json
 
       - name: Install web dependencies
-        if: env.WEB_CHANGED == 'true'
+        if: steps.changes.outputs.web == 'true'
         working-directory: web
         run: npm ci
 
       - name: Build web application
-        if: env.WEB_CHANGED == 'true'
+        if: steps.changes.outputs.web == 'true'
         working-directory: web
         env:
-          NEXT_PUBLIC_API_BASE_URL: ${{ secrets['NEXT_PUBLIC_API_BASE_URL'] }}
-          NEXT_PUBLIC_AZURE_TENANT_ID: ${{ secrets['NEXT_PUBLIC_AZURE_TENANT_ID'] }}
-          NEXT_PUBLIC_AZURE_CLIENT_ID: ${{ secrets['NEXT_PUBLIC_AZURE_CLIENT_ID'] }}
-          NEXT_PUBLIC_AZURE_REDIRECT_URI: ${{ secrets['NEXT_PUBLIC_AZURE_REDIRECT_URI'] }}
-          NEXT_PUBLIC_AZURE_API_SCOPES: ${{ secrets['NEXT_PUBLIC_AZURE_API_SCOPES'] }}
-          NEXT_PUBLIC_RECAPTCHA_SITE_KEY: ${{ secrets['NEXT_PUBLIC_RECAPTCHA_SITE_KEY'] }}
+          NEXT_PUBLIC_API_BASE_URL: ${{ env.NEXT_PUBLIC_API_BASE_URL }}
+          NEXT_PUBLIC_AZURE_TENANT_ID: ${{ env.NEXT_PUBLIC_AZURE_TENANT_ID }}
+          NEXT_PUBLIC_AZURE_CLIENT_ID: ${{ env.NEXT_PUBLIC_AZURE_CLIENT_ID }}
+          NEXT_PUBLIC_AZURE_REDIRECT_URI: ${{ env.NEXT_PUBLIC_AZURE_REDIRECT_URI }}
+          NEXT_PUBLIC_AZURE_API_SCOPES: ${{ env.NEXT_PUBLIC_AZURE_API_SCOPES }}
+          NEXT_PUBLIC_RECAPTCHA_SITE_KEY: ${{ env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY }}
         run: npm run build
 
-      - name: Package web artifact
-        if: env.WEB_CHANGED == 'true'
-        run: |
-          cd web
-          zip -r ../web-build.zip .next public package.json package-lock.json next.config.ts staticwebapp.config.json
-
-      - name: Upload web artifact
-        if: env.WEB_CHANGED == 'true'
-        uses: actions/upload-artifact@v4
-        with:
-          name: web-build
-          path: web-build.zip
-
       - name: Setup .NET
+        if: steps.changes.outputs.api_or_tests == 'true'
         uses: actions/setup-dotnet@v4
-        if: env.API_CHANGED == 'true'
         with:
           dotnet-version: '9.0.x'
 
       - name: Restore API dependencies
-        if: env.API_CHANGED == 'true'
+        if: steps.changes.outputs.api_or_tests == 'true'
         run: dotnet restore api/api.sln
 
       - name: Publish API
-        if: env.API_CHANGED == 'true'
+        if: steps.changes.outputs.api_or_tests == 'true'
         run: dotnet publish api/api.csproj --configuration Release --no-restore --output publish/api
 
-      - name: Package API artifact
-        if: env.API_CHANGED == 'true'
-        run: zip -r api-publish.zip publish/api
-
-      - name: Upload API artifact
-        if: env.API_CHANGED == 'true'
-        uses: actions/upload-artifact@v4
-        with:
-          name: api-publish
-          path: api-publish.zip
-
-  deploy:
-    name: Deploy to Azure and Create Release
-    needs: build
-    if: >-
-      github.ref == 'refs/heads/main' &&
-      (needs.build.outputs.web_changed == 'true' || needs.build.outputs.api_changed == 'true')
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      id-token: write
-    env:
-      WEB_CHANGED: ${{ needs.build.outputs.web_changed }}
-      API_CHANGED: ${{ needs.build.outputs.api_changed }}
-      RESOURCE_GROUP: ${{ secrets.AZURE_RESOURCE_GROUP }}
-      WEBAPP_NAME: ${{ secrets.AZURE_WEBAPP_NAME }}
-      STATIC_WEB_APP_TOKEN: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
-      API_HEALTHCHECK_URL: ${{ secrets.AZURE_API_HEALTHCHECK_URL }}
-      WEB_HEALTHCHECK_URL: ${{ secrets.AZURE_STATIC_WEB_APP_HEALTHCHECK_URL }}
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Azure deployment secrets are present
-        env:
-          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-          AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-          STATIC_WEB_APP_TOKEN: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
-          WEBAPP_NAME: ${{ secrets.AZURE_WEBAPP_NAME }}
-          RESOURCE_GROUP: ${{ secrets.AZURE_RESOURCE_GROUP }}
-        run: |
-          missing=()
-          [ -z "$AZURE_CLIENT_ID" ] && missing+=(AZURE_CLIENT_ID)
-          [ -z "$AZURE_TENANT_ID" ] && missing+=(AZURE_TENANT_ID)
-          [ -z "$AZURE_SUBSCRIPTION_ID" ] && missing+=(AZURE_SUBSCRIPTION_ID)
-          [ -z "$STATIC_WEB_APP_TOKEN" ] && missing+=(AZURE_STATIC_WEB_APPS_API_TOKEN)
-          [ -z "$WEBAPP_NAME" ] && missing+=(AZURE_WEBAPP_NAME)
-          [ -z "$RESOURCE_GROUP" ] && missing+=(AZURE_RESOURCE_GROUP)
-          if [ ${#missing[@]} -gt 0 ]; then
-            printf '::error::Missing Azure secrets: %s\n' "${missing[*]}"
-            exit 1
-          fi
-
-      - name: Download web artifact
-        if: env.WEB_CHANGED == 'true'
-        uses: actions/download-artifact@v4
-        with:
-          name: web-build
-          path: web_artifact
-
-      - name: Extract web artifact
-        if: env.WEB_CHANGED == 'true'
-        run: unzip web_artifact/web-build.zip -d web_artifact
-
-      - name: Download API artifact
-        if: env.API_CHANGED == 'true'
-        uses: actions/download-artifact@v4
-        with:
-          name: api-publish
-          path: api_artifact
-
-      - name: Extract API artifact
-        if: env.API_CHANGED == 'true'
-        run: unzip api_artifact/api-publish.zip -d api_artifact
-
       - name: Azure Login
+        if: steps.changes.outputs.api_or_tests == 'true'
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          client-id: ${{ env.AZURE_CLIENT_ID }}
+          tenant-id: ${{ env.AZURE_TENANT_ID }}
+          subscription-id: ${{ env.AZURE_SUBSCRIPTION_ID }}
 
       - name: Deploy Azure Static Web App
-        if: env.WEB_CHANGED == 'true'
+        if: steps.changes.outputs.web == 'true'
         uses: Azure/static-web-apps-deploy@v1
         with:
           azure_static_web_apps_api_token: ${{ env.STATIC_WEB_APP_TOKEN }}
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           action: upload
           production_branch: main
-          app_location: web_artifact
+          app_location: ${{ env.STATIC_WEB_APP_LOCATION }}
           api_location: ""
           output_location: .next
-          config_file_location: web_artifact
+          config_file_location: ${{ env.STATIC_WEB_APP_CONFIG }}
           skip_app_build: true
           skip_api_build: true
-          app_artifact_location: web_artifact/.next
+          app_artifact_location: web/.next
 
       - name: Deploy API to App Service
-        if: env.API_CHANGED == 'true'
+        if: steps.changes.outputs.api_or_tests == 'true'
         uses: azure/webapps-deploy@v3
         with:
           app-name: ${{ env.WEBAPP_NAME }}
           resource-group-name: ${{ env.RESOURCE_GROUP }}
-          package: api_artifact/publish/api
+          package: publish/api
 
       - name: Define health_check function
-        if: env.WEB_CHANGED == 'true' || env.API_CHANGED == 'true'
+        if: steps.changes.outputs.web == 'true' || steps.changes.outputs.api_or_tests == 'true'
         run: |
           cat <<'EOF' > health_check.sh
           #!/bin/bash
@@ -278,13 +187,13 @@ jobs:
           chmod +x health_check.sh
 
       - name: Verify API health
-        if: env.API_HEALTHCHECK_URL != '' && env.API_CHANGED == 'true'
+        if: steps.changes.outputs.api_or_tests == 'true' && env.API_HEALTHCHECK_URL != ''
         run: |
           source ./health_check.sh
           health_check "$API_HEALTHCHECK_URL"
 
       - name: Verify Web health
-        if: env.WEB_HEALTHCHECK_URL != '' && env.WEB_CHANGED == 'true'
+        if: steps.changes.outputs.web == 'true' && env.WEB_HEALTHCHECK_URL != ''
         run: |
           source ./health_check.sh
           health_check "$WEB_HEALTHCHECK_URL"
