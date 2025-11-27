@@ -88,7 +88,7 @@ NEXT_PUBLIC_API_URL=http://localhost:7071/api # URL da API Backend
 
 ### Executando Localmente
 
-Para iniciar o servidor de desenvolvimento com Turbopack (mais rápido):
+Para iniciar o servidor de desenvolvimento com Turbopack:
 
 ```bash
 npm run dev
