@@ -16,13 +16,12 @@ export default function Navbar({ onOpenReportModal }: NavbarProps) {
 
   const links = [
     { href: "/", label: "Início" },
-    { href: "/sobre", label: "Sobre" },
-  { href: "/dashboards", label: "Dashboards" },
+    { href: "/dashboards", label: "Dashboards" },
   ];
 
   return (
     <nav className="w-full bg-neutral-900 text-white border-b border-gray-700">
-      <div className="flex items-center justify-between py-1 px-[128px] max-w-[1920px] mx-auto">
+      <div className="flex flex-col md:flex-row items-center justify-between py-4 md:py-1 px-4 md:px-[128px] max-w-[1920px] mx-auto gap-4 md:gap-0">
         <Link href="/" className="flex items-center gap-2">
           <Image
             src="/logo2.svg"
@@ -33,7 +32,7 @@ export default function Navbar({ onOpenReportModal }: NavbarProps) {
           />
         </Link>
 
-        <div className="flex items-center gap-8">
+        <div className="flex flex-wrap justify-center items-center gap-4 md:gap-8">
           {links.map((link) => {
             const active = pathname === link.href;
             return (
@@ -60,6 +59,17 @@ export default function Navbar({ onOpenReportModal }: NavbarProps) {
           >
             Fazer Denúncia
           </button>
+
+          <Link
+            href="/sobre"
+            className={`text-sm md:text-base transition-all duration-200 pb-1 border-b-2 ${
+              pathname === "/sobre"
+                ? "border-cyan-400 text-white font-semibold"
+                : "border-transparent text-gray-300 hover:text-white hover:border-cyan-400"
+            }`}
+          >
+            Sobre
+          </Link>
         </div>
       </div>
 

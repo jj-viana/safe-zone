@@ -85,7 +85,7 @@ export default function MemberCard() {
   ];
 
   return (
-    <section className="w-full py-16 px-[114px] bg-gray-50 dark:bg-[#111]">
+    <section className="w-full py-16 pb-32 px-6 md:px-[114px] bg-gray-50 dark:bg-[#111]">
       <h2 className="text-3xl font-bold text-center mb-10 text-gray-900 dark:text-gray-100">
         Equipe de Desenvolvimento
       </h2>

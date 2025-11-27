@@ -60,7 +60,7 @@ export default function ReporterSexualOrientationDistribution({ data }: Reporter
   }, [data]);
 
   return (
-    <div className="w-full h-full flex flex-col gap-3 overflow-y-auto">
+    <div className="w-full flex flex-col gap-3">
       {distributionData.map((item, index) => (
         <div key={index} className="flex items-center justify-between">
           <span className="text-white text-sm font-medium">{item.label}</span>
