@@ -47,7 +47,7 @@ web/
 │   └── utils/              # Funções utilitárias (formatação de data, mappers)
 ├── public/                 # Arquivos estáticos (imagens, ícones, manifestos)
 ├── .env.example            # Exemplo de variáveis de ambiente
-├── next.config.ts          # Configurações do Next.js
+├── next.config.mjs          # Configurações do Next.js
 ├── tailwind.config.ts      # Configurações do Tailwind (se aplicável/implícito)
 └── staticwebapp.config.json # Configuração de deploy para Azure Static Web Apps
 ```

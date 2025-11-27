@@ -127,7 +127,7 @@ jobs:
         if: env.WEB_CHANGED == 'true'
         run: |
           cd web
-          zip -r ../web-build.zip .next public package.json package-lock.json next.config.ts staticwebapp.config.json
+          zip -r ../web-build.zip .next public package.json package-lock.json next.config.mjs staticwebapp.config.json
 
       - name: Upload web artifact
         if: env.WEB_CHANGED == 'true'
