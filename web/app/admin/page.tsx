@@ -5,6 +5,7 @@ import Navbar from '../components/navbar/navbar';
 import { reportsClient, type ReportResponse } from '@/lib/api';
 import { getStatusLabel, normalizeStatusValue } from '@/lib/utils/status-utils';
 import { formatUtcDateInSaoPaulo } from '@/lib/utils/date-utils';
+import { truncateText } from '@/lib/utils/text-utils';
 
 const STATUS_TABS = [
   { value: 'Draft', label: getStatusLabel('Draft', { plural: true }) },
@@ -13,6 +14,7 @@ const STATUS_TABS = [
 ] as const;
 
 const REPORTS_PAGE_SIZE = 9;
+const DESCRIPTION_PREVIEW_MAX_LENGTH = 180;
 
 type StatusTabValue = (typeof STATUS_TABS)[number]['value'];
 
@@ -708,7 +710,7 @@ export default function AdminPage() {
                     </div>
 
                     <p className="text-sm text-neutral-300">
-                      {report.description}
+                      {truncateText(report.description, DESCRIPTION_PREVIEW_MAX_LENGTH)}
                     </p>
                   </div>
 

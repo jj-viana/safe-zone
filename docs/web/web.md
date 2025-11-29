@@ -13,11 +13,11 @@ As principais tecnologias e bibliotecas utilizadas no projeto são:
 -   **Framework**: [Next.js 15](https://nextjs.org/) com React 19.
 -   **Linguagem**: [TypeScript](https://www.typescriptlang.org/).
 -   **Estilização**: [Tailwind CSS v4](https://tailwindcss.com/).
--   **Autenticação**: [MSAL (Microsoft Authentication Library)](https://github.com/AzureAD/microsoft-authentication-library-for-js) para integração com Azure AD.
+-   **Autenticação**: Autenticação nativa do [Azure Static Web Apps](https://learn.microsoft.com/azure/static-web-apps/authentication-authorization?tabs=entra-id) via Azure AD (Entra ID).
 -   **Mapas**: [Leaflet](https://leafletjs.com/) e [React Leaflet](https://react-leaflet.js.org/).
 -   **Gráficos**: [Recharts](https://recharts.org/).
 -   **Ícones**: [React Icons](https://react-icons.github.io/react-icons/).
--   **Validação/Segurança**: `jose` para manipulação de JWT, `react-google-recaptcha` para proteção contra bots.
+-   **Validação/Segurança**: `react-google-recaptcha` para proteção contra bots.
 
 ## Estrutura do Projeto
 
@@ -37,11 +37,9 @@ web/
 │   ├── login/              # Página de login/redirecionamento
 │   ├── sobre/              # Página institucional
 │   ├── layout.tsx          # Layout principal da aplicação (RootLayout)
-│   ├── page.tsx            # Página inicial (Home)
-│   └── providers.tsx       # Provedores de contexto (Auth, Theme, etc.)
+│   └── page.tsx            # Página inicial (Home)
 ├── lib/                    # Lógica compartilhada e utilitários
 │   ├── api/                # Clientes HTTP e definições de tipos da API
-│   ├── auth/               # Configuração do MSAL e validação de tokens
 │   ├── constants/          # Constantes globais (ex: regiões, tipos de crime)
 │   ├── hooks/              # React Hooks customizados (ex: useReportSubmission)
 │   └── utils/              # Funções utilitárias (formatação de data, mappers)
@@ -76,14 +74,8 @@ web/
 Crie um arquivo `.env.local` na raiz da pasta `web` com as seguintes variáveis (baseado em `.env.example`):
 
 ```env
-# Configurações do Azure AD B2C / Entra ID
-NEXT_PUBLIC_AZURE_TENANT_ID=seu-tenant-id
-NEXT_PUBLIC_AZURE_CLIENT_ID=seu-client-id
-NEXT_PUBLIC_AZURE_REDIRECT_URI=http://localhost:3000/login
-NEXT_PUBLIC_AZURE_API_SCOPES=api://seu-app-id/Scope
-
-# Outras configurações
-NEXT_PUBLIC_API_URL=http://localhost:7071/api # URL da API Backend
+NEXT_PUBLIC_API_BASE_URL=http://localhost:5206
+NEXT_PUBLIC_RECAPTCHA_SITE_KEY= # opcional
 ```
 
 ### Executando Localmente
@@ -105,11 +97,11 @@ A aplicação estará disponível em `http://localhost:3000`.
 
 ## Autenticação
 
-A autenticação é gerenciada pelo **Azure Active Directory (Entra ID)** utilizando a biblioteca `@azure/msal-browser` e `@azure/msal-react`.
+A proteção da área administrativa é feita pela camada de autenticação nativa do **Azure Static Web Apps** com Azure AD (Entra ID).
 
--   **Configuração**: Localizada em `lib/auth/msal-config.ts`.
--   **Fluxo**: O usuário é redirecionado para o login da Microsoft e, após o sucesso, retorna com um token de acesso.
--   **Proteção de Rotas**: Páginas como `/admin` verificam a presença de um usuário autenticado e/ou roles específicas.
+-   **Configuração**: `staticwebapp.config.json` marca `/admin` e `/admin/*` com `allowedRoles: ["admin"]`. Os usuários são associados a esse role no portal (modo *Simple*).
+-   **Fluxo**: A página `/login` apenas dispara `/.auth/login/aad?post_login_redirect_uri=/admin`, mantendo um reCAPTCHA opcional antes do redirecionamento.
+-   **Sessão**: O front-end consulta `/.auth/me` para detectar sessões existentes e redirecionar automaticamente administradores autenticados, eliminando o uso de tokens personalizados e middleware.
 
 ## Integração com API
 
@@ -162,6 +154,6 @@ Página institucional que apresenta o projeto SafeZone.
 -   **Equipe**: Apresenta os membros responsáveis pelo desenvolvimento do projeto.
 
 ### 5. Login (`/login`)
-Página responsável pelo fluxo de autenticação.
--   Integração com o **Azure Active Directory**.
--   Redireciona o usuário para o provedor de identidade da Microsoft e gerencia o retorno do token de acesso.
+Página responsável por disparar o fluxo de autenticação.
+-   Valida o reCAPTCHA (quando configurado) e encaminha o usuário para `/.auth/login/aad?post_login_redirect_uri=/admin`.
+-   Consulta `/.auth/me` para identificar sessões já autenticadas e, se necessário, redireciona imediatamente para `/admin`.

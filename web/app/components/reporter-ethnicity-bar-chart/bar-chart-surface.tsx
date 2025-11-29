@@ -30,11 +30,9 @@ export default function BarChartSurface({ data, colors = DEFAULT_COLORS }: BarCh
       >
         <XAxis
           dataKey="name"
-          angle={0}
-          height={45}
+          height={12}
           stroke="#9CA3AF"
-          style={{ fontSize: '11px' }}
-          interval={0}
+          tick={false}
         />
         <Tooltip
           contentStyle={{

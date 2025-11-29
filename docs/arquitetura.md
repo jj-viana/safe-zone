@@ -16,7 +16,7 @@ graph LR
     API -->|Telemetry| AppInsights[Application Insights]
 ```
 
-*   **Frontend:** Aplicação web construída com **Next.js** (React), utilizando TypeScript e Tailwind CSS. Possui integração com mapas (`leaflet`) e autenticação preparada para MSAL (Microsoft Authentication Library).
+*   **Frontend:** Aplicação web construída com **Next.js** (React), utilizando TypeScript e Tailwind CSS. Possui integração com mapas (`leaflet`) e usa a autenticação nativa do Azure Static Web Apps (Azure AD/Entra ID) para proteger a área administrativa.
 *   **Backend:** Web API desenvolvida em **.NET 9** (C#). Responsável pela lógica de negócios, validação e persistência de dados.
 *   **Banco de Dados:** **Azure Cosmos DB** (NoSQL), utilizado para armazenar os relatórios de crimes de forma escalável e flexível.
 *   **Observabilidade:** Integração com **Azure Application Insights** para monitoramento de logs e telemetria (incluindo consumo de RUs do Cosmos DB).

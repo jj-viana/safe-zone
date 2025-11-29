@@ -84,12 +84,7 @@ export default function ReportModal({ show, onCloseAction, presetLocation = null
       parsed.getMonth() === month - 1 &&
       parsed.getDate() === day
 
-    if (!isSameDate) return false
-
-    const now = new Date()
-    const endOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999)
-
-    return parsed.getTime() <= endOfToday.getTime()
+    return isSameDate
   }
 
   /**
@@ -284,7 +279,6 @@ export default function ReportModal({ show, onCloseAction, presetLocation = null
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          onClick={() => handleClose()}
         >
           <motion.div
             className="bg-neutral-900 p-4 md:p-8 rounded-2xl w-[95%] md:w-[700px] max-h-[90vh] overflow-y-auto text-white relative flex flex-col items-center border border-[#24BBE0]/30 shadow-lg"

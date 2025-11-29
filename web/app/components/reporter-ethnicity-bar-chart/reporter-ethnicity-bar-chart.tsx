@@ -49,9 +49,36 @@ export default function ReporterEthnicityBarChart({ data }: ReporterEthnicityBar
     })) as ChartData[];
   }, [data]);
 
+  const legendItems = useMemo(
+    () =>
+      chartData.map((item, index) => ({
+        label: item.name,
+        color: COLORS[index % COLORS.length],
+      })),
+    [chartData],
+  );
+
   return (
-    <section className="w-full h-full">
-      <BarChartSurface data={chartData} colors={COLORS} />
+    <section className="w-full h-full flex flex-col gap-4">
+      <div className="flex-1 min-h-0">
+        <BarChartSurface data={chartData} colors={COLORS} />
+      </div>
+      {legendItems.length > 0 && (
+        <ul className="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-gray-200" role="list">
+          {legendItems.map(item => (
+            <li key={item.label} className="flex items-center gap-2">
+              <span
+                aria-hidden="true"
+                className="h-3 w-3 rounded-full"
+                style={{ backgroundColor: item.color }}
+              />
+              <span className="truncate max-w-[140px]" title={item.label}>
+                {item.label}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
     </section>
   );
 }
