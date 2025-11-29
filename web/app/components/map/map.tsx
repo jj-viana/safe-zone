@@ -8,6 +8,7 @@ import { useEffect, useState } from "react"
 import { reportsClient } from "@/lib/api/reports-client"
 import type { ReportResponse, ReporterDetailsResponse } from "@/lib/api/types"
 import { formatUtcDateTimeInSaoPaulo } from "@/lib/utils/date-utils"
+import { truncateText } from "@/lib/utils/text-utils"
 
 const parseLocation = (location: ReportResponse['location']): [number, number] | null => {
   if (!location) return null
@@ -32,6 +33,14 @@ L.Icon.Default.mergeOptions({
 })
 
 const DEFAULT_CENTER: [number, number] = [-15.824162,-47.929301]
+const MIN_ZOOM = 4
+// Bounding box roughly covering Brazil to prevent drifting too far away
+const MAP_BOUNDS: L.LatLngBoundsExpression = [
+  [-34, -74],
+  [6, -34],
+]
+const MAP_BOUNDS_VISCOSITY = 0.9
+const MAP_PREVIEW_MAX_LENGTH = 140
 
 interface MapaDepoimentosProps {
   hideMarkers?: boolean
@@ -287,6 +296,9 @@ export default function MapaDepoimentos({ hideMarkers = false, hideTitle = false
         center={DEFAULT_CENTER}
         zoom={11}
         className="w-full h-full rounded-lg"
+        maxBounds={MAP_BOUNDS}
+        maxBoundsViscosity={MAP_BOUNDS_VISCOSITY}
+        minZoom={MIN_ZOOM}
       >
         <EnableZoomOnHover />
         <ContextMenuHandler handler={onContextMenu} />
@@ -302,7 +314,9 @@ export default function MapaDepoimentos({ hideMarkers = false, hideTitle = false
             <Marker key={dep.id} position={dep.location} icon={createIcon(dep.cor || getMarkerColor(dep.crimeGenre))}>
               <Popup>
                 <div className="text-gray-800 flex flex-col items-center">
-                  <p className="font-medium mb-2 text-center">{dep.description}</p>
+                  <p className="font-medium mb-2 text-center">
+                    {truncateText(dep.description, MAP_PREVIEW_MAX_LENGTH)}
+                  </p>
                   <button
                     onClick={() => setSelectedDepoimento(dep)}
                     className="mt-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm font-medium"
