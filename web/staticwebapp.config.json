@@ -1,5 +1,25 @@
 {
   "platform": {
     "apiRuntime": "node:20"
-  }
+  },
+  "routes": [
+    {
+      "route": "/admin",
+      "allowedRoles": ["admin"]
+    },
+    {
+      "route": "/admin/*",
+      "allowedRoles": ["admin"]
+    },
+    {
+      "route": "/auth/login",
+      "redirect": "/.auth/login/aad?post_login_redirect_uri=/admin",
+      "statusCode": 302
+    },
+    {
+      "route": "/auth/logout",
+      "redirect": "/.auth/logout?post_logout_redirect_uri=/",
+      "statusCode": 302
+    }
+  ]
 }

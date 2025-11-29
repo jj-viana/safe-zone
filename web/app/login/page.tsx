@@ -1,12 +1,8 @@
 'use client';
 
 import dynamic from "next/dynamic";
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { useMsal } from "@azure/msal-react";
-import { EventType, InteractionStatus, type AuthenticationResult } from "@azure/msal-browser";
+import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { loginRequest } from "@/lib/auth/msal-config";
-import { sessionCookieName, sessionMaxAgeSeconds } from "@/lib/auth/constants";
 
 const styles = {
   container: "flex min-h-screen flex-col items-center justify-center bg-neutral-950 px-4 text-white",
@@ -24,95 +20,74 @@ const ReCAPTCHA = dynamic(() => import("react-google-recaptcha"), {
 const RECAPTCHA_SITE_KEY = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY ?? "";
 const RECAPTCHA_ENABLED = Boolean(RECAPTCHA_SITE_KEY);
 
-const buildCookie = (value: string, maxAge: number) => {
-  const parts = [
-    `${sessionCookieName}=${encodeURIComponent(value)}`,
-    `Max-Age=${maxAge}`,
-    "Path=/",
-    "SameSite=Lax",
-  ];
+type ClientPrincipal = {
+  userRoles: string[];
+  userDetails?: string | null;
+};
 
-  if (typeof window !== "undefined" && window.location.protocol === "https:") {
-    parts.push("Secure");
+type AuthResponse = {
+  clientPrincipal?: ClientPrincipal | null;
+};
+
+const ADMIN_ROLE = "admin";
+
+async function fetchClientPrincipal(): Promise<ClientPrincipal | null> {
+  try {
+    const response = await fetch("/.auth/me", { cache: "no-store" });
+    if (!response.ok) {
+      return null;
+    }
+
+    const payload: AuthResponse = await response.json();
+    return payload?.clientPrincipal ?? null;
+  } catch (error) {
+    console.warn("Não foi possível verificar a sessão atual", error);
+    return null;
   }
+}
 
-  return parts.join("; ");
-};
-
-const setAuthCookie = (token: string) => {
-  document.cookie = buildCookie(token, sessionMaxAgeSeconds);
-};
-
-const clearAuthCookie = () => {
-  document.cookie = buildCookie("", 0);
-};
-
-export default function LoginPage() {
-  const { instance, accounts, inProgress } = useMsal();
+function LoginPageContent() {
   const router = useRouter();
   const params = useSearchParams();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
   const [recaptchaError, setRecaptchaError] = useState(false);
+  const [redirecting, setRedirecting] = useState(false);
+  const [checkingSession, setCheckingSession] = useState(true);
 
-  const redirectTo = useMemo(() => params?.get("redirectTo") ?? "/admin", [params]);
-  const isAuthenticating = inProgress !== InteractionStatus.None;
+  const redirectParam = params?.get("redirectTo") ?? "/admin";
+  const redirectTo = useMemo(() => {
+    if (!redirectParam || !redirectParam.startsWith("/")) {
+      return "/admin";
+    }
+
+    return redirectParam;
+  }, [redirectParam]);
 
   useEffect(() => {
-    const callbackId = instance.addEventCallback(event => {
-      if (event.eventType === EventType.LOGIN_SUCCESS && event.payload) {
-        const result = event.payload as AuthenticationResult;
-        instance.setActiveAccount(result.account);
+    let active = true;
+
+    const checkExistingSession = async () => {
+      const principal = await fetchClientPrincipal();
+
+      if (!active) {
+        return;
       }
 
-      if (event.eventType === EventType.LOGIN_FAILURE && event.error) {
-        setErrorMessage(event.error.message);
+      if (principal?.userRoles?.includes(ADMIN_ROLE)) {
+        router.replace(redirectTo);
+        return;
       }
-    });
+
+      setCheckingSession(false);
+    };
+
+    void checkExistingSession();
 
     return () => {
-      if (callbackId) {
-        instance.removeEventCallback(callbackId);
-      }
+      active = false;
     };
-  }, [instance]);
-
-  const persistSession = useCallback(async () => {
-    const activeAccount = instance.getActiveAccount() ?? accounts[0];
-    if (!activeAccount) {
-      clearAuthCookie();
-      return;
-    }
-
-    instance.setActiveAccount(activeAccount);
-
-    try {
-      const result = await instance.acquireTokenSilent({
-        ...loginRequest,
-        account: activeAccount,
-      });
-
-      setAuthCookie(result.idToken);
-      setErrorMessage(null);
-      router.replace(redirectTo);
-    } catch (error) {
-      console.error("Failed to acquire token silently", error);
-      clearAuthCookie();
-      setErrorMessage("Não foi possível autenticar. Tente novamente.");
-    }
-  }, [accounts, instance, redirectTo, router]);
-
-  useEffect(() => {
-    if (accounts.length > 0 && !isAuthenticating) {
-      void persistSession();
-    }
-  }, [accounts, isAuthenticating, persistSession]);
-
-  useEffect(() => {
-    if (accounts.length === 0 && !isAuthenticating) {
-      clearAuthCookie();
-    }
-  }, [accounts, isAuthenticating]);
+  }, [redirectTo, router]);
 
   const handleLogin = useCallback(async () => {
     setErrorMessage(null);
@@ -122,13 +97,15 @@ export default function LoginPage() {
       return;
     }
 
-    try {
-      await instance.loginRedirect(loginRequest);
-    } catch (error) {
-      console.error("Microsoft login failed", error);
-      setErrorMessage("Não foi possível iniciar o login com a Microsoft.");
+    if (typeof window === "undefined") {
+      setErrorMessage("Ação de login indisponível neste ambiente.");
+      return;
     }
-  }, [instance, recaptchaToken]);
+
+    setRedirecting(true);
+    const loginUrl = `/.auth/login/aad?post_login_redirect_uri=${encodeURIComponent(redirectTo)}`;
+    window.location.href = loginUrl;
+  }, [recaptchaToken, redirectTo]);
 
   const handleRecaptchaChange = useCallback((token: string | null) => {
     setRecaptchaToken(token);
@@ -174,17 +151,33 @@ export default function LoginPage() {
           type="button"
           onClick={handleLogin}
           disabled={
-            isAuthenticating || (RECAPTCHA_ENABLED && !recaptchaToken)
+            checkingSession ||
+            redirecting ||
+            (RECAPTCHA_ENABLED && !recaptchaToken)
           }
           className={styles.button}
         >
-          {isAuthenticating ? "Redirecionando..." : "Entrar com Microsoft"}
+          {redirecting ? "Redirecionando..." : "Entrar com Microsoft"}
         </button>
+
+        {checkingSession ? (
+          <p className="mt-3 text-center text-xs text-neutral-400">
+            Verificando sessão existente...
+          </p>
+        ) : null}
 
         <p className={styles.footer}>
           O acesso é restrito a administradores aprovados. Caso não reconheça esta tela, encerre o navegador.
         </p>
       </section>
     </main>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginPageContent />
+    </Suspense>
   );
 }

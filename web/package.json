@@ -9,8 +9,6 @@
     "lint": "eslint"
   },
   "dependencies": {
-    "@azure/msal-browser": "^4.26.1",
-    "@azure/msal-react": "^3.0.21",
     "@types/recharts": "^1.8.29",
     "framer-motion": "^12.23.24",
     "leaflet": "^1.9.4",
@@ -21,8 +19,7 @@
     "react-icons": "^5.5.0",
     "react-input-mask": "^2.0.4",
     "react-leaflet": "^5.0.0",
-    "recharts": "^3.3.0",
-    "jose": "^5.9.6"
+    "recharts": "^3.3.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
